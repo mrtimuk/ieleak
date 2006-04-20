@@ -1,0 +1,27 @@
+<html>
+   <head>
+      <title>innerHTML Test</title>
+      <script language="javascript">
+			// From http://blogs.telerik.com/blogs/twisted_asp_net/archive/2006/04/11/190.aspx
+			function DripInvisible()
+			{
+				 var container = document.getElementById("container");
+				 for (var i = 0; i < 100; i++)
+				 {
+					  var linkText = "<a id='link" + i + "'>test2</a>";
+					  container.innerHTML += linkText;
+       
+					  var link = document.getElementById("link" + i);
+					  link.circular = link;     
+				 }
+			}
+
+			window.onload = DripInvisible;
+
+      </script>
+   </head>
+   <body>
+		<p>This page should leak a hundred links.<p>
+      <div id="container"></div>
+   </body>
+</html>

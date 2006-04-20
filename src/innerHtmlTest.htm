@@ -1,0 +1,45 @@
+<html>
+   <head>
+      <title>innerHTML Test</title>
+      <script language="javascript">
+         var preloadCreate, preloadClone;
+         function createAndClone() {
+            preloadCreate = document.createElement("DIV");
+            preloadClone = preloadCreate.cloneNode();
+
+            preloadCreate.id = "preloadCreate";
+            preloadCreate.innerHTML = '<div id="preloadCreate_innerHTML_leak">preloadCreate_innerHTML_leak</div>';
+
+            document.body.appendChild(preloadCreate);
+            document.body.appendChild(preloadClone);
+
+            preloadClone.id = "preloadClone";
+            preloadClone.innerHTML = '<div id="preloadClone_innerHTML_leak">preloadClone_innerHTML_leak</div>';
+
+            var preloadCreateChild = document.createElement("DIV");
+            preloadCreateChild.id = "preloadchild";
+         	preloadCreateChild.appendChild(document.createTextNode('preloadchild'));
+            preloadCreate.appendChild(preloadCreateChild);
+         }
+
+         function createExandoLeak(elem) {
+            elem.expandoLeak = elem;
+         }
+
+         window.onload = function() {
+            var staticElem = document.getElementById("staticElem");
+            staticElem.innerHTML = '<div id="staticElem_innerHTML_leak">staticElem_innerHTML_leak</div>';
+
+            createAndClone();
+
+            createExandoLeak(document.getElementById('staticElem_innerHTML_leak'));
+            createExandoLeak(document.getElementById('preloadchild'));
+            createExandoLeak(document.getElementById('preloadCreate_innerHTML_leak'));
+            createExandoLeak(document.getElementById('preloadClone_innerHTML_leak'));
+         };
+      </script>
+   </head>
+   <body>
+      <div id="staticElem"><EM></EM></div>
+   </body>
+</html>

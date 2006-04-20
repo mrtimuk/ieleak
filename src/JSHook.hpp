@@ -24,9 +24,8 @@ class __declspec(uuid("8340a7f2-413a-46dd-9f95-fbad5d455a90")) IJSHook: public I
 //
 class JSHook: public IJSHook, public ATL::CComObjectRoot {
 private:
-	void addElement(MSHTML::IHTMLElement* elem);
 	void addElement(MSHTML::IHTMLElement* elem, MSHTML::IHTMLDocument2* doc);
-	void addElementRecursively(MSHTML::IHTMLElement* elem);
+	void addElementRecursively(MSHTML::IHTMLElement* elem, MSHTML::IHTMLDocument2* doc);
 	void clearElements();
 
 	std::map<IUnknown*,Elem> m_elements;

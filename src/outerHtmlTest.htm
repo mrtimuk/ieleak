@@ -1,0 +1,42 @@
+<html>
+   <head>
+      <title>outerHTML Test</title>
+      <script language="javascript">
+         var preloadCreate, preloadClone;
+         function createAndClone() {
+            preloadCreate = document.createElement("DIV");
+            preloadClone = preloadCreate.cloneNode();
+
+            // NOTE: It appears that the element must be attached to the body for outerHTML to work
+            preloadCreate.id = "preloadCreate";
+            preloadCreate.outerHTML = '<div id="preloadCreate_outerHTML_leak">preloadCreate_outerHTML_leak</div>';
+
+            document.body.appendChild(preloadCreate);
+            document.body.appendChild(preloadClone);
+
+            preloadClone.id = "preloadClone";
+            preloadClone.outerHTML = '<div id="preloadClone_outerHTML_leak">preloadClone_outerHTML_leak</div>';
+         }
+
+         function createExandoLeak(elem) {
+            elem.expandoLeak = elem;
+         }
+
+         window.onload = function() {
+            var staticElem = document.getElementById("staticElem");
+            staticElem.outerHTML = '<div id="staticElem_outerHTML_leak">staticElem_outerHTML_leak</div>';
+
+            createAndClone();
+
+            createExandoLeak(document.getElementById('staticElem_outerHTML_leak'));
+            // See NOTE above: createExandoLeak(document.getElementById('preloadCreate_outerHTML_leak'));
+            createExandoLeak(document.getElementById('preloadClone_outerHTML_leak'));
+         };
+      </script>
+   </head>
+   <body>
+		<p style="font-weight: bold;">Drip cannot detect memory leaks on elements created with outerHTML.</p>
+      <div id="staticElem"><EM></EM></div>
+   </body>
+</html>
+
