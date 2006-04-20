@@ -117,7 +117,13 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath=".\BrowserDlg.cpp">
+				RelativePath=".\BrowserHostDlg.cpp">
+			</File>
+			<File
+				RelativePath=".\BrowserPopupDlg.cpp">
+			</File>
+			<File
+				RelativePath=".\DlgResizeHelper.cpp">
 			</File>
 			<File
 				RelativePath=".\drip.cpp">
@@ -127,6 +133,9 @@
 			</File>
 			<File
 				RelativePath=".\LeakDlg.cpp">
+			</File>
+			<File
+				RelativePath=".\MainBrowserDlg.cpp">
 			</File>
 			<File
 				RelativePath=".\PropDlg.cpp">
@@ -140,13 +149,22 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
-				RelativePath=".\BrowserDlg.hpp">
+				RelativePath=".\BrowserHostDlg.hpp">
+			</File>
+			<File
+				RelativePath=".\BrowserPopupDlg.hpp">
+			</File>
+			<File
+				RelativePath=".\DlgResizeHelper.h">
 			</File>
 			<File
 				RelativePath=".\JSHook.hpp">
 			</File>
 			<File
 				RelativePath=".\LeakDlg.hpp">
+			</File>
+			<File
+				RelativePath=".\MainBrowserDlg.hpp">
 			</File>
 			<File
 				RelativePath=".\PropDlg.hpp">
@@ -173,6 +191,9 @@
 			</File>
 			<File
 				RelativePath=".\README.txt">
+			</File>
+			<File
+				RelativePath=".\res\rt_manif.bin">
 			</File>
 		</Filter>
 	</Files>

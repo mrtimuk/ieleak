@@ -1,0 +1,16 @@
+<html>
+
+<script>
+function inner_onLoad() {
+	var btn = document.getElementById('btn');
+	btn.onclick = function() {
+		window.alert(btn.id + ' clicked');
+	};
+}
+</script>
+
+<body onload='inner_onLoad()'>
+	<button id='btn'>Inner Button</button>
+	<iframe src='innerInnerFrame.html'></iframe>
+</body>
+</html>

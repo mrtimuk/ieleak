@@ -1,0 +1,17 @@
+<html>
+
+<script>
+function inner_onLoad() {
+	var btn = document.getElementById('btn');
+	btn.onclick = function() {
+		window.alert(btn.id + ' clicked');
+	};
+}
+</script>
+
+<body onload='inner_onLoad()'>
+	<button id='btn'>Inner Inner Button</button>
+
+</body>
+</html>
+

@@ -1,0 +1,26 @@
+<html>
+   <head>
+      <title>Hidden Cell Test</title>
+      <style type="text/css">
+         td#hiddenCell {
+            border: 1px dashed red;
+            padding: 0.5em;
+            display: none;
+         }
+      </style>
+      <script language="javascript">
+         function breakLeak() {
+            document.getElementById('hiddenCell').style.display = 'block';
+         }
+      </script>
+   </head>
+   <body>
+      <p>This page contains a hidden table cell; it should not be reported as a memory leak.</p>
+      <p><input type="button" value="Show Cell" onclick="breakLeak();"/></p>
+      <table>
+         <tr>
+            <td id='hiddenCell'>Padded Cell</td>
+         </tr>
+      </table>
+   </body>
+</html>

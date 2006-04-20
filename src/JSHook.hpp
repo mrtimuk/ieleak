@@ -6,20 +6,10 @@ class CLeakDlg;
 //   along with the URL of the document to which each belongs.
 //
 struct Elem {
-	Elem(IUnknown* unk, BSTR url) {
-		this->unk = unk;
+	Elem(BSTR url) {
 		this->url = url;
 	}
 
-	bool operator<(Elem const& other) const {
-		return (unk < other.unk);
-	}
-
-	bool operator==(Elem const& other) const {
-		return (unk == other.unk);
-	}
-
-	IUnknown*	unk;
 	BSTR		url;
 };
 
@@ -39,7 +29,7 @@ private:
 	void addElementRecursively(MSHTML::IHTMLElement* elem);
 	void clearElements();
 
-	std::set<Elem> m_elements;
+	std::map<IUnknown*,Elem> m_elements;
 
 public:
 	virtual ~JSHook();

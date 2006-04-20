@@ -1,21 +1,13 @@
-Drip -- Memory Leak Detector for Internet Explorer
+Drip -- Memory Leak Detector for Internet Explorer (version 0.3)
 
-I'll call this version, umm...., 0.2 (for wont of a better name).  It basically
-works at this point, allowing you to detect leaked DOM elements in Internet
-Explorer.  For more detailed information, go to jgwebber.blogspot.com, where
-you'll find much more detailed information and discussion.
-
-The included project was built under MSVC 2003, but it should be pretty easy to
-build under just about any non-ancient version.  If you have trouble with it,
-feel free to contact me.
-
-Enjoy!
+This software is distributed under the BSD license included below. The
+source code and compiled binary, as well as further resources, can be found
+at http://www.outofhanwell.com/ieleak/.
 
 -----
 
-I suppose I have to specify a license.  So let's just make it BSD.  Here goes:
-
 Copyright (c) 2005, Joel G. Webber
+Portions of this software are copyright (c) 2005, Matthias Miller.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

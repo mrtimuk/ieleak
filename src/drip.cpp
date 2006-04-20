@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "resource.h"
-#include "BrowserDlg.hpp"
+#include "MainBrowserDlg.hpp"
 
 ATL::CComModule _Module;
 
@@ -11,17 +11,16 @@ public:
 	BOOL InitInstance() {
 		OleInitialize(NULL);
 		AfxEnableControlContainer();
+		InitCommonControls();
 
 		// Create the main dialog and display it.  The application
 		//   will end when this dialog is closed.
 		//
-		CBrowserDlg* dlg = new CBrowserDlg();
-		dlg->Create(CBrowserDlg::IDD);
-		dlg->ShowWindow(SW_SHOWNORMAL);
-		dlg->SetForegroundWindow();
-		m_pMainWnd = dlg;
+		CMainBrowserDlg dlg;
+		m_pMainWnd = &dlg;
+		dlg.DoModal();
 
-		return TRUE;
+		return FALSE;
 	}
 
 	int ExitInstance() {

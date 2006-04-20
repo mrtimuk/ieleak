@@ -77,7 +77,19 @@ void JSHook::addElement(MSHTML::IHTMLElement* elem, MSHTML::IHTMLDocument2* doc)
 	//
 	IUnknown* unk = NULL;
 	elem->QueryInterface(IID_IUnknown, (void**)&unk);
-	m_elements.insert(Elem(unk, SysAllocString(doc->url)));
+
+	// Do not register the element twice; doing so will cause it to be incorrectly reported as a leak.
+	// This happens when an element is created by createElement and is added to the DOM before the DOM
+	// is traversed. (Note that the createElement hook must be in place immediately in case the caller
+	// saves a references to the element and adds it to the DOM after the page is loaded.) 
+	//
+	if (m_elements.find(unk) == m_elements.end()) {
+		Elem cachedElem(SysAllocString(doc->url));
+		m_elements.insert(std::pair<IUnknown*,Elem>(unk,cachedElem));
+	}
+	else {
+		unk->Release();
+	}
 }
 
 // This method is called when a document is finished loading.  It will hook the
@@ -93,6 +105,19 @@ void JSHook::hookNewPage(MSHTML::IHTMLDocument2Ptr doc) {
 		L"function __drip_replaceCreateElement(jsHook) {"
 		L"  var oldCE = document.createElement;"
 		L"  document.createElement = function(tag) {"
+		L"    var elem = oldCE(tag);"
+		L"    jsHook.logElement(elem, document);"
+		L"    return elem;"
+		L"  };"
+		L"}",
+		L"javascript");
+
+	// Create a temporary function to hook cloneNode().
+	//
+	wnd->execScript(
+		L"function __drip_replaceCloneNode(jsHook) {"
+		L"  var oldCE = document.cloneNode;"
+		L"  document.cloneNode = function(tag) {"
 		L"    var elem = oldCE(tag);"
 		L"    jsHook.logElement(elem, document);"
 		L"    return elem;"
@@ -122,6 +147,12 @@ void JSHook::hookNewPage(MSHTML::IHTMLDocument2Ptr doc) {
 	SysFreeString(name);
 
 	scriptObj->Invoke(dispId, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &params, NULL, NULL, NULL);
+
+	name = SysAllocString(L"__drip_replaceCloneNode");
+	scriptObj->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_SYSTEM_DEFAULT, &dispId);
+	SysFreeString(name);
+	scriptObj->Invoke(dispId, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &params, NULL, NULL, NULL);
+
 	VariantClear(&vHook);
 }
 
@@ -155,20 +186,21 @@ void JSHook::showLeaks(MSHTML::IHTMLWindow2Ptr wnd, CLeakDlg* dlg) {
 	//
 	wnd->execScript(L"window.CollectGarbage()", L"javascript");
 
-	for (std::set<Elem>::const_iterator it = m_elements.begin(); it != m_elements.end(); ++it) {
-		Elem const& elem = *it;
+	for (std::map<IUnknown*,Elem>::const_iterator it = m_elements.begin(); it != m_elements.end(); ++it) {
+		IUnknown *unk = it->first;
+		Elem const& elem = it->second;
 
 		// For each element, AddRef() and Release() it.  The latter method will return
 		//   the current ref count.
 		//
-		elem.unk->AddRef();
-		int refCount = elem.unk->Release();
+		unk->AddRef();
+		int refCount = unk->Release();
 
 		// If any references (other than the one that we hold) are outstanding, then
 		//   the element has been leaked.
 		//
 		if (refCount > 1)
-			dlg->addElement(elem.unk, elem.url, refCount - 1);
+			dlg->addElement(unk, elem.url, refCount - 1);
 	}
 
 	// When finished, clear the element list.
@@ -185,13 +217,14 @@ bool JSHook::hasElements() {
 // Clear all elements in the hook.
 //
 void JSHook::clearElements() {
-	for (std::set<Elem>::const_iterator it = m_elements.begin(); it != m_elements.end(); ++it) {
-		Elem const& elem = *it;
+	for (std::map<IUnknown*,Elem>::const_iterator it = m_elements.begin(); it != m_elements.end(); ++it) {
+		IUnknown *unk = it->first;
+		Elem const& elem = it->second;
 
 		// Release the URL string and the element.
 		//
 		SysFreeString(elem.url);
-		elem.unk->Release();
+		unk->Release();
 	}
 
 	m_elements.clear();
