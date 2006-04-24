@@ -37,3 +37,11 @@
 #include <vector>
 #include <set>
 #include <map>
+
+// See http://forums.microsoft.com/msdn/showpost.aspx?postid=8663&siteid=1
+// Handle the changes in OnNcHitTest's return value
+#if _MSC_VER >= 1400
+ typedef LRESULT NCHITTEST_RESULT;
+#else
+ typedef UINT NCHITTEST_RESULT;
+#endif

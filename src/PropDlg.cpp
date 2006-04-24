@@ -154,9 +154,9 @@ void CPropDlg::OnPaint() {
 	m_resizeHelper.OnGripperPaint();
 }
 
-LRESULT CPropDlg::OnNcHitTest(CPoint point)
+NCHITTEST_RESULT CPropDlg::OnNcHitTest(CPoint point)
 {
-	LRESULT ht = CDialog::OnNcHitTest(point);
+	NCHITTEST_RESULT ht = CDialog::OnNcHitTest(point);
 	m_resizeHelper.OnGripperNcHitTest(point, ht);
 	return ht;
 }

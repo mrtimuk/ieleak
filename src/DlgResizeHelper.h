@@ -69,7 +69,7 @@ public:
   void OnSize();
 
   void OnGripperPaint();
-  void OnGripperNcHitTest(CPoint point, IN OUT LRESULT& ht);
+  void OnGripperNcHitTest(CPoint point, IN OUT NCHITTEST_RESULT& ht);
 
 private:
   struct CtrlSize {

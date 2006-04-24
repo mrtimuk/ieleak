@@ -76,9 +76,9 @@ void CLeakDlg::OnPaint() {
 	m_resizeHelper.OnGripperPaint();
 }
 
-LRESULT CLeakDlg::OnNcHitTest(CPoint point)
+NCHITTEST_RESULT CLeakDlg::OnNcHitTest(CPoint point)
 {
-	LRESULT ht = CDialog::OnNcHitTest(point);
+	NCHITTEST_RESULT ht = CDialog::OnNcHitTest(point);
 	m_resizeHelper.OnGripperNcHitTest(point, ht);
 	return ht;
 }
