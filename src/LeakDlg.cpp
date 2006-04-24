@@ -2,7 +2,7 @@
 #include "resource.h"
 #include "LeakDlg.hpp"
 #include "PropDlg.hpp"
-#include ".\leakdlg.hpp"
+#include "leakdlg.hpp"
 #include <afxtempl.h>
 
 CLeakDlg::CLeakDlg(CWnd* pParent) : CDialog(CLeakDlg::IDD, pParent) {
@@ -76,9 +76,9 @@ void CLeakDlg::OnPaint() {
 	m_resizeHelper.OnGripperPaint();
 }
 
-UINT CLeakDlg::OnNcHitTest(CPoint point)
+LRESULT CLeakDlg::OnNcHitTest(CPoint point)
 {
-	UINT ht = CDialog::OnNcHitTest(point);
+	LRESULT ht = CDialog::OnNcHitTest(point);
 	m_resizeHelper.OnGripperNcHitTest(point, ht);
 	return ht;
 }
@@ -129,7 +129,7 @@ void CLeakDlg::populateLeaks() {
 		MSHTML::IHTMLElementPtr elem = entry.elem;
 
 		wchar_t refCountText[32];
-		_itow(entry.refCount, refCountText, 10);
+		wsprintf(refCountText, L"%d", entry.refCount);
 
 		m_leakList.InsertItem(idx, entry.url);
 		m_leakList.SetItemText(idx, 1, refCountText);
