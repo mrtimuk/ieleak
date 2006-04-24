@@ -136,7 +136,7 @@ void DlgResizeHelper::OnGripperPaint()
   }
 }
 
-void DlgResizeHelper::OnGripperNcHitTest(CPoint point, IN OUT UINT& ht)
+void DlgResizeHelper::OnGripperNcHitTest(CPoint point, IN OUT LRESULT& ht)
 {
   // If it was in the client area...
   if(ht == HTCLIENT && !IsZoomed(m_hParent))
