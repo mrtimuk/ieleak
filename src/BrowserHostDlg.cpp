@@ -6,6 +6,7 @@
 #include "JSHook.hpp"
 #include "WebBrowser2.hpp"
 #include "resource.h"
+
 #include <exdisp.h>
 #include <exdispid.h>
 
@@ -15,6 +16,10 @@ IMPLEMENT_DYNAMIC(CBrowserHostDlg, CDialog)
 CBrowserHostDlg::CBrowserHostDlg(UINT explorerCtrlID, UINT nIDTemplate, CWnd* pParent /*=NULL*/)
 	: CDialog(nIDTemplate, pParent) {
 	m_explorer = new CWebBrowser2;
+
+	//fixing a weird compiler warning on END_EVENTSINK_MAP() -- something like:
+	//#pragma warning(pop) without a push
+	#pragma warning(push)
 
 	// The event sink is complicated somewhat by the fact that the ID of the web browser control is not known
 	// until the class is instantiated.
