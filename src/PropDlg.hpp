@@ -29,7 +29,7 @@ public:
 	virtual void DoDataExchange(CDataExchange* pDX);
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
-	afx_msg UINT OnNcHitTest(CPoint point);
+	afx_msg LRESULT OnNcHitTest(CPoint point);
 	afx_msg void OnClose();
 	afx_msg void OnDestroy();
 	afx_msg void OnOk();

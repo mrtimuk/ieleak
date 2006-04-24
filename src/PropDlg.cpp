@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "resource.h"
 #include "PropDlg.hpp"
-#include ".\propdlg.hpp"
+#include "propdlg.hpp"
 #include <afxtempl.h>
 
 CPropDlg::CPropDlg(CStringW titleDesc, CWnd* pParent) : CDialog(CPropDlg::IDD, pParent) {
@@ -154,9 +154,9 @@ void CPropDlg::OnPaint() {
 	m_resizeHelper.OnGripperPaint();
 }
 
-UINT CPropDlg::OnNcHitTest(CPoint point)
+LRESULT CPropDlg::OnNcHitTest(CPoint point)
 {
-	UINT ht = CDialog::OnNcHitTest(point);
+	LRESULT ht = CDialog::OnNcHitTest(point);
 	m_resizeHelper.OnGripperNcHitTest(point, ht);
 	return ht;
 }
