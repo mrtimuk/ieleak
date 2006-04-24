@@ -17,7 +17,7 @@ void GetMemoryUsage(wchar_t *pszUsage)
 	procMem.cb = sizeof(PROCESS_MEMORY_COUNTERS);
 	GetProcessMemoryInfo(GetCurrentProcess(), &procMem, procMem.cb);
 
-	_itow((int)procMem.WorkingSetSize, pszUsage, 10);
+	wsprintf(pszUsage, L"%d", procMem.WorkingSetSize);
 }
 
 BEGIN_MESSAGE_MAP(CMainBrowserDlg, CBrowserHostDlg)
