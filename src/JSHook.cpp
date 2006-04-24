@@ -227,9 +227,8 @@ void JSHook::hookNewPage(MSHTML::IHTMLDocument2Ptr doc) {
 	CComPtr<IDispatch> scriptObj = doc->Script;
 
 	DISPID dispId;
-	OLECHAR *name = SysAllocString(L"__drip_initHook");
+	CComBSTR name("__drip_initHook");
 	scriptObj->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_SYSTEM_DEFAULT, &dispId);
-	SysFreeString(name);
 
 	scriptObj->Invoke(dispId, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &params, NULL, NULL, NULL);
 
