@@ -255,7 +255,7 @@ END
 // RT_MANIFEST
 //
 
-//1                       RT_MANIFEST             "res\\rt_manif.bin"
+1                       RT_MANIFEST             "res\\rt_manif.bin"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
