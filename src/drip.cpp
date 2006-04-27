@@ -2,6 +2,8 @@
 #include "resource.h"
 #include "MainBrowserDlg.hpp"
 
+#include "nanocppunit/test.h"
+
 ATL::CComModule _Module;
 
 // The main drip application.
@@ -12,6 +14,14 @@ public:
 		OleInitialize(NULL);
 		AfxEnableControlContainer();
 		InitCommonControls();
+
+#ifdef TEST
+
+		bool result (runAllTests());
+		if (!result)
+			return result;
+
+#endif //#ifdef TEST
 
 		// Create the main dialog and display it.  The application
 		//   will end when this dialog is closed.
