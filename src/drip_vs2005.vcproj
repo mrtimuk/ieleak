@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;TEST"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -77,6 +77,8 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				EmbedManifest="false"
+				VerboseOutput="false"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -213,7 +215,33 @@
 				>
 			</File>
 			<File
+				RelativePath=".\UnitTests\MemoryUsageTest.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\PropDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\NanoCppUnit\test.cpp"
 				>
 			</File>
 			<File
@@ -235,6 +263,17 @@
 				>
 			</File>
 			<File
+				RelativePath=".\NanoCppUnit\debug.h"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\DlgResizeHelper.h"
 				>
 			</File>
@@ -251,6 +290,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\UnitTests\MemoryUsageTest.h"
+				>
+			</File>
+			<File
 				RelativePath=".\PropDlg.hpp"
 				>
 			</File>
@@ -260,6 +303,10 @@
 			</File>
 			<File
 				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\NanoCppUnit\test.h"
 				>
 			</File>
 			<File
@@ -282,6 +329,11 @@
 			</File>
 			<File
 				RelativePath=".\README.txt"
+				>
+			</File>
+			<File
+				RelativePath=".\res\rt_manif.bin"
+				DeploymentContent="true"
 				>
 			</File>
 		</Filter>
