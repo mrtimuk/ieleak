@@ -3,8 +3,6 @@
 
 #include "stdafx.h"
 #include "BrowserPopupDlg.hpp"
-#include "JSHook.hpp"
-
 
 
 // CBrowserPopupDlg dialog
