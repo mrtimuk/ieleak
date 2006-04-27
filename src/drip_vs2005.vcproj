@@ -306,6 +306,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\UnitTests\stdafx.h"
+				>
+			</File>
+			<File
 				RelativePath=".\NanoCppUnit\test.h"
 				>
 			</File>
