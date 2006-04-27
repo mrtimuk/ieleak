@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #ifdef TEST
+
 //  a lite test rig
 
 
