@@ -1,5 +1,5 @@
 #pragma once
-#include "d:\work\drip\nanocppunit\test.h"
+#include "..\nanocppunit\test.h"
 
 #ifdef TEST
 
