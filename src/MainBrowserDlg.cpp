@@ -10,16 +10,6 @@
 #define TIMER_MONITOR_MEMORY	1
 #define TIMER_CHECK_LEAKS	2
 
-void GetMemoryUsage(wchar_t *pszUsage)
-{
-	PROCESS_MEMORY_COUNTERS procMem;
-	memset(&procMem, 0, sizeof(PROCESS_MEMORY_COUNTERS));
-	procMem.cb = sizeof(PROCESS_MEMORY_COUNTERS);
-	GetProcessMemoryInfo(GetCurrentProcess(), &procMem, procMem.cb);
-
-	wsprintf(pszUsage, L"%d", procMem.WorkingSetSize);
-}
-
 BEGIN_MESSAGE_MAP(CMainBrowserDlg, CBrowserHostDlg)
 	//{{AFX_MSG_MAP(CMainBrowserDlg)
 	ON_WM_PAINT()
@@ -60,8 +50,20 @@ CMainBrowserDlg::~CMainBrowserDlg() {
 	m_hook->Release();
 }
 
+
+void CMainBrowserDlg::GetMemoryUsage(wchar_t *pszUsage)
+{
+	PROCESS_MEMORY_COUNTERS procMem;
+	memset(&procMem, 0, sizeof(PROCESS_MEMORY_COUNTERS));
+	procMem.cb = sizeof(PROCESS_MEMORY_COUNTERS);
+	GetProcessMemoryInfo(GetCurrentProcess(), &procMem, procMem.cb);
+
+	wsprintf(pszUsage, L"%d", procMem.WorkingSetSize);
+}
+
 void CMainBrowserDlg::DoDataExchange(CDataExchange* pDX) {
 	CBrowserHostDlg::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_CURRENT_MEMORY_EDIT, m_CurrentMemoryBox);
 }
 
 BOOL CMainBrowserDlg::OnInitDialog() {
@@ -187,7 +189,7 @@ void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent) {
 		case TIMER_MONITOR_MEMORY:
 			wchar_t memText[32];
 			GetMemoryUsage(memText);
-			GetDlgItem(IDC_CURRENT_MEMORY_EDIT)->SendMessage(WM_SETTEXT, 0, (LPARAM)memText);
+			m_CurrentMemoryBox.SetWindowText(memText);
 			break;
 
 		case TIMER_CHECK_LEAKS:

@@ -3,6 +3,7 @@
 #include "resource.h"
 #include "DlgResizeHelper.h"
 #include "BrowserHostDlg.hpp"
+#include "afxwin.h"
 
 // Forward declaration
 class CBrowserPopupDlg;
@@ -62,4 +63,9 @@ public:
 	virtual void onTitleChange(LPCTSTR lpszText);
 	virtual void onOuterDocumentLoad(MSHTML::IHTMLDocument2Ptr doc);
 	virtual void onNewWindow(CBrowserHostDlg** ppDlg);
+
+public:
+	static void GetMemoryUsage(wchar_t *pszUsage);
+public:
+	CEdit m_CurrentMemoryBox;
 };
