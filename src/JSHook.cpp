@@ -3,9 +3,9 @@
 #include "LeakDlg.hpp"
 
 JSHook::~JSHook() {
-	// When the hook is destroyed, make sure all elements are released.
+	// When the hook is destroyed, make sure all nodes are released.
 	//
-	clearElements();
+	clearNodes();
 }
 
 // IDispatch
@@ -23,11 +23,11 @@ STDMETHODIMP JSHook::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo) {
 }
 
 STDMETHODIMP JSHook::GetIDsOfNames(REFIID iid, OLECHAR **names, UINT nameCount, LCID lcid, DISPID *dispIds) {
-	// The only member is 'logElement'.
+	// The only member is 'logNode'.
 	//
 	bool failed = false;
 	for (int i = 0; i < (int)nameCount; ++i) {
-		if (!wcscmp(names[i], L"logElement"))
+		if (!wcscmp(names[i], L"logNode"))
 			dispIds[i] = 0;
 		else {
 			dispIds[i] = -1;
@@ -44,7 +44,7 @@ STDMETHODIMP JSHook::Invoke(DISPID dispId, REFIID riid, LCID lcid, WORD flags, D
 	if (dispId == -1)
 		return DISP_E_MEMBERNOTFOUND;
 
-	// logElement() takes three arguments, elem, doc, and recurse.
+	// logNode() takes three arguments, node, doc, and recurse.
 	//
 	if (dispParams->cArgs != 3)
 		return DISP_E_BADPARAMCOUNT;
@@ -54,50 +54,48 @@ STDMETHODIMP JSHook::Invoke(DISPID dispId, REFIID riid, LCID lcid, WORD flags, D
 		dispParams->rgvarg[2].vt != VT_DISPATCH)
 		return DISP_E_BADVARTYPE;
 
-	// Get the document and element, and add the element to the list.
+	// Get the document and node, and add the node to the list.
 	//
 	BOOL recurse = dispParams->rgvarg[0].boolVal;
 	MSHTML::IHTMLDocument2Ptr doc = dispParams->rgvarg[1].pdispVal;
-	MSHTML::IHTMLElementPtr elem = dispParams->rgvarg[2].pdispVal;
+	MSHTML::IHTMLDOMNodePtr node = dispParams->rgvarg[2].pdispVal;
 
-	if (elem) {
+	if (node) {
 		if (recurse)
-			addElementRecursively(elem, doc);
+			addNodeRecursively(node, doc);
 		else
-			addElement(elem, doc);
+			addNode(node, doc);
 	}
 	return S_OK;
 }
 
-// Add an element to the hook's list.  The element's URL will be retrieved from
+// Add an node to the hook's list.  The node's URL will be retrieved from
 //  the specified document.
 //
-void JSHook::addElement(MSHTML::IHTMLElement* elem, MSHTML::IHTMLDocument2* doc) {
-	// In order to ensure that we maintain a durable reference to the element (as
+void JSHook::addNode(MSHTML::IHTMLDOMNode* node, MSHTML::IHTMLDocument2* doc) {
+	// In order to ensure that we maintain a durable reference to the node (as
 	//   opposed to a tear-off interface), we have to query for IUnknown.
 	//
 	IUnknown* unk = NULL;
-	elem->QueryInterface(IID_IUnknown, (void**)&unk);
+	node->QueryInterface(IID_IUnknown, (void**)&unk);
 
-	// Do not register the element twice; doing so will cause it to be incorrectly reported as a leak.
-	// This happens when an element is created by createElement and is added to the DOM before the DOM
+	// Do not register the node twice; doing so will cause it to be incorrectly reported as a leak.
+	// This happens when an node is created by createElement and is added to the DOM before the DOM
 	// is traversed. (Note that the createElement hook must be in place immediately in case the caller
 	// saves a references to the element and adds it to the DOM after the page is loaded.) 
 	//
-	if (m_elements.find(unk) == m_elements.end()) {
-		Elem cachedElem(SysAllocString(doc->url));
-		m_elements.insert(std::pair<IUnknown*,Elem>(unk,cachedElem));
+	if (m_nodes.find(unk) == m_nodes.end()) {
+		Node cachedNode(SysAllocString(doc->url));
+		m_nodes.insert(std::pair<IUnknown*,Node>(unk,cachedNode));
 
-		_bstr_t sz = elem->innerHTML;
-
-		// Create a temporary parameter list to pass the element to the script, 
+		// Create a temporary parameter list to pass the node to the script, 
 		// in order to so attach events and override functions
 		//
 		VARIANT vHook;
 		VariantInit(&vHook);
 		vHook.vt = VT_DISPATCH;
-		vHook.pdispVal = elem;
-		elem->AddRef();
+		vHook.pdispVal = node;
+		node->AddRef();
 
 		DISPPARAMS params;
 		memset(&params, 0, sizeof(DISPPARAMS));
@@ -138,7 +136,7 @@ void JSHook::hookNewPage(MSHTML::IHTMLDocument2Ptr doc) {
 		L"  var oldCE = document.createElement;"
 		L"  document.createElement = function(tag) {"
 		L"    var elem = oldCE(tag);"
-		L"    jsHook.logElement(elem, document, false);"
+		L"    jsHook.logNode(elem, document, false);"
 		L"    return elem;"
 		L"  };"
 		L"  var oldCDF = document.createDocumentFragment;"
@@ -151,42 +149,43 @@ void JSHook::hookNewPage(MSHTML::IHTMLDocument2Ptr doc) {
 		L""
 		L"function __drip_onPropertyChange() {"
 		L"  if (window.event.propertyName == 'innerHTML') {"
-		L"    __drip_jsHook.logElement(window.event.srcElement, document, true);"
+		L"    __drip_jsHook.logNode(window.event.srcElement, document, true);"
 		L"  }"
 		L"}"
 		L""
 		L"function __drip_cloneNode(child) {"
 		L"	var elem = this.__drip_native_cloneNode(child);"
-		L"	__drip_jsHook.logElement(elem, document, true);"
+		L"	__drip_jsHook.logNode(elem, document, true);"
 		L"  return elem;"
 		L"}"
 		L""
 		L"function __drip_appendChild(child) {"
 		L"	var elem = this.__drip_native_appendChild(child);"
-		L"	__drip_jsHook.logElement(elem, document, true);"
+		L"	__drip_jsHook.logNode(elem, document, true);"
 		L"  return elem;"
 		L"}"
 		L""
 		L"function __drip_insertBefore(oNewNode, oChildNode) {"
 		L"	var elem = this.__drip_native_insertBefore(oNewNode, oChildNode);"
-		L"	__drip_jsHook.logElement(elem, document, true);"
+		L"	__drip_jsHook.logNode(elem, document, true);"
 		L"  return elem;"
 		L"}"
 		L""
 		L"function __drip_insertAdjacentElement(sWhere, oElement) {"
 		L"	var elem = this.__drip_native_insertAdjacentElement(sWhere, oElement);"
-		L"	__drip_jsHook.logElement(elem.parentNode || elem, document, true);"
+		L"	__drip_jsHook.logNode(elem.parentNode || elem, document, true);"
 		L"  return elem;"
 		L"}"
 		L""
 		L"function __drip_insertAdjacentHTML(sWhere, sText) {"
 		L"	this.__drip_native_insertAdjacentHTML(sWhere, sText);"
-		L"	__drip_jsHook.logElement(this.parentNode || this, document, true);"
+		L"	__drip_jsHook.logNode(this.parentNode || this, document, true);"
 		L"}"
 		L""
  		L"function __drip_hookEvents(elem) {"
 		L"  /* NOTE: don't double-register functions */"
 		L"  if (elem.__drip_hooked) return;"
+		L"  if (elem.nodeType != 1/*ELEMENT*/ && elem.nodeType != 11/*Document Fragment*/) return;"
 		L""
 		L"  elem.attachEvent('onpropertychange', __drip_onPropertyChange);"
 		L""
@@ -237,24 +236,21 @@ void JSHook::hookNewPage(MSHTML::IHTMLDocument2Ptr doc) {
 
 // Add all elements recursively from a given root element.
 //
-void JSHook::addElementRecursively(MSHTML::IHTMLElement* elem, MSHTML::IHTMLDocument2* doc) {
-	addElement(elem, doc);
+void JSHook::addNodeRecursively(MSHTML::IHTMLDOMNode* node, MSHTML::IHTMLDocument2* doc) {
+	addNode(node, doc);
 
-	MSHTML::IHTMLDOMNodePtr node = elem;
 	MSHTML::IHTMLDOMNodePtr child = node->firstChild;
 	while (child) {
-		MSHTML::IHTMLElementPtr childElem = child;
-		if (childElem)
-			addElementRecursively(childElem, doc);
+		addNodeRecursively(child, doc);
 		child = child->nextSibling;
 	}
 }
 
 // Add all elements within a window, starting with its document's body.
 //
-void JSHook::addStaticElements(MSHTML::IHTMLWindow2Ptr wnd) {
-	MSHTML::IHTMLElementPtr body = wnd->document->body;
-	addElementRecursively(body, wnd->document);
+void JSHook::addStaticNodes(MSHTML::IHTMLWindow2Ptr wnd) {
+   MSHTML::IHTMLDOMNodePtr docNode = wnd->document;
+	addNodeRecursively(docNode, wnd->document);
 }
 
 // Collect all leaked elements, passing them to the specified leak dialog.
@@ -265,46 +261,46 @@ void JSHook::showLeaks(MSHTML::IHTMLWindow2Ptr wnd, CLeakDlg* dlg) {
 	//
 	wnd->execScript(L"window.CollectGarbage()", L"javascript");
 
-	for (std::map<IUnknown*,Elem>::const_iterator it = m_elements.begin(); it != m_elements.end(); ++it) {
+	for (std::map<IUnknown*,Node>::const_iterator it = m_nodes.begin(); it != m_nodes.end(); ++it) {
 		IUnknown *unk = it->first;
-		Elem const& elem = it->second;
+		Node const& node = it->second;
 
-		// For each element, AddRef() and Release() it.  The latter method will return
+		// For each node, AddRef() and Release() it.  The latter method will return
 		//   the current ref count.
 		//
 		unk->AddRef();
 		int refCount = unk->Release();
 
 		// If any references (other than the one that we hold) are outstanding, then
-		//   the element has been leaked.
+		//   the node has been leaked.
 		//
 		if (refCount > 1)
-			dlg->addElement(unk, elem.url, refCount - 1);
+			dlg->addNode(unk, node.url, refCount - 1);
 	}
 
-	// When finished, clear the element list.
+	// When finished, clear the node list.
 	//
-	clearElements();
+	clearNodes();
 }
 
-// Returns true if the hook contains any elements.
+// Returns true if the hook contains any nodes.
 //
-bool JSHook::hasElements() {
-	return (m_elements.size() > 0);
+bool JSHook::hasNodes() {
+	return (m_nodes.size() > 0);
 }
 
-// Clear all elements in the hook.
+// Clear all nodes in the hook.
 //
-void JSHook::clearElements() {
-	for (std::map<IUnknown*,Elem>::const_iterator it = m_elements.begin(); it != m_elements.end(); ++it) {
+void JSHook::clearNodes() {
+	for (std::map<IUnknown*,Node>::const_iterator it = m_nodes.begin(); it != m_nodes.end(); ++it) {
 		IUnknown *unk = it->first;
-		Elem const& elem = it->second;
+		Node const& node = it->second;
 
-		// Release the URL string and the element.
+		// Release the URL string and the node.
 		//
-		SysFreeString(elem.url);
+		SysFreeString(node.url);
 		unk->Release();
 	}
 
-	m_elements.clear();
+	m_nodes.clear();
 }

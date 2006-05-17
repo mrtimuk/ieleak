@@ -97,24 +97,24 @@ void CLeakDlg::OnDestroy() {
 	clearLeaks();
 }
 
-// Adds an element to the leak list, including its document URL and ref count.
+// Adds an node to the leak list, including its document URL and ref count.
 //
-void CLeakDlg::addElement(IUnknown* elem, BSTR url, int refCount) {
-	// Add a reference to the element, and allocate a copy of the URL string.
+void CLeakDlg::addNode(IUnknown* node, BSTR url, int refCount) {
+	// Add a reference to the node, and allocate a copy of the URL string.
 	//
-	elem->AddRef();
-	m_leaks.push_back(LeakEntry(elem, SysAllocString(url), refCount));
+	node->AddRef();
+	m_leaks.push_back(LeakEntry(node, SysAllocString(url), refCount));
 }
 
 // Clear all leaks.
 //
 void CLeakDlg::clearLeaks() {
 	for (std::vector<LeakEntry>::const_iterator it = m_leaks.begin(); it != m_leaks.end(); ++it) {
-		// Release the leaked element and free its associated document URL.
-		//   (of course, since this element is over-referenced, it won't actually get freed
+		// Release the leaked node and free its associated document URL.
+		//   (of course, since this node is over-referenced, it won't actually get freed
 		//   properly, but we're doing our part, at least!)
 		//
-		it->elem->Release();
+		it->node->Release();
 		SysFreeString(it->url);
 	}
 	m_leaks.clear();
@@ -126,17 +126,24 @@ void CLeakDlg::populateLeaks() {
 	int idx = 0;
 	for (std::vector<LeakEntry>::const_iterator it = m_leaks.begin(); it != m_leaks.end(); ++it, ++idx) {
 		LeakEntry const& entry = *it;
-		MSHTML::IHTMLElementPtr elem = entry.elem;
 
 		wchar_t refCountText[32];
 		wsprintf(refCountText, L"%d", entry.refCount);
 
 		m_leakList.InsertItem(idx, entry.url);
 		m_leakList.SetItemText(idx, 1, refCountText);
-		m_leakList.SetItemText(idx, 2, elem->tagName);
-		m_leakList.SetItemText(idx, 3, elem->id);
-		m_leakList.SetItemText(idx, 4, elem->innerHTML);
-		IHTMLElementPtr parentElement = elem->parentElement;
+
+		MSHTML::IHTMLElementPtr elem = entry.node;
+		if (elem) {
+			m_leakList.SetItemText(idx, 2, elem->tagName);
+			m_leakList.SetItemText(idx, 3, elem->id);
+			m_leakList.SetItemText(idx, 4, elem->innerHTML);
+		}
+		else {
+			m_leakList.SetItemText(idx, 2, L"(?)");
+			m_leakList.SetItemText(idx, 3, L"(?)");
+			m_leakList.SetItemText(idx, 4, L"(?)");
+		}
 	}
 	if (m_leakList.GetItemCount() > 0)
 		m_leakList.SetItemState(0, LVIS_SELECTED, LVIS_SELECTED);
@@ -181,7 +188,7 @@ void CLeakDlg::showItemProperties(UINT nItem)
 	ASSERT(nItem != -1);
 
 	LeakEntry& entry = m_leaks.at(nItem);
-	CComQIPtr<IDispatchEx> disp = entry.elem;
+	CComQIPtr<IDispatchEx> disp = entry.node;
 
 	CPropDlg propDlg(CStringW(L"Memory Leak in ") + entry.url, this);
 	propDlg.setObject(disp);
@@ -234,7 +241,7 @@ void CLeakDlg::CopySelectedItems()
 		
 		// Load object properties
 		LeakEntry& entry = m_leaks.at(iCurrentItem);
-		GetObjectProperties((CComQIPtr<IDispatchEx>)entry.elem, aDispIDs, asNames, asValues);
+		GetObjectProperties((CComQIPtr<IDispatchEx>)entry.node, aDispIDs, asNames, asValues);
 
 		// Serialize object
 		CStringW header;

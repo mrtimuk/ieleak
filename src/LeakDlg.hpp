@@ -3,22 +3,22 @@
 #include "resource.h"
 #include "DlgResizeHelper.h"
 
-// This structure is used to keep track of leaked elements, the URL of their
+// This structure is used to keep track of leaked nodes, the URL of their
 //  documents, and the number of references left outstanding.
 //
 struct LeakEntry {
-	LeakEntry(IUnknown* elem, BSTR url, int refCount) {
-		this->elem = elem;
+	LeakEntry(IUnknown* node, BSTR url, int refCount) {
+		this->node = node;
 		this->url = url;
 		this->refCount = refCount;
 	}
 
-	IUnknown*	elem;
+	IUnknown*	node;
 	BSTR		url;
 	int			refCount;
 };
 
-// The dialog box for displaying all leaked elements.
+// The dialog box for displaying all leaked nodes.
 //
 class CLeakDlg : public CDialog {
 private:
@@ -34,7 +34,7 @@ private:
 
 public:
 	CLeakDlg(CWnd* pParent = NULL);
-	void addElement(IUnknown* elem, BSTR url, int refCount);
+	void addNode(IUnknown* node, BSTR url, int refCount);
 
 	DECLARE_MESSAGE_MAP()
 

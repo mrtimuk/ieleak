@@ -129,7 +129,7 @@ void CBrowserHostDlg::Event_DocumentCompleteExplorer(LPDISPATCH pDisp, VARIANT* 
 	// If we're waiting for a normal document, hook all of its static elements.
 	//
 	if (isHookActive())
-		getHook()->addStaticElements(doc->parentWindow);
+		getHook()->addStaticNodes(doc->parentWindow);
 
 	// Determine whether the completed document is the outer one that we are
 	//   actually waiting on (by comparing its URL with the outer browser's).
