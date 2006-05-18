@@ -13,7 +13,7 @@ function __drip_initHook(jsHook) {
     var elem = oldCDF();
     __drip_hookEvents(elem);
     return elem;
-  }
+  };
 }
 
 function __drip_onPropertyChange() {
@@ -22,57 +22,80 @@ function __drip_onPropertyChange() {
   }
 }
 
-function __drip_cloneNode(child) {
-	var elem = this.__drip_native_cloneNode(child);
-	__drip_jsHook.logNode(elem, document, true);
-  return elem;
+function __drip_onFunctionCall(obj, functionName, returnValue) {
+  switch (functionName)
+  {
+  case 'cloneNode':
+  case 'appendChild':
+  case 'insertBefore':
+    __drip_jsHook.logNode(returnValue, document, true);
+    break;
+
+  case 'insertAdjacentElement':
+    __drip_jsHook.logNode(returnValue.parentNode || returnValue, document, true);
+    break;
+
+  case 'insertAdjacentHTML':
+    __drip_jsHook.logNode(obj.parentNode || obj, document, true);
+    break;
+
+  default:
+    break;
+  }
 }
 
-function __drip_appendChild(child) {
-	var elem = this.__drip_native_appendChild(child);
-	__drip_jsHook.logNode(elem, document, true);
-  return elem;
+function __drip_safeSetObjectProperty(obj, name, value)
+{
+  try
+  {
+    obj[name] = value;
+  }
+  catch (err)
+  {
+    // an exception may be thrown if the script does not have permission to attach
+  }
 }
 
-function __drip_insertBefore(oNewNode, oChildNode) {
-	var elem = this.__drip_native_insertBefore(oNewNode, oChildNode);
-	__drip_jsHook.logNode(elem, document, true);
-  return elem;
-}
+/* This function attaches to a native function and triggers a notification when it gets called.
+ * NOTE: This function allows only a limited number of parameters.
+ */
+function __drip_captureFunction(obj, functionName) {
+  /* override the function and clear the reference to the object (to avoid memory leak) */
+  var nativeFunction = obj[functionName];
+  if (typeof nativeFunction !== 'undefined')
+    __drip_safeSetObjectProperty(obj, functionName, override);
+  obj = void 0;
 
-function __drip_insertAdjacentElement(sWhere, oElement) {
-	var elem = this.__drip_native_insertAdjacentElement(sWhere, oElement);
-	__drip_jsHook.logNode(elem.parentNode || elem, document, true);
-  return elem;
-}
+  function override(arg1, arg2, arg3) {
+    /* Because of the self-altering nature of the overridden functions, the value
+     * of "this" must be preserved for the callback notification
+     */
+    var self = this;
 
-function __drip_insertAdjacentHTML(sWhere, sText) {
-	this.__drip_native_insertAdjacentHTML(sWhere, sText);
-	__drip_jsHook.logNode(this.parentNode || this, document, true);
+    /* simulate Function.call */
+    this.__drip_call = nativeFunction;
+    var result = this.__drip_call(arg1, arg2, arg3);
+    this.__drip_call = void 0;
+
+    __drip_onFunctionCall(self, functionName, result);
+    return result;
+  }
 }
 
 function __drip_hookEvents(elem) {
   /* NOTE: don't double-register functions */
   if (elem.__drip_hooked) return;
-  if (elem.nodeType != 1/*ELEMENT*/ && elem.nodeType != 11/*Document Fragment*/) return;
 
-  elem.attachEvent('onpropertychange', __drip_onPropertyChange);
+  if (typeof elem.attachEvent !== 'undefined')
+    elem.attachEvent('onpropertychange', __drip_onPropertyChange);
 
-  elem.__drip_native_cloneNode = elem.cloneNode;
-  elem.cloneNode = __drip_cloneNode;
+  __drip_captureFunction(elem, 'cloneNode');
 
   /* Element references might change when an element is attached to the document */
-  elem.__drip_native_appendChild = elem.appendChild;
-  elem.appendChild = __drip_appendChild;
-
-  elem.__drip_native_insertBefore = elem.insertBefore;
-  elem.insertBefore = __drip_insertBefore;
-
-  elem.__drip_native_insertAdjacentElement = elem.insertAdjacentElement;
-  elem.insertAdjacentElement = __drip_insertAdjacentElement;
-
-  elem.__drip_native_insertAdjacentHTML = elem.insertAdjacentHTML;
-  elem.insertAdjacentHTML = __drip_insertAdjacentHTML;
-
-  elem.__drip_hooked = true;
+  __drip_captureFunction(elem, 'appendChild');
+  __drip_captureFunction(elem, 'insertBefore');
+  __drip_captureFunction(elem, 'insertAdjacentElement');
+  __drip_captureFunction(elem, 'insertAdjacentHTML');
+  
+  __drip_safeSetObjectProperty(elem, '__drip_hooked', true);
 }

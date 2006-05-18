@@ -49,8 +49,7 @@ bool getPropertyValue(CComPtr<IDispatchEx> object, DISPID dispId, VARIANT& resul
 		// BEGIN HARDCODE - Accessing the "filters" property (for example, from Google Maps)
 		// causes crashes access violations deep in MSHTML.
 		//
-		bool skip = CStringW(memberName).Compare(L"filters") == 0 ||
-			(CStringW(memberName).Find(L"__drip") == 0);
+		bool skip = CStringW(memberName).Compare(L"filters") == 0;
 		SysFreeString(memberName);
 		if (skip)
 			return false;
