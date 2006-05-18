@@ -129,6 +129,10 @@ void JSHook::hookNewPage(MSHTML::IHTMLDocument2Ptr doc) {
 	if (!m_js.GetLength())
 		VERIFY(GetHTML(IDR_DRIP_JS, m_js));
 
+	// Free up extra references to avoid a perpetual increase in memory usage
+	//
+	releaseExtraReferences(wnd);
+
 	// Create a temporary function to hook createElement() and cloneNode
 	// Also, set up functions to hook onPropertyChange.
 	//
@@ -183,11 +187,12 @@ void JSHook::addStaticNodes(MSHTML::IHTMLWindow2Ptr wnd) {
 // Collect all leaked elements, passing them to the specified leak dialog.
 //
 void JSHook::showLeaks(MSHTML::IHTMLWindow2Ptr wnd, CLeakDlg* dlg) {
-	// Ensure that all garbage collection is completed so that elements will
-	//   be released.
+	// Free non-leaked nodes
 	//
-	wnd->execScript(L"window.CollectGarbage()", L"javascript");
+	releaseExtraReferences(wnd);
 
+	// The remaining nodes have been leaked
+	//
 	for (std::map<IUnknown*,Node>::const_iterator it = m_nodes.begin(); it != m_nodes.end(); ++it) {
 		IUnknown *unk = it->first;
 		Node const& node = it->second;
@@ -199,10 +204,12 @@ void JSHook::showLeaks(MSHTML::IHTMLWindow2Ptr wnd, CLeakDlg* dlg) {
 		int refCount = unk->Release();
 
 		// If any references (other than the one that we hold) are outstanding, then
-		//   the node has been leaked.
+		//   the node has been leaked. (All non-leaked elements should already have been released.)
 		//
 		if (refCount > 1)
 			dlg->addNode(unk, node.url, refCount - 1);
+		else
+			ASSERT(false);
 	}
 
 	// When finished, clear the node list.
@@ -230,4 +237,37 @@ void JSHook::clearNodes() {
 	}
 
 	m_nodes.clear();
+}
+
+// Free up any non-leaked elements
+//
+void JSHook::releaseExtraReferences(MSHTML::IHTMLWindow2Ptr wnd) {
+	// Make as many passes as necessary to clean up elements. Some elements such
+	// as hidden table cells may not be cleaned up on the first pass.
+	//
+	size_t count = 0;
+	while (count != m_nodes.size()) {
+		count = m_nodes.size();
+
+		// Ensure that all garbage collection is completed so that elements will
+		//   be released.
+		//
+		wnd->execScript(L"window.CollectGarbage()", L"javascript");
+
+		for (std::map<IUnknown*,Node>::iterator it = m_nodes.begin(); it != m_nodes.end(); ) {
+			IUnknown *unk = it->first;
+			Node const& node = it->second;
+
+			unk->AddRef();
+			int i = unk->Release();
+			if (i == 1) {
+				// If this is the only outstanding reference, free it.
+				SysFreeString(node.url);
+				VERIFY(unk->Release() == 0);
+				it = m_nodes.erase(it);
+			}
+			else
+				it++;
+		}
+	}
 }

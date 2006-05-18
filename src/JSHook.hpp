@@ -27,6 +27,7 @@ private:
 	void addNode(MSHTML::IHTMLDOMNode* node, MSHTML::IHTMLDocument2* doc);
 	void addNodeRecursively(MSHTML::IHTMLDOMNode* node, MSHTML::IHTMLDocument2* doc);
 	void clearNodes();
+	void releaseExtraReferences(MSHTML::IHTMLWindow2Ptr wnd);
 
 	CStringW m_js;
 	std::map<IUnknown*,Node> m_nodes;
