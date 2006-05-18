@@ -48,7 +48,7 @@ BOOL CLeakDlg::OnInitDialog() {
 	//
 	m_leakList.InsertColumn(0, L"URL", LVCFMT_LEFT, 128);
 	m_leakList.InsertColumn(1, L"Refs", LVCFMT_LEFT, 40);
-	m_leakList.InsertColumn(2, L"Tag", LVCFMT_LEFT, 64);
+	m_leakList.InsertColumn(2, L"Node Type", LVCFMT_LEFT, 72);
 	m_leakList.InsertColumn(3, L"ID", LVCFMT_LEFT, 128);
 	m_leakList.InsertColumn(4, L"Class", LVCFMT_LEFT, 256);
 
@@ -126,23 +126,23 @@ void CLeakDlg::populateLeaks() {
 	int idx = 0;
 	for (std::vector<LeakEntry>::const_iterator it = m_leaks.begin(); it != m_leaks.end(); ++it, ++idx) {
 		LeakEntry const& entry = *it;
+		MSHTML::IHTMLDOMNodePtr node = entry.node;
+		MSHTML::IHTMLElementPtr elem = entry.node;
 
 		wchar_t refCountText[32];
 		wsprintf(refCountText, L"%d", entry.refCount);
 
 		m_leakList.InsertItem(idx, entry.url);
 		m_leakList.SetItemText(idx, 1, refCountText);
+		m_leakList.SetItemText(idx, 2, node->nodeName);
 
-		MSHTML::IHTMLElementPtr elem = entry.node;
 		if (elem) {
-			m_leakList.SetItemText(idx, 2, elem->tagName);
 			m_leakList.SetItemText(idx, 3, elem->id);
 			m_leakList.SetItemText(idx, 4, elem->innerHTML);
 		}
 		else {
-			m_leakList.SetItemText(idx, 2, L"(?)");
-			m_leakList.SetItemText(idx, 3, L"(?)");
-			m_leakList.SetItemText(idx, 4, L"(?)");
+			m_leakList.SetItemText(idx, 3, L"");
+			m_leakList.SetItemText(idx, 4, L"");
 		}
 	}
 	if (m_leakList.GetItemCount() > 0)
