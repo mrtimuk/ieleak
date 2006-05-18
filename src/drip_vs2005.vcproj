@@ -203,6 +203,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\HtmlResource.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\JSHook.cpp"
 				>
 			</File>
@@ -255,6 +259,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\ActivScp.h"
+				>
+			</File>
+			<File
 				RelativePath=".\BrowserHostDlg.hpp"
 				>
 			</File>
@@ -275,6 +283,10 @@
 			</File>
 			<File
 				RelativePath=".\DlgResizeHelper.h"
+				>
+			</File>
+			<File
+				RelativePath=".\HtmlResource.h"
 				>
 			</File>
 			<File
@@ -302,7 +314,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\NanoCppUnit\stdafx.h"
+				RelativePath=".\UnitTests\stdafx.h"
 				>
 			</File>
 			<File
@@ -310,7 +322,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\UnitTests\stdafx.h"
+				RelativePath=".\NanoCppUnit\stdafx.h"
 				>
 			</File>
 			<File
@@ -345,6 +357,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\res\drip.js"
+			>
+		</File>
 	</Files>
 	<Globals>
 		<Global
