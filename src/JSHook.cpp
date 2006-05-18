@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "JSHook.hpp"
 #include "LeakDlg.hpp"
+#include "HtmlResource.h"
 
 JSHook::~JSHook() {
 	// When the hook is destroyed, make sure all nodes are released.
@@ -125,89 +126,15 @@ void JSHook::addNode(MSHTML::IHTMLDOMNode* node, MSHTML::IHTMLDocument2* doc) {
 void JSHook::hookNewPage(MSHTML::IHTMLDocument2Ptr doc) {
 	MSHTML::IHTMLWindow2Ptr wnd = doc->parentWindow;
 
+	if (!m_js.GetLength())
+		VERIFY(GetHTML(IDR_DRIP_JS, m_js));
+
 	// Create a temporary function to hook createElement() and cloneNode
 	// Also, set up functions to hook onPropertyChange.
 	//
-	wnd->execScript(
-		L"var __drip_jsHook;"
-		L"function __drip_initHook(jsHook) {"
-		L"  __drip_jsHook = jsHook;"
-		L""
-		L"  var oldCE = document.createElement;"
-		L"  document.createElement = function(tag) {"
-		L"    var elem = oldCE(tag);"
-		L"    jsHook.logNode(elem, document, false);"
-		L"    return elem;"
-		L"  };"
-		L"  var oldCDF = document.createDocumentFragment;"
-		L"  document.createDocumentFragment = function() {"
-		L"    var elem = oldCDF();"
-		L"    __drip_hookEvents(elem);"
-		L"    return elem;"
-		L"  }"
-		L"}"
-		L""
-		L"function __drip_onPropertyChange() {"
-		L"  if (window.event.propertyName == 'innerHTML') {"
-		L"    __drip_jsHook.logNode(window.event.srcElement, document, true);"
-		L"  }"
-		L"}"
-		L""
-		L"function __drip_cloneNode(child) {"
-		L"	var elem = this.__drip_native_cloneNode(child);"
-		L"	__drip_jsHook.logNode(elem, document, true);"
-		L"  return elem;"
-		L"}"
-		L""
-		L"function __drip_appendChild(child) {"
-		L"	var elem = this.__drip_native_appendChild(child);"
-		L"	__drip_jsHook.logNode(elem, document, true);"
-		L"  return elem;"
-		L"}"
-		L""
-		L"function __drip_insertBefore(oNewNode, oChildNode) {"
-		L"	var elem = this.__drip_native_insertBefore(oNewNode, oChildNode);"
-		L"	__drip_jsHook.logNode(elem, document, true);"
-		L"  return elem;"
-		L"}"
-		L""
-		L"function __drip_insertAdjacentElement(sWhere, oElement) {"
-		L"	var elem = this.__drip_native_insertAdjacentElement(sWhere, oElement);"
-		L"	__drip_jsHook.logNode(elem.parentNode || elem, document, true);"
-		L"  return elem;"
-		L"}"
-		L""
-		L"function __drip_insertAdjacentHTML(sWhere, sText) {"
-		L"	this.__drip_native_insertAdjacentHTML(sWhere, sText);"
-		L"	__drip_jsHook.logNode(this.parentNode || this, document, true);"
-		L"}"
-		L""
- 		L"function __drip_hookEvents(elem) {"
-		L"  /* NOTE: don't double-register functions */"
-		L"  if (elem.__drip_hooked) return;"
-		L"  if (elem.nodeType != 1/*ELEMENT*/ && elem.nodeType != 11/*Document Fragment*/) return;"
-		L""
-		L"  elem.attachEvent('onpropertychange', __drip_onPropertyChange);"
-		L""
-		L"  elem.__drip_native_cloneNode = elem.cloneNode;"
-		L"  elem.cloneNode = __drip_cloneNode;"
-		L""
-		L"  /* Element references might change when an element is attached to the document */"
-		L"  elem.__drip_native_appendChild = elem.appendChild;"
-		L"  elem.appendChild = __drip_appendChild;"
-		L""
-		L"  elem.__drip_native_insertBefore = elem.insertBefore;"
-		L"  elem.insertBefore = __drip_insertBefore;"
-		L""
-		L"  elem.__drip_native_insertAdjacentElement = elem.insertAdjacentElement;"
-		L"  elem.insertAdjacentElement = __drip_insertAdjacentElement;"
-		L""
-		L"  elem.__drip_native_insertAdjacentHTML = elem.insertAdjacentHTML;"
-		L"  elem.insertAdjacentHTML = __drip_insertAdjacentHTML;"
-		L""
-		L"  elem.__drip_hooked = true;"
-		L"}",
-		L"javascript");
+	bstr_t js = m_js.GetBuffer();
+	wnd->execScript(js, L"javascript");
+	m_js.ReleaseBuffer();
 
 	// Create a parameter list containing the hook, then invoke the
 	//   temporary function to attach it to the document.

@@ -7,6 +7,7 @@
 #define IDI_ICON1                       134
 #define IDD_PROPERTIES                  135
 #define IDD_BROWSER_POPUP_DIALOG        136
+#define IDR_DRIP_JS                     140
 #define IDC_EXPLORER                    1000
 #define IDC_BACK                        1001
 #define IDC_FORWARD                     1002
@@ -29,7 +30,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        137
+#define _APS_NEXT_RESOURCE_VALUE        141
 #define _APS_NEXT_COMMAND_VALUE         32771
 #define _APS_NEXT_CONTROL_VALUE         1017
 #define _APS_NEXT_SYMED_VALUE           101
