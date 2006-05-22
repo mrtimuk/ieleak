@@ -44,16 +44,18 @@ function __drip_onFunctionCall(obj, functionName, returnValue) {
   }
 }
 
+function __drip_safeGetObjectProperty(obj, name)
+{
+  // the XML island getter throws an exception; return undefined in that case
+  var retval;
+  try { retval = obj[name]; } catch (err) { }
+  return retval;
+}
+
 function __drip_safeSetObjectProperty(obj, name, value)
 {
-  try
-  {
-    obj[name] = value;
-  }
-  catch (err)
-  {
-    // an exception may be thrown if the script does not have permission to attach
-  }
+  // an exception may be thrown if the script does not have permission to attach
+  try { obj[name] = value; } catch (err) { }
 }
 
 /* This function attaches to a native function and triggers a notification when it gets called.
@@ -61,7 +63,7 @@ function __drip_safeSetObjectProperty(obj, name, value)
  */
 function __drip_captureFunction(obj, functionName) {
   /* override the function and clear the reference to the object (to avoid memory leak) */
-  var nativeFunction = obj[functionName];
+  var nativeFunction = __drip_safeGetObjectProperty(obj, functionName);
   if (typeof nativeFunction !== 'undefined')
     __drip_safeSetObjectProperty(obj, functionName, override);
   obj = void 0;
