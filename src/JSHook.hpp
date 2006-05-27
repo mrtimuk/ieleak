@@ -8,10 +8,12 @@ class CDOMReportDlg;
 struct Node {
 	Node(BSTR url) {
 		this->url = url;
+		this->lastUsageRefCount = 0;
 		this->lastLeakRefCount = 0;
 	}
 
 	BSTR		url;
+	int		lastUsageRefCount;
 	int		lastLeakRefCount;
 };
 
@@ -39,6 +41,7 @@ public:
 
 	enum DOMReportType
 	{
+		kUsage,
 		kLeaks,
 	};
 

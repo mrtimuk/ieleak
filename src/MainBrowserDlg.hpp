@@ -28,6 +28,7 @@ private:
 	HICON						m_hIcon;
 
 	DlgResizeHelper				m_resizeHelper;
+	CStringW					m_autoRefreshBtnTitle;
 
 	virtual CComObject<JSHook>* getHook() { return m_hook; }
 	virtual bool isHookActive() { return !m_waitingForBlankDoc && !m_autoRefreshMode; }
@@ -54,6 +55,7 @@ public:
 	afx_msg void OnBnClickedGo();
 	afx_msg void OnBnClickedBack();
 	afx_msg void OnBnClickedForward();
+	afx_msg void OnBnClickedCheckUsage();
 	afx_msg void OnBnClickedCheckLeaks();
 	afx_msg void OnBnClickedAutoRefresh();
 

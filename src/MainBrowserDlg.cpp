@@ -25,6 +25,7 @@ BEGIN_MESSAGE_MAP(CMainBrowserDlg, CBrowserHostDlg)
 	ON_BN_CLICKED(IDC_GO, OnBnClickedGo)
 	ON_BN_CLICKED(IDC_BACK, OnBnClickedBack)
 	ON_BN_CLICKED(IDC_FORWARD, OnBnClickedForward)
+	ON_BN_CLICKED(IDC_CHECKUSAGE, OnBnClickedCheckUsage)
 	ON_BN_CLICKED(IDC_CHECKLEAKS, OnBnClickedCheckLeaks)
 	ON_BN_CLICKED(IDC_AUTOREFRESH, OnBnClickedAutoRefresh)
 END_MESSAGE_MAP()
@@ -89,6 +90,7 @@ BOOL CMainBrowserDlg::OnInitDialog() {
 	// Set up resizing
 	m_resizeHelper.Init(m_hWnd);
 	m_resizeHelper.Fix(IDC_AUTOREFRESH, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
+	m_resizeHelper.Fix(IDC_CHECKUSAGE, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
 	m_resizeHelper.Fix(IDC_CHECKLEAKS, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
 	m_resizeHelper.Fix(IDC_GO, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
 	m_resizeHelper.Fix(IDC_EDITURL, DlgResizeHelper::kLeftRight, DlgResizeHelper::kHeightTop);
@@ -205,7 +207,7 @@ void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent) {
 			if (m_popups.begin() == m_popups.end()) {
 				KillTimer(nIDEvent);
 
-				CDOMReportDlg leakDlg(this);
+				CDOMReportDlg leakDlg(L"Leaks", this);
 				m_hook->showDOMReport(m_checkLeakDoc->parentWindow, &leakDlg, JSHook::kLeaks);
 				GetDlgItem(IDC_CHECKLEAKS)->EnableWindow(FALSE);
 				leakDlg.DoModal();
@@ -276,6 +278,12 @@ void CMainBrowserDlg::OnBnClickedGo() {
 	}
 }
 
+void CMainBrowserDlg::OnBnClickedCheckUsage() {
+	CDOMReportDlg usageDlg(L"Usage", this);
+	m_hook->showDOMReport(getWindow(), &usageDlg, JSHook::kUsage);
+	usageDlg.DoModal();
+}
+
 void CMainBrowserDlg::OnBnClickedCheckLeaks() {
 	// When the leak test button is pressed, navigate to the blank document
 	//   so that the browser will release all of its elements.  Set
@@ -291,6 +299,9 @@ void CMainBrowserDlg::OnBnClickedCheckLeaks() {
 void CMainBrowserDlg::OnBnClickedAutoRefresh() {
 	if (!m_autoRefreshMode) {
 		// (The button says 'auto refresh')
+		if (m_autoRefreshBtnTitle == "")
+			GetDlgItem(IDC_AUTOREFRESH)->GetWindowText(m_autoRefreshBtnTitle);
+
 		//   Start automatically refreshing ("blowing memory"), change the button to 'stop', and disable
 		//   the go and leak test buttons.
 		//
@@ -310,7 +321,7 @@ void CMainBrowserDlg::OnBnClickedAutoRefresh() {
 		//   re-enable the go and leak test buttons.
 		//
 		m_autoRefreshMode = false;
-		GetDlgItem(IDC_AUTOREFRESH)->SendMessage(WM_SETTEXT, 0, (LPARAM)L"Auto-Refresh");
+		GetDlgItem(IDC_AUTOREFRESH)->SetWindowText(m_autoRefreshBtnTitle);
 		GetDlgItem(IDC_GO)->EnableWindow(TRUE);
 		GetDlgItem(IDC_DRIP)->EnableWindow(TRUE);
 	}
@@ -387,6 +398,7 @@ void CMainBrowserDlg::onOuterDocumentLoad(MSHTML::IHTMLDocument2Ptr doc)
 		GetDlgItem(IDC_AUTOREFRESH)->EnableWindow(TRUE);
 		GetDlgItem(IDC_GO)->SendMessage(WM_SETTEXT, 0, (LPARAM)L"Go");
 		GetDlgItem(IDC_CHECKLEAKS)->EnableWindow(TRUE);
+		GetDlgItem(IDC_CHECKUSAGE)->EnableWindow(TRUE);
 		m_waitingForDoc = false;
 	}
 }

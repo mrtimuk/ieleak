@@ -24,6 +24,9 @@ protected:
 	void GoForward();
 	void Stop();
 
+	MSHTML::IHTMLDocument2Ptr getDocument();
+	MSHTML::IHTMLWindow2Ptr getWindow();
+
 	virtual CComObject<JSHook>* getHook()=0;
 	virtual bool isHookActive()=0;
 

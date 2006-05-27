@@ -89,6 +89,20 @@ void CBrowserHostDlg::Stop() {
 	m_explorer->Stop();
 }
 
+MSHTML::IHTMLDocument2Ptr CBrowserHostDlg::getDocument() {
+	MSHTML::IHTMLDocument2Ptr doc = NULL;
+	m_explorer->GetDocument()->QueryInterface(IID_IHTMLDocument2,(void**)&doc);
+	return doc;
+}
+
+MSHTML::IHTMLWindow2Ptr CBrowserHostDlg::getWindow() {
+	MSHTML::IHTMLDocument2Ptr doc = getDocument();
+	if (doc)
+		return doc->parentWindow;
+	else
+		return NULL;
+}
+
 
 void CBrowserHostDlg::Event_TitleChange(LPCTSTR lpszText) {
 	onTitleChange(lpszText);

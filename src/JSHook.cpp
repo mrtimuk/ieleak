@@ -187,8 +187,6 @@ void JSHook::addStaticNodes(MSHTML::IHTMLWindow2Ptr wnd) {
 // Collect all leaked elements, passing them to the specified leak dialog.
 //
 void JSHook::showDOMReport(MSHTML::IHTMLWindow2Ptr wnd, CDOMReportDlg* dlg, DOMReportType type) {
-	ASSERT(type == kLeaks);
-
 	// Free non-leaked nodes
 	//
 	releaseExtraReferences(wnd);
@@ -209,8 +207,25 @@ void JSHook::showDOMReport(MSHTML::IHTMLWindow2Ptr wnd, CDOMReportDlg* dlg, DOMR
 		//   the node has been leaked. (All non-leaked elements should already have been released.)
 		//
 		if (refCount > 1) {
-			dlg->addNode(unk, node.url, refCount - 1, node.lastLeakRefCount != refCount);
-			node.lastLeakRefCount = refCount;
+			// Track nodes from one report to the next
+			//
+			bool isRecent;
+			switch (type) {
+				case kUsage:
+					isRecent = node.lastUsageRefCount != refCount;
+					node.lastUsageRefCount = refCount;
+					break;
+				case kLeaks:
+					isRecent = node.lastLeakRefCount != refCount;
+					node.lastLeakRefCount = refCount;
+					break;
+				default:
+					ASSERT(false);
+					isRecent = false;
+					break;
+			}
+
+			dlg->addNode(unk, node.url, refCount - 1, isRecent);
 		}
 		else
 			ASSERT(false);

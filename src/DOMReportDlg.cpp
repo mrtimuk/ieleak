@@ -4,10 +4,12 @@
 #include "PropDlg.hpp"
 #include <afxtempl.h>
 
-CDOMReportDlg::CDOMReportDlg(CWnd* pParent) : CDialog(CDOMReportDlg::IDD, pParent) {
+CDOMReportDlg::CDOMReportDlg(CStringW domReportType, CWnd* pParent) : CDialog(CDOMReportDlg::IDD, pParent) {
 	//{{AFX_DATA_INIT(CDOMReportDlg)
 		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
+
+	m_domReportType = domReportType;
 }
 
 void CDOMReportDlg::DoDataExchange(CDataExchange* pDX) {
@@ -43,6 +45,12 @@ END_MESSAGE_MAP()
 BOOL CDOMReportDlg::OnInitDialog() {
 	CDialog::OnInitDialog();
 
+	// Show the report type in the title and radio buttons
+	//
+	replaceRptTypeInTitle(this);
+	replaceRptTypeInTitle(&m_showAllRadio);
+	replaceRptTypeInTitle(&m_showRecentRadio);
+
 	// Full-row selection is more intuitive
 	//
 	m_leakList.SetExtendedStyle(m_leakList.GetExtendedStyle() | LVS_EX_FULLROWSELECT);
@@ -76,6 +84,14 @@ BOOL CDOMReportDlg::OnInitDialog() {
 	m_resizeHelper.Fix(IDOK, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
 
 	return TRUE;
+}
+
+void CDOMReportDlg::replaceRptTypeInTitle(CWnd* wnd) {
+	CStringW text;
+	wnd->GetWindowText(text);
+	VERIFY(text.Replace(L"_____", m_domReportType) == 1);
+	ASSERT(text.Find(L"_") == -1);
+	wnd->SetWindowText(text);
 }
 
 void CDOMReportDlg::OnPaint() {

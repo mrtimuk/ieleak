@@ -30,14 +30,16 @@ private:
 	CButton					m_showRecentRadio;
 	std::vector<LeakEntry>	m_leaks;
 	DlgResizeHelper			m_resizeHelper;
+	CStringW						m_domReportType;
 
+	void replaceRptTypeInTitle(CWnd* wnd);
 	void clearLeaks();
 	void populateLeaks(bool showRecentOnly);
 	void updateButtons();
 	void showItemProperties(UINT nItem);
 
 public:
-	CDOMReportDlg(CWnd* pParent = NULL);
+	CDOMReportDlg(CStringW domReportType, CWnd* pParent = NULL);
 	void addNode(IUnknown* node, BSTR url, int refCount, bool isRecent);
 
 	DECLARE_MESSAGE_MAP()
