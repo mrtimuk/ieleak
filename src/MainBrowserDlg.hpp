@@ -30,7 +30,7 @@ private:
 	DlgResizeHelper				m_resizeHelper;
 
 	virtual CComObject<JSHook>* getHook() { return m_hook; }
-	virtual bool isHookActive() { return m_waitingForDoc && !m_autoRefreshMode; }
+	virtual bool isHookActive() { return !m_waitingForBlankDoc && !m_autoRefreshMode; }
 
 public:
 	enum { IDD = IDD_BROWSER_DIALOG };
