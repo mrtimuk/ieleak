@@ -16,6 +16,8 @@ void CLeakDlg::DoDataExchange(CDataExchange* pDX) {
 
 	//{{AFX_DATA_MAP(CLeakDlg)
 	DDX_Control(pDX, IDC_LEAKLIST, m_leakList);
+	DDX_Control(pDX, IDC_SHOW_ALL_RADIO, m_showAllRadio);
+	DDX_Control(pDX, IDC_SHOW_RECENT_RADIO, m_showRecentRadio);
 	//}}AFX_DATA_MAP
 }
 
@@ -35,6 +37,8 @@ BEGIN_MESSAGE_MAP(CLeakDlg, CDialog)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LEAKLIST, OnLvnItemChangedLeaklist)
 	ON_BN_CLICKED(IDC_COPY, CopySelectedItems)
 	ON_NOTIFY(LVN_KEYDOWN, IDC_LEAKLIST, OnLvnKeydownLeaklist)
+	ON_BN_CLICKED(IDC_SHOW_ALL_RADIO, OnBnClickedAllRadio)
+	ON_BN_CLICKED(IDC_SHOW_RECENT_RADIO, OnBnClickedRecentRadio)
 END_MESSAGE_MAP()
 
 BOOL CLeakDlg::OnInitDialog() {
@@ -54,7 +58,9 @@ BOOL CLeakDlg::OnInitDialog() {
 
 	// Populate the leak list control from the list of LeakEntry structures.
 	//
-	populateLeaks();
+	m_showAllRadio.SetCheck(0);
+	m_showRecentRadio.SetCheck(1);
+	populateLeaks(true);
 
 	// Enable/disable button
 	//
@@ -63,6 +69,8 @@ BOOL CLeakDlg::OnInitDialog() {
 	// Set up resizing
 	//
 	m_resizeHelper.Init(m_hWnd);
+	m_resizeHelper.Fix(IDC_SHOW_ALL_RADIO, DlgResizeHelper::kWidthLeft, DlgResizeHelper::kHeightTop);
+	m_resizeHelper.Fix(IDC_SHOW_RECENT_RADIO, DlgResizeHelper::kWidthLeft, DlgResizeHelper::kHeightTop);
 	m_resizeHelper.Fix(IDC_LEAKLIST, DlgResizeHelper::kLeftRight, DlgResizeHelper::kTopBottom);
 	m_resizeHelper.Fix(IDC_PROPERTIES_BUTTON, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
 	m_resizeHelper.Fix(IDC_COPY, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
@@ -99,11 +107,11 @@ void CLeakDlg::OnDestroy() {
 
 // Adds an node to the leak list, including its document URL and ref count.
 //
-void CLeakDlg::addNode(IUnknown* node, BSTR url, int refCount) {
+void CLeakDlg::addNode(IUnknown* node, BSTR url, int refCount, bool isRecent) {
 	// Add a reference to the node, and allocate a copy of the URL string.
 	//
 	node->AddRef();
-	m_leaks.push_back(LeakEntry(node, SysAllocString(url), refCount));
+	m_leaks.push_back(LeakEntry(node, SysAllocString(url), refCount, isRecent));
 }
 
 // Clear all leaks.
@@ -122,16 +130,21 @@ void CLeakDlg::clearLeaks() {
 
 // Take all entries in m_leaks and populate the leak list control with them.
 //
-void CLeakDlg::populateLeaks() {
-	int idx = 0;
-	for (std::vector<LeakEntry>::const_iterator it = m_leaks.begin(); it != m_leaks.end(); ++it, ++idx) {
+void CLeakDlg::populateLeaks(bool showRecentOnly) {
+	m_leakList.DeleteAllItems();
+
+	for (std::vector<LeakEntry>::const_iterator it = m_leaks.begin(); it != m_leaks.end(); ++it) {
 		LeakEntry const& entry = *it;
+		if (showRecentOnly && !entry.isRecent)
+			continue;
+
 		MSHTML::IHTMLDOMNodePtr node = entry.node;
 		MSHTML::IHTMLElementPtr elem = entry.node;
 
 		wchar_t refCountText[32];
 		wsprintf(refCountText, L"%d", entry.refCount);
 
+		int idx = m_leakList.GetItemCount();
 		m_leakList.InsertItem(idx, entry.url);
 		m_leakList.SetItemText(idx, 1, refCountText);
 		m_leakList.SetItemText(idx, 2, node->nodeName);
@@ -204,28 +217,28 @@ afx_msg void CLeakDlg::OnViewProperties()
 bool CopyToClipboard(HWND hOwner, CStringW text)
 {
 	LPWSTR  lptstrCopy; 
-    HGLOBAL hglbCopy; 
+	HGLOBAL hglbCopy; 
 
 	if (!OpenClipboard(hOwner))
 		return false;
 
 	// Allocate a global memory object for the text. 
 	hglbCopy = GlobalAlloc(GMEM_MOVEABLE, (text.GetLength() + 1) * sizeof(WCHAR)); 
-    if (hglbCopy == NULL) 
-    { 
-        CloseClipboard(); 
-        return false; 
-    } 
+	if (hglbCopy == NULL) 
+	{ 
+		CloseClipboard(); 
+		return false; 
+	} 
 
-    // Lock the handle and copy the text to the buffer. 
-    lptstrCopy = (LPWSTR)GlobalLock(hglbCopy); 
+	// Lock the handle and copy the text to the buffer. 
+	lptstrCopy = (LPWSTR)GlobalLock(hglbCopy); 
 	memcpy(lptstrCopy, text, text.GetLength() * sizeof(WCHAR)); 
-    lptstrCopy[text.GetLength()] = (WCHAR) 0;    // null character 
-    GlobalUnlock(hglbCopy); 
+	lptstrCopy[text.GetLength()] = (WCHAR) 0; // null character 
+	GlobalUnlock(hglbCopy); 
 
-    // Place the handle on the clipboard. 
+	// Place the handle on the clipboard. 
 	EmptyClipboard();
-    SetClipboardData(CF_UNICODETEXT, hglbCopy);
+	SetClipboardData(CF_UNICODETEXT, hglbCopy);
 	CloseClipboard();
 	return true;
 }
@@ -269,4 +282,14 @@ void CLeakDlg::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI)
 	lpMMI->ptMinTrackSize.y = 250;
 
 	CWnd::OnGetMinMaxInfo(lpMMI);
+}
+
+void CLeakDlg::OnBnClickedAllRadio()
+{
+	populateLeaks(false);
+}
+
+void CLeakDlg::OnBnClickedRecentRadio()
+{
+	populateLeaks(true);
 }

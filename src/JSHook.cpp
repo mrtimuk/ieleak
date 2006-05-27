@@ -193,9 +193,9 @@ void JSHook::showLeaks(MSHTML::IHTMLWindow2Ptr wnd, CLeakDlg* dlg) {
 
 	// The remaining nodes have been leaked
 	//
-	for (std::map<IUnknown*,Node>::const_iterator it = m_nodes.begin(); it != m_nodes.end(); ++it) {
+	for (std::map<IUnknown*,Node>::iterator it = m_nodes.begin(); it != m_nodes.end(); ++it) {
 		IUnknown *unk = it->first;
-		Node const& node = it->second;
+		Node& node = it->second;
 
 		// For each node, AddRef() and Release() it.  The latter method will return
 		//   the current ref count.
@@ -206,15 +206,13 @@ void JSHook::showLeaks(MSHTML::IHTMLWindow2Ptr wnd, CLeakDlg* dlg) {
 		// If any references (other than the one that we hold) are outstanding, then
 		//   the node has been leaked. (All non-leaked elements should already have been released.)
 		//
-		if (refCount > 1)
-			dlg->addNode(unk, node.url, refCount - 1);
+		if (refCount > 1) {
+			dlg->addNode(unk, node.url, refCount - 1, node.lastLeakRefCount != refCount);
+			node.lastLeakRefCount = refCount;
+		}
 		else
 			ASSERT(false);
 	}
-
-	// When finished, clear the node list.
-	//
-	clearNodes();
 }
 
 // Returns true if the hook contains any nodes.

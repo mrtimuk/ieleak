@@ -8,9 +8,11 @@ class CLeakDlg;
 struct Node {
 	Node(BSTR url) {
 		this->url = url;
+		this->lastLeakRefCount = 0;
 	}
 
 	BSTR		url;
+	int		lastLeakRefCount;
 };
 
 class __declspec(uuid("8340a7f2-413a-46dd-9f95-fbad5d455a90")) IJSHook: public IDispatch { };

@@ -25,6 +25,9 @@
 #define IDC_PROPERTIES_BUTTON           1014
 #define IDC_COPY                        1015
 #define IDC_ADDRESS_STATIC              1016
+#define IDC_RECENT_RADIO                1018
+#define IDC_SHOW_RECENT_RADIO           1018
+#define IDC_SHOW_ALL_RADIO              1019
 
 // Next default values for new objects
 // 
@@ -32,7 +35,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        141
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1017
+#define _APS_NEXT_CONTROL_VALUE         1020
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

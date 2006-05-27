@@ -7,15 +7,17 @@
 //  documents, and the number of references left outstanding.
 //
 struct LeakEntry {
-	LeakEntry(IUnknown* node, BSTR url, int refCount) {
+	LeakEntry(IUnknown* node, BSTR url, int refCount, bool isRecent) {
 		this->node = node;
 		this->url = url;
 		this->refCount = refCount;
+		this->isRecent = isRecent;
 	}
 
 	IUnknown*	node;
-	BSTR		url;
+	BSTR			url;
 	int			refCount;
+	bool			isRecent;
 };
 
 // The dialog box for displaying all leaked nodes.
@@ -24,17 +26,19 @@ class CLeakDlg : public CDialog {
 private:
 	enum { IDD = IDD_LEAKS };
 	CListCtrl				m_leakList;
+	CButton					m_showAllRadio;
+	CButton					m_showRecentRadio;
 	std::vector<LeakEntry>	m_leaks;
 	DlgResizeHelper			m_resizeHelper;
 
 	void clearLeaks();
-	void populateLeaks();
+	void populateLeaks(bool showRecentOnly);
 	void updateButtons();
 	void showItemProperties(UINT nItem);
 
 public:
 	CLeakDlg(CWnd* pParent = NULL);
-	void addNode(IUnknown* node, BSTR url, int refCount);
+	void addNode(IUnknown* node, BSTR url, int refCount, bool isRecent);
 
 	DECLARE_MESSAGE_MAP()
 
@@ -52,4 +56,6 @@ public:
 	afx_msg void OnLvnKeydownLeaklist(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI);
+	afx_msg void OnBnClickedAllRadio();
+	afx_msg void OnBnClickedRecentRadio();
 };
