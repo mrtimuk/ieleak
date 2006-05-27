@@ -1,6 +1,6 @@
 #pragma once
 
-class CLeakDlg;
+class CDOMReportDlg;
 
 // This structure is used to maintain a list of hooked nodes,
 //   along with the URL of the document to which each belongs.
@@ -37,9 +37,14 @@ private:
 public:
 	virtual ~JSHook();
 
+	enum DOMReportType
+	{
+		kLeaks,
+	};
+
 	void hookNewPage(MSHTML::IHTMLDocument2Ptr wnd);
 	void addStaticNodes(MSHTML::IHTMLWindow2Ptr wnd);
-	void showLeaks(MSHTML::IHTMLWindow2Ptr wnd, CLeakDlg* dlg);
+	void showDOMReport(MSHTML::IHTMLWindow2Ptr wnd, CDOMReportDlg* dlg, DOMReportType type);
 	bool hasNodes();
 
 	BEGIN_COM_MAP(JSHook)

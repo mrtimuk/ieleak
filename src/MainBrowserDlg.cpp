@@ -3,7 +3,7 @@
 #include "BrowserPopupDlg.hpp"
 #include "DlgResizeHelper.h"
 #include "JSHook.hpp"
-#include "LeakDlg.hpp"
+#include "DOMReportDlg.hpp"
 #include "resource.h"
 
 #define TIMER_AUTO_REFRESH		0
@@ -205,8 +205,8 @@ void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent) {
 			if (m_popups.begin() == m_popups.end()) {
 				KillTimer(nIDEvent);
 
-				CLeakDlg leakDlg(this);
-				m_hook->showLeaks(m_checkLeakDoc->parentWindow, &leakDlg);
+				CDOMReportDlg leakDlg(this);
+				m_hook->showDOMReport(m_checkLeakDoc->parentWindow, &leakDlg, JSHook::kLeaks);
 				GetDlgItem(IDC_CHECKLEAKS)->EnableWindow(FALSE);
 				leakDlg.DoModal();
 			}

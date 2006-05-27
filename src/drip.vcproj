@@ -135,7 +135,7 @@
 				RelativePath=".\JSHook.cpp">
 			</File>
 			<File
-				RelativePath=".\LeakDlg.cpp">
+				RelativePath=".\DOMReportDlg.cpp">
 			</File>
 			<File
 				RelativePath=".\MainBrowserDlg.cpp">
@@ -176,7 +176,7 @@
 				RelativePath=".\JSHook.hpp">
 			</File>
 			<File
-				RelativePath=".\LeakDlg.hpp">
+				RelativePath=".\DOMReportDlg.hpp">
 			</File>
 			<File
 				RelativePath=".\MainBrowserDlg.hpp">

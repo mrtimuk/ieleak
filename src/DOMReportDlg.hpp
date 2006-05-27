@@ -22,7 +22,7 @@ struct LeakEntry {
 
 // The dialog box for displaying all leaked nodes.
 //
-class CLeakDlg : public CDialog {
+class CDOMReportDlg : public CDialog {
 private:
 	enum { IDD = IDD_LEAKS };
 	CListCtrl				m_leakList;
@@ -37,7 +37,7 @@ private:
 	void showItemProperties(UINT nItem);
 
 public:
-	CLeakDlg(CWnd* pParent = NULL);
+	CDOMReportDlg(CWnd* pParent = NULL);
 	void addNode(IUnknown* node, BSTR url, int refCount, bool isRecent);
 
 	DECLARE_MESSAGE_MAP()

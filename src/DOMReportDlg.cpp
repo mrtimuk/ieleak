@@ -1,28 +1,27 @@
 #include "stdafx.h"
 #include "resource.h"
-#include "LeakDlg.hpp"
+#include "DOMReportDlg.hpp"
 #include "PropDlg.hpp"
-#include "leakdlg.hpp"
 #include <afxtempl.h>
 
-CLeakDlg::CLeakDlg(CWnd* pParent) : CDialog(CLeakDlg::IDD, pParent) {
-	//{{AFX_DATA_INIT(CLeakDlg)
+CDOMReportDlg::CDOMReportDlg(CWnd* pParent) : CDialog(CDOMReportDlg::IDD, pParent) {
+	//{{AFX_DATA_INIT(CDOMReportDlg)
 		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
 }
 
-void CLeakDlg::DoDataExchange(CDataExchange* pDX) {
+void CDOMReportDlg::DoDataExchange(CDataExchange* pDX) {
 	CDialog::DoDataExchange(pDX);
 
-	//{{AFX_DATA_MAP(CLeakDlg)
+	//{{AFX_DATA_MAP(CDOMReportDlg)
 	DDX_Control(pDX, IDC_LEAKLIST, m_leakList);
 	DDX_Control(pDX, IDC_SHOW_ALL_RADIO, m_showAllRadio);
 	DDX_Control(pDX, IDC_SHOW_RECENT_RADIO, m_showRecentRadio);
 	//}}AFX_DATA_MAP
 }
 
-BEGIN_MESSAGE_MAP(CLeakDlg, CDialog)
-	//{{AFX_MSG_MAP(CLeakDlg)
+BEGIN_MESSAGE_MAP(CDOMReportDlg, CDialog)
+	//{{AFX_MSG_MAP(CDOMReportDlg)
 	ON_WM_PAINT()
 	ON_WM_NCHITTEST()
 	ON_WM_QUERYDRAGICON()
@@ -41,7 +40,7 @@ BEGIN_MESSAGE_MAP(CLeakDlg, CDialog)
 	ON_BN_CLICKED(IDC_SHOW_RECENT_RADIO, OnBnClickedRecentRadio)
 END_MESSAGE_MAP()
 
-BOOL CLeakDlg::OnInitDialog() {
+BOOL CDOMReportDlg::OnInitDialog() {
 	CDialog::OnInitDialog();
 
 	// Full-row selection is more intuitive
@@ -79,27 +78,27 @@ BOOL CLeakDlg::OnInitDialog() {
 	return TRUE;
 }
 
-void CLeakDlg::OnPaint() {
+void CDOMReportDlg::OnPaint() {
 	CDialog::OnPaint();
 	m_resizeHelper.OnGripperPaint();
 }
 
-NCHITTEST_RESULT CLeakDlg::OnNcHitTest(CPoint point)
+NCHITTEST_RESULT CDOMReportDlg::OnNcHitTest(CPoint point)
 {
 	NCHITTEST_RESULT ht = CDialog::OnNcHitTest(point);
 	m_resizeHelper.OnGripperNcHitTest(point, ht);
 	return ht;
 }
 
-void CLeakDlg::OnClose() {
+void CDOMReportDlg::OnClose() {
 	EndDialog(0);
 }
 
-void CLeakDlg::OnOk() {
+void CDOMReportDlg::OnOk() {
 	EndDialog(0);
 }
 
-void CLeakDlg::OnDestroy() {
+void CDOMReportDlg::OnDestroy() {
 	// Free the leak list when the dialog is destroyed.
 	//
 	clearLeaks();
@@ -107,7 +106,7 @@ void CLeakDlg::OnDestroy() {
 
 // Adds an node to the leak list, including its document URL and ref count.
 //
-void CLeakDlg::addNode(IUnknown* node, BSTR url, int refCount, bool isRecent) {
+void CDOMReportDlg::addNode(IUnknown* node, BSTR url, int refCount, bool isRecent) {
 	// Add a reference to the node, and allocate a copy of the URL string.
 	//
 	node->AddRef();
@@ -116,7 +115,7 @@ void CLeakDlg::addNode(IUnknown* node, BSTR url, int refCount, bool isRecent) {
 
 // Clear all leaks.
 //
-void CLeakDlg::clearLeaks() {
+void CDOMReportDlg::clearLeaks() {
 	for (std::vector<LeakEntry>::const_iterator it = m_leaks.begin(); it != m_leaks.end(); ++it) {
 		// Release the leaked node and free its associated document URL.
 		//   (of course, since this node is over-referenced, it won't actually get freed
@@ -130,7 +129,7 @@ void CLeakDlg::clearLeaks() {
 
 // Take all entries in m_leaks and populate the leak list control with them.
 //
-void CLeakDlg::populateLeaks(bool showRecentOnly) {
+void CDOMReportDlg::populateLeaks(bool showRecentOnly) {
 	m_leakList.DeleteAllItems();
 
 	for (std::vector<LeakEntry>::const_iterator it = m_leaks.begin(); it != m_leaks.end(); ++it) {
@@ -164,13 +163,13 @@ void CLeakDlg::populateLeaks(bool showRecentOnly) {
 
 // When a leaked element is selected, display its properties.
 //
-afx_msg void CLeakDlg::OnLvnItemActivateLeaklist(NMHDR *pNMHDR, LRESULT *pResult) {
+afx_msg void CDOMReportDlg::OnLvnItemActivateLeaklist(NMHDR *pNMHDR, LRESULT *pResult) {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 
 	showItemProperties(pNMLV->iItem);
 }
 
-void CLeakDlg::OnLvnItemChangedLeaklist(NMHDR *pNMHDR, LRESULT *pResult)
+void CDOMReportDlg::OnLvnItemChangedLeaklist(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	
@@ -178,7 +177,7 @@ void CLeakDlg::OnLvnItemChangedLeaklist(NMHDR *pNMHDR, LRESULT *pResult)
 	updateButtons();
 }
 
-void CLeakDlg::OnLvnKeydownLeaklist(NMHDR *pNMHDR, LRESULT *pResult)
+void CDOMReportDlg::OnLvnKeydownLeaklist(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLVKEYDOWN pLVKeyDown = reinterpret_cast<LPNMLVKEYDOWN>(pNMHDR);
 
@@ -188,12 +187,12 @@ void CLeakDlg::OnLvnKeydownLeaklist(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
-void CLeakDlg::updateButtons()
+void CDOMReportDlg::updateButtons()
 {
 	GetDlgItem(IDC_PROPERTIES_BUTTON)->EnableWindow(m_leakList.GetSelectedCount() == 1);
 }
 
-void CLeakDlg::showItemProperties(UINT nItem)
+void CDOMReportDlg::showItemProperties(UINT nItem)
 {
 	// Get the IDispatch interface so that we can dynamically query the
 	//   element's properties.
@@ -208,7 +207,7 @@ void CLeakDlg::showItemProperties(UINT nItem)
 	propDlg.DoModal();
 }
 
-afx_msg void CLeakDlg::OnViewProperties()
+afx_msg void CDOMReportDlg::OnViewProperties()
 {
 	if (m_leakList.GetSelectedCount() == 1)
 		showItemProperties(m_leakList.GetNextItem(-1, LVNI_SELECTED));
@@ -243,7 +242,7 @@ bool CopyToClipboard(HWND hOwner, CStringW text)
 	return true;
 }
 
-void CLeakDlg::CopySelectedItems()
+void CDOMReportDlg::CopySelectedItems()
 {
 	CStringW text;
 
@@ -270,11 +269,11 @@ void CLeakDlg::CopySelectedItems()
 	}
 }
 
-void CLeakDlg::OnSize(UINT nType, int cx, int cy) {
+void CDOMReportDlg::OnSize(UINT nType, int cx, int cy) {
 	m_resizeHelper.OnSize();
 }
 
-void CLeakDlg::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI)
+void CDOMReportDlg::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI)
 {
 	// Using arbitrary figures here (dialog units would be better)
 	//
@@ -284,12 +283,12 @@ void CLeakDlg::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI)
 	CWnd::OnGetMinMaxInfo(lpMMI);
 }
 
-void CLeakDlg::OnBnClickedAllRadio()
+void CDOMReportDlg::OnBnClickedAllRadio()
 {
 	populateLeaks(false);
 }
 
-void CLeakDlg::OnBnClickedRecentRadio()
+void CDOMReportDlg::OnBnClickedRecentRadio()
 {
 	populateLeaks(true);
 }

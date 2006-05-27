@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "JSHook.hpp"
-#include "LeakDlg.hpp"
+#include "DOMReportDlg.hpp"
 #include "HtmlResource.h"
 
 JSHook::~JSHook() {
@@ -186,7 +186,9 @@ void JSHook::addStaticNodes(MSHTML::IHTMLWindow2Ptr wnd) {
 
 // Collect all leaked elements, passing them to the specified leak dialog.
 //
-void JSHook::showLeaks(MSHTML::IHTMLWindow2Ptr wnd, CLeakDlg* dlg) {
+void JSHook::showDOMReport(MSHTML::IHTMLWindow2Ptr wnd, CDOMReportDlg* dlg, DOMReportType type) {
+	ASSERT(type == kLeaks);
+
 	// Free non-leaked nodes
 	//
 	releaseExtraReferences(wnd);
