@@ -9,6 +9,7 @@ CDOMReportDlg::CDOMReportDlg(CStringW domReportType, CWnd* pParent) : CDialog(CD
 		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
 
+	m_isShowingRecentOnly = false;
 	m_domReportType = domReportType;
 }
 
@@ -146,6 +147,16 @@ void CDOMReportDlg::clearLeaks() {
 // Take all entries in m_leaks and populate the leak list control with them.
 //
 void CDOMReportDlg::populateLeaks(bool showRecentOnly) {
+	// Don't reload if the dialog is already showing the correct items
+	//
+	if (m_isShowingRecentOnly == showRecentOnly)
+		return;
+	m_isShowingRecentOnly = showRecentOnly;
+
+	// Reduce flicker
+	//
+	LockWindowUpdate();
+
 	m_leakList.DeleteAllItems();
 
 	for (std::vector<LeakEntry>::const_iterator it = m_leaks.begin(); it != m_leaks.end(); ++it) {
@@ -175,6 +186,8 @@ void CDOMReportDlg::populateLeaks(bool showRecentOnly) {
 	}
 	if (m_leakList.GetItemCount() > 0)
 		m_leakList.SetItemState(0, LVIS_SELECTED, LVIS_SELECTED);
+
+	UnlockWindowUpdate();
 }
 
 // When a leaked element is selected, display its properties.

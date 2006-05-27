@@ -28,6 +28,8 @@ private:
 	CListCtrl				m_leakList;
 	CButton					m_showAllRadio;
 	CButton					m_showRecentRadio;
+
+	bool						m_isShowingRecentOnly;
 	std::vector<LeakEntry>	m_leaks;
 	DlgResizeHelper			m_resizeHelper;
 	CStringW						m_domReportType;
