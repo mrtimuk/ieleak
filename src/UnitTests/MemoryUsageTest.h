@@ -11,7 +11,7 @@ public:
 public:
 	virtual ~MemoryUsageTest(void);
 public:
-	static int ToInt(wchar_t* stringBuffer);
+	static int ToInt(CStringW stringBuffer);
 };
 
 #endif

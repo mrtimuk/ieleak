@@ -55,19 +55,22 @@ CMainBrowserDlg::~CMainBrowserDlg() {
 }
 
 
-void CMainBrowserDlg::GetMemoryUsage(wchar_t *pszUsage)
+CStringW CMainBrowserDlg::GetMemoryUsage()
 {
 	PROCESS_MEMORY_COUNTERS procMem;
 	memset(&procMem, 0, sizeof(PROCESS_MEMORY_COUNTERS));
 	procMem.cb = sizeof(PROCESS_MEMORY_COUNTERS);
 	GetProcessMemoryInfo(GetCurrentProcess(), &procMem, procMem.cb);
 
-	wsprintf(pszUsage, L"%d", procMem.WorkingSetSize);
+	CStringW usage;
+	usage.Format(L"%d", procMem.WorkingSetSize);
+	return usage;
 }
 
 void CMainBrowserDlg::DoDataExchange(CDataExchange* pDX) {
 	CBrowserHostDlg::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_CURRENT_MEMORY_EDIT, m_CurrentMemoryBox);
+	DDX_Control(pDX, IDC_MEMLIST, m_memList);
 }
 
 BOOL CMainBrowserDlg::OnInitDialog() {
@@ -197,9 +200,7 @@ void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent) {
 			break;
 
 		case TIMER_MONITOR_MEMORY:
-			wchar_t memText[32];
-			GetMemoryUsage(memText);
-			m_CurrentMemoryBox.SetWindowText(memText);
+			m_CurrentMemoryBox.SetWindowText(GetMemoryUsage());
 			break;
 
 		case TIMER_CHECK_LEAKS:
@@ -226,31 +227,25 @@ void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent) {
 
 // Gets the text in the url edit control.  The caller must free it.
 //
-wchar_t* CMainBrowserDlg::getUrlText() {
-	CWnd* item = GetDlgItem(IDC_EDITURL);
-	int len = (int)item->SendMessage(WM_GETTEXTLENGTH, 0, 0);
-	
+CStringW CMainBrowserDlg::getUrlText() {
+	CStringW url;
+	GetDlgItem(IDC_EDITURL)->GetWindowText(url);
+
 	// Navigating to a blank URL will cause the browser not to show a document at all.
 	// Either use about:blank or bulletproof this dialog against NULL document pointers.
 	//
-	if (!len) {
-		wchar_t about_blank[] = L"about:blank";
-		wchar_t* text = new wchar_t[sizeof(about_blank)];
-		memcpy(text, about_blank, sizeof(about_blank));
-		return text;
+	if (url == "") {
+		url = L"about:blank";
 	}
 
-	wchar_t* text = new wchar_t[len + 1];
-	item->SendMessage(WM_GETTEXT, (WPARAM)len + 1, (LPARAM)text);
-	return text;
+	return url;
 }
 
 // Loads the document specified by the url edit control.
 //
 void CMainBrowserDlg::go() {
-	wchar_t* url = getUrlText();
+	CStringW url = getUrlText();
 	Navigate(url);
-	delete[] url;
 }
 
 void CMainBrowserDlg::OnBnClickedBack() {
@@ -317,7 +312,7 @@ void CMainBrowserDlg::OnBnClickedAutoRefresh() {
 		GetDlgItem(IDC_AUTOREFRESH)->SendMessage(WM_SETTEXT, 0, (LPARAM)L"Stop");
 		GetDlgItem(IDC_GO)->EnableWindow(FALSE);
 		GetDlgItem(IDC_DRIP)->EnableWindow(FALSE);
-		GetDlgItem(IDC_MEMLIST)->SendMessage(LB_RESETCONTENT, 0, 0);
+		m_memList.ResetContent();
 
 		// Load the specified document, which will start the auto-refresh cycle.
 		//
@@ -379,9 +374,7 @@ void CMainBrowserDlg::onOuterDocumentLoad(MSHTML::IHTMLDocument2Ptr doc)
 
 		// Get the process' memory usage and add it to the list.
 		//
-		wchar_t memText[32];
-		GetMemoryUsage(memText);
-		GetDlgItem(IDC_MEMLIST)->SendMessage(LB_INSERTSTRING, 0, (LPARAM)memText);
+		m_memList.InsertString(0, GetMemoryUsage());
 
 		// Reload the document in 500 ms.
 		//

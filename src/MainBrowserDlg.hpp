@@ -13,7 +13,7 @@ class JSHook;
 //
 class CMainBrowserDlg : public CBrowserHostDlg {
 private:
-	wchar_t* getUrlText();
+	CStringW getUrlText();
 	void go();
 
 	CComObject<JSHook>*			m_hook;
@@ -68,7 +68,8 @@ public:
 	virtual void onNewWindow(CBrowserHostDlg** ppDlg);
 
 public:
-	static void GetMemoryUsage(wchar_t *pszUsage);
+	static CStringW GetMemoryUsage();
 public:
 	CEdit m_CurrentMemoryBox;
+	CListBox m_memList;
 };

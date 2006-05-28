@@ -167,8 +167,8 @@ void CDOMReportDlg::populateLeaks(bool showRecentOnly) {
 		MSHTML::IHTMLDOMNodePtr node = entry.node;
 		MSHTML::IHTMLElementPtr elem = entry.node;
 
-		wchar_t refCountText[32];
-		wsprintf(refCountText, L"%d", entry.refCount);
+		CStringW refCountText;
+		refCountText.Format(L"%d", entry.refCount);
 
 		int idx = m_leakList.GetItemCount();
 		m_leakList.InsertItem(idx, entry.url);
