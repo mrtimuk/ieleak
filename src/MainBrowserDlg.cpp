@@ -6,6 +6,8 @@
 #include "DOMReportDlg.hpp"
 #include "resource.h"
 
+#include <afxpriv.h>
+
 #define TIMER_AUTO_REFRESH		0
 #define TIMER_MONITOR_MEMORY	1
 #define TIMER_CHECK_LEAKS	2
@@ -19,6 +21,7 @@ BEGIN_MESSAGE_MAP(CMainBrowserDlg, CBrowserHostDlg)
 	ON_WM_CLOSE()
 	ON_WM_DESTROY()
 	ON_WM_TIMER()
+	ON_MESSAGE(WM_KICKIDLE, OnKickIdle)
 	ON_BN_CLICKED(IDOK, doNothing)
 	ON_BN_CLICKED(IDCANCEL, doNothing)
 	//}}AFX_MSG_MAP
@@ -179,6 +182,11 @@ void CMainBrowserDlg::doNothing() {
 
 LRESULT CMainBrowserDlg::WindowProc(UINT message, WPARAM wparam, LPARAM lparam) {
 	return CBrowserHostDlg::WindowProc(message, wparam, lparam);
+}
+
+LRESULT CMainBrowserDlg::OnKickIdle(WPARAM, LPARAM lCount) {
+	m_hook->backgroundReleaseExtraReferences();
+	return (lCount < (LPARAM)m_hook->getNodeCount());
 }
 
 void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent) {

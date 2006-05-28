@@ -3,6 +3,10 @@
 #include "DOMReportDlg.hpp"
 #include "HtmlResource.h"
 
+JSHook::JSHook() {
+	m_itNextNode = m_nodes.begin();
+}
+
 JSHook::~JSHook() {
 	// When the hook is destroyed, make sure all nodes are released.
 	//
@@ -184,6 +188,10 @@ void JSHook::addStaticNodes(MSHTML::IHTMLWindow2Ptr wnd) {
 	addNodeRecursively(docNode, wnd->document);
 }
 
+size_t JSHook::getNodeCount() const {
+	return m_nodes.size();
+}
+
 // Collect all leaked elements, passing them to the specified leak dialog.
 //
 void JSHook::showDOMReport(MSHTML::IHTMLWindow2Ptr wnd, CDOMReportDlg* dlg, DOMReportType type) {
@@ -232,12 +240,6 @@ void JSHook::showDOMReport(MSHTML::IHTMLWindow2Ptr wnd, CDOMReportDlg* dlg, DOMR
 	}
 }
 
-// Returns true if the hook contains any nodes.
-//
-bool JSHook::hasNodes() {
-	return (m_nodes.size() > 0);
-}
-
 // Clear all nodes in the hook.
 //
 void JSHook::clearNodes() {
@@ -251,7 +253,10 @@ void JSHook::clearNodes() {
 		unk->Release();
 	}
 
+	// It is very important to update m_itNextNode whenever items are removed from the nodes list
+	//
 	m_nodes.clear();
+	m_itNextNode = m_nodes.begin();
 }
 
 // Free up any non-leaked elements
@@ -269,20 +274,40 @@ void JSHook::releaseExtraReferences(MSHTML::IHTMLWindow2Ptr wnd) {
 		//
 		wnd->execScript(L"window.CollectGarbage()", L"javascript");
 
-		for (std::map<IUnknown*,Node>::iterator it = m_nodes.begin(); it != m_nodes.end(); ) {
-			IUnknown *unk = it->first;
-			Node const& node = it->second;
+		// Release extra references for all elements
+		//
+		m_itNextNode = m_nodes.begin();
+		while (m_itNextNode != m_nodes.end())
+			backgroundReleaseExtraReferences();
+	}
+}
 
-			unk->AddRef();
-			int i = unk->Release();
-			if (i == 1) {
-				// If this is the only outstanding reference, free it.
-				SysFreeString(node.url);
-				VERIFY(unk->Release() == 0);
-				it = m_nodes.erase(it);
-			}
-			else
-				it++;
+void JSHook::backgroundReleaseExtraReferences() {
+	if (m_itNextNode == m_nodes.end()) {
+		if (m_itNextNode == m_nodes.begin()) {
+			// There are no nodes to collect.
+			//
+			return;
 		}
+		else {
+			// Restart the garbage collection
+			//
+			m_itNextNode = m_nodes.begin();
+		}
+	}
+
+	IUnknown *unk = m_itNextNode->first;
+	Node const& node = m_itNextNode->second;
+
+	unk->AddRef();
+	int i = unk->Release();
+	if (i == 1) {
+		// If this is the only outstanding reference, free it.
+		SysFreeString(node.url);
+		VERIFY(unk->Release() == 0);
+		m_itNextNode = m_nodes.erase(m_itNextNode);
+	}
+	else {
+		m_itNextNode++;
 	}
 }

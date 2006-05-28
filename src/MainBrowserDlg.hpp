@@ -52,6 +52,7 @@ public:
 	afx_msg void OnClose();
 	afx_msg void OnDestroy();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg LRESULT OnKickIdle(WPARAM, LPARAM lCount);
 	afx_msg void OnBnClickedGo();
 	afx_msg void OnBnClickedBack();
 	afx_msg void OnBnClickedForward();

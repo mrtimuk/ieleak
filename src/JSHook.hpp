@@ -30,13 +30,16 @@ class JSHook: public IJSHook, public ATL::CComObjectRoot {
 private:
 	void addNode(MSHTML::IHTMLDOMNode* node, MSHTML::IHTMLDocument2* doc);
 	void addNodeRecursively(MSHTML::IHTMLDOMNode* node, MSHTML::IHTMLDocument2* doc);
+
 	void clearNodes();
 	void releaseExtraReferences(MSHTML::IHTMLWindow2Ptr wnd);
 
 	CStringW m_js;
 	std::map<IUnknown*,Node> m_nodes;
+	std::map<IUnknown*,Node>::iterator m_itNextNode;
 
 public:
+	JSHook();
 	virtual ~JSHook();
 
 	enum DOMReportType
@@ -47,8 +50,10 @@ public:
 
 	void hookNewPage(MSHTML::IHTMLDocument2Ptr wnd);
 	void addStaticNodes(MSHTML::IHTMLWindow2Ptr wnd);
+
+	size_t getNodeCount() const;
 	void showDOMReport(MSHTML::IHTMLWindow2Ptr wnd, CDOMReportDlg* dlg, DOMReportType type);
-	bool hasNodes();
+	void backgroundReleaseExtraReferences();
 
 	BEGIN_COM_MAP(JSHook)
 		COM_INTERFACE_ENTRY(IDispatch)
