@@ -70,6 +70,6 @@ public:
 public:
 	static CStringW GetMemoryUsage();
 public:
-	CEdit m_CurrentMemoryBox;
+	CEdit m_CurrentMemoryBox, m_CurrentDOMNodesBox;
 	CListBox m_memList;
 };

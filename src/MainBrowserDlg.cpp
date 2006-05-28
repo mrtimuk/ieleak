@@ -69,6 +69,7 @@ CStringW CMainBrowserDlg::GetMemoryUsage()
 
 void CMainBrowserDlg::DoDataExchange(CDataExchange* pDX) {
 	CBrowserHostDlg::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_CURRENT_DOM_NODES_EDIT, m_CurrentDOMNodesBox);
 	DDX_Control(pDX, IDC_CURRENT_MEMORY_EDIT, m_CurrentMemoryBox);
 	DDX_Control(pDX, IDC_MEMLIST, m_memList);
 }
@@ -103,6 +104,8 @@ BOOL CMainBrowserDlg::OnInitDialog() {
 	m_resizeHelper.Fix(IDC_ADDRESS_STATIC, DlgResizeHelper::kWidthLeft, DlgResizeHelper::kHeightTop);
 	m_resizeHelper.Fix(IDC_FORWARD, DlgResizeHelper::kWidthLeft, DlgResizeHelper::kHeightTop);
 	m_resizeHelper.Fix(IDC_BACK, DlgResizeHelper::kWidthLeft, DlgResizeHelper::kHeightTop);
+	m_resizeHelper.Fix(IDC_TOTALDOMNODES_STATIC, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
+	m_resizeHelper.Fix(IDC_CURRENT_DOM_NODES_EDIT, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
 	m_resizeHelper.Fix(IDC_TOTALMEMLABEL, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
 	m_resizeHelper.Fix(IDC_CURRENT_MEMORY_EDIT, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
 	m_resizeHelper.Fix(IDC_MEMLABEL, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
@@ -200,7 +203,15 @@ void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent) {
 			break;
 
 		case TIMER_MONITOR_MEMORY:
-			m_CurrentMemoryBox.SetWindowText(GetMemoryUsage());
+			{
+				// Update the node count and memory usage
+				//
+				CStringW nodes;
+				nodes.Format(L"%i", m_hook->getNodeCount());
+				m_CurrentDOMNodesBox.SetWindowText(nodes);
+
+				m_CurrentMemoryBox.SetWindowText(GetMemoryUsage());
+			}
 			break;
 
 		case TIMER_CHECK_LEAKS:
