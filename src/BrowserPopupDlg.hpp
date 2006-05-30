@@ -11,7 +11,6 @@ class JSHook;
 class CBrowserPopupDlg : public CBrowserHostDlg
 {
 private:
-	CComObject<JSHook>*			m_hook;
 	void repositionExplorer();
 
 	DECLARE_DYNAMIC(CBrowserPopupDlg)
@@ -35,7 +34,6 @@ protected:
 	afx_msg BOOL OnInitDialog();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 
-	virtual CComObject<JSHook>* getHook();
 	virtual bool isHookActive();
 
 	virtual void onTitleChange(LPCTSTR lpszText);

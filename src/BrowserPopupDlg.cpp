@@ -57,10 +57,6 @@ void CBrowserPopupDlg::requestClose() {
 	m_waitingForBlankDoc = true;
 }
 
-CComObject<JSHook>* CBrowserPopupDlg::getHook() {
-	return m_hook;
-}
-
 bool CBrowserPopupDlg::isHookActive() {
 	return !m_waitingForBlankDoc;
 }
@@ -101,7 +97,7 @@ void CBrowserPopupDlg::onOuterDocumentLoad(MSHTML::IHTMLDocument2Ptr doc) {
 }
 
 void CBrowserPopupDlg::onNewWindow(CBrowserHostDlg** ppDlg) {
-	CBrowserPopupDlg *dlg = new CBrowserPopupDlg(m_hook,m_popups,this);
+	CBrowserPopupDlg *dlg = new CBrowserPopupDlg(getHook(),m_popups,this);
 	dlg->Create(CBrowserPopupDlg::IDD);
 	dlg->ShowWindow(SW_SHOW);
 	m_popups->push_back(dlg);
