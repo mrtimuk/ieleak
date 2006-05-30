@@ -33,13 +33,24 @@ public:
 		// Create the main dialog and display it.  The application
 		//   will end when this dialog is closed.
 		//
-		CMainBrowserDlg dlg(hook);
-		m_pMainWnd = &dlg;
-		dlg.DoModal();
+		if (true) {
+			// Scope the dialog so that its reference to the hook will be freed immediately
+			//
+			CMainBrowserDlg dlg(hook);
+			m_pMainWnd = &dlg;
+			dlg.DoModal();
+		}
 
 		// Release the browser hook.
 		//
-		hook->Release();
+		int refCnt = hook->Release();
+
+		// JSHook::hookNewPage adds references when it calls __drip_initHook. However, it is unclear
+		// when this reference is freed. At this point, all references to the hook *should* have been
+		// released, so force the hook to be freed.
+		//
+		while (refCnt > 0)
+			refCnt = hook->Release();
 
 		return FALSE;
 	}
