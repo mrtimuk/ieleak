@@ -9,8 +9,8 @@
 
 IMPLEMENT_DYNAMIC(CBrowserPopupDlg, CBrowserHostDlg)
 CBrowserPopupDlg::CBrowserPopupDlg(CComObject<JSHook>* hook, std::vector<CBrowserPopupDlg*> *popups, CWnd* pParent /*=NULL*/)
-	: CBrowserHostDlg(IDC_EXPLORER, CBrowserPopupDlg::IDD, pParent),
-	m_hook(hook), m_popups(popups), m_waitingForBlankDoc(false), m_isFinished(false) {
+	: CBrowserHostDlg(hook, IDC_EXPLORER, CBrowserPopupDlg::IDD, pParent),
+	m_popups(popups), m_waitingForBlankDoc(false), m_isFinished(false) {
 }
 
 CBrowserPopupDlg::~CBrowserPopupDlg() {

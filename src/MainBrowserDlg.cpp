@@ -33,7 +33,7 @@ BEGIN_MESSAGE_MAP(CMainBrowserDlg, CBrowserHostDlg)
 	ON_BN_CLICKED(IDC_AUTOREFRESH, OnBnClickedAutoRefresh)
 END_MESSAGE_MAP()
 
-CMainBrowserDlg::CMainBrowserDlg(CWnd* pParent)	: CBrowserHostDlg(IDC_EXPLORER, CMainBrowserDlg::IDD, pParent),
+CMainBrowserDlg::CMainBrowserDlg(CComObject<JSHook>* hook, CWnd* pParent)	: CBrowserHostDlg(hook, IDC_EXPLORER, CMainBrowserDlg::IDD, pParent),
 	m_waitingForDoc(false), m_waitingForBlankDoc(false), m_autoRefreshMode(false), m_checkLeakDoc(NULL)
 {
 	//{{AFX_DATA_INIT(CMainBrowserDlg)
@@ -41,17 +41,9 @@ CMainBrowserDlg::CMainBrowserDlg(CWnd* pParent)	: CBrowserHostDlg(IDC_EXPLORER, 
 	//}}AFX_DATA_INIT
 
 	m_hIcon = AfxGetApp()->LoadIcon(IDI_ICON1);
-
-	// Create the browser hook, which will be shared across all HTML documents.
-	//
-	CComObject<JSHook>::CreateInstance(&m_hook);
-	m_hook->AddRef();
 }
 
 CMainBrowserDlg::~CMainBrowserDlg() {
-	// Release the browser hook.
-	//
-	m_hook->Release();
 }
 
 
@@ -191,8 +183,8 @@ LRESULT CMainBrowserDlg::WindowProc(UINT message, WPARAM wparam, LPARAM lparam) 
 }
 
 LRESULT CMainBrowserDlg::OnKickIdle(WPARAM, LPARAM lCount) {
-	m_hook->backgroundReleaseExtraReferences();
-	return (lCount < (LPARAM)m_hook->getNodeCount());
+	getHook()->backgroundReleaseExtraReferences();
+	return (lCount < (LPARAM)getHook()->getNodeCount());
 }
 
 void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent) {
@@ -207,7 +199,7 @@ void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent) {
 				// Update the node count and memory usage
 				//
 				CStringW nodes;
-				nodes.Format(L"%i", m_hook->getNodeCount());
+				nodes.Format(L"%i", getHook()->getNodeCount());
 				m_CurrentDOMNodesBox.SetWindowText(nodes);
 
 				m_CurrentMemoryBox.SetWindowText(GetMemoryUsage());
@@ -228,7 +220,7 @@ void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent) {
 				KillTimer(nIDEvent);
 
 				CDOMReportDlg leakDlg(L"Leaks", this);
-				m_hook->showDOMReport(m_checkLeakDoc->parentWindow, &leakDlg, JSHook::kLeaks);
+				getHook()->showDOMReport(m_checkLeakDoc->parentWindow, &leakDlg, JSHook::kLeaks);
 				GetDlgItem(IDC_CHECKLEAKS)->EnableWindow(FALSE);
 				leakDlg.DoModal();
 			}
@@ -294,7 +286,7 @@ void CMainBrowserDlg::OnBnClickedGo() {
 
 void CMainBrowserDlg::OnBnClickedCheckUsage() {
 	CDOMReportDlg usageDlg(L"Usage", this);
-	m_hook->showDOMReport(getWindow(), &usageDlg, JSHook::kUsage);
+	getHook()->showDOMReport(getWindow(), &usageDlg, JSHook::kUsage);
 	usageDlg.DoModal();
 }
 
@@ -417,7 +409,7 @@ void CMainBrowserDlg::onOuterDocumentLoad(MSHTML::IHTMLDocument2Ptr doc)
 
 void CMainBrowserDlg::onNewWindow(CBrowserHostDlg** ppDlg)
 {
-	CBrowserPopupDlg *dlg = new CBrowserPopupDlg(m_hook,&m_popups,this);
+	CBrowserPopupDlg *dlg = new CBrowserPopupDlg(getHook(),&m_popups,this);
 	dlg->Create(CBrowserPopupDlg::IDD);
 	dlg->ShowWindow(SW_SHOW);
 	m_popups.push_back(dlg);

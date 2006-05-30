@@ -13,7 +13,7 @@ class CBrowserHostDlg : public CDialog
 	DECLARE_DYNAMIC(CBrowserHostDlg)
 
 public:
-	CBrowserHostDlg(UINT explorerCtrlID, UINT nIDTemplate, CWnd* pParent = NULL);   // standard constructor
+	CBrowserHostDlg(CComObject<JSHook>* hook, UINT explorerCtrlID, UINT nIDTemplate, CWnd* pParent = NULL);   // standard constructor
 	virtual ~CBrowserHostDlg();
 
 // for derived classes
@@ -27,7 +27,8 @@ protected:
 	MSHTML::IHTMLDocument2Ptr getDocument();
 	MSHTML::IHTMLWindow2Ptr getWindow();
 
-	virtual CComObject<JSHook>* getHook()=0;
+	CComObject<JSHook>* getHook() { return m_hook; }
+
 	virtual bool isHookActive()=0;
 
 	virtual void onTitleChange(LPCTSTR lpszText) {}
@@ -57,4 +58,5 @@ private:
 	AFX_EVENTSINKMAP		m_eventsinkMap;
 
 	CWebBrowser2*			m_explorer;
+	CComObject<JSHook>*	m_hook;
 };

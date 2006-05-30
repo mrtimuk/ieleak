@@ -191,13 +191,13 @@
 				RelativePath=".\resource.h">
 			</File>
 			<File
-				RelativePath=".\UnitTests\stdafx.h">
-			</File>
-			<File
 				RelativePath=".\stdafx.h">
 			</File>
 			<File
 				RelativePath=".\NanoCppUnit\stdafx.h">
+			</File>
+			<File
+				RelativePath=".\UnitTests\stdafx.h">
 			</File>
 			<File
 				RelativePath=".\NanoCppUnit\test.h">

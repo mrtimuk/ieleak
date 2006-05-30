@@ -13,8 +13,11 @@
 // CBrowserHostDlg dialog
 
 IMPLEMENT_DYNAMIC(CBrowserHostDlg, CDialog)
-CBrowserHostDlg::CBrowserHostDlg(UINT explorerCtrlID, UINT nIDTemplate, CWnd* pParent /*=NULL*/)
+CBrowserHostDlg::CBrowserHostDlg(CComObject<JSHook>* hook, UINT explorerCtrlID, UINT nIDTemplate, CWnd* pParent /*=NULL*/)
 	: CDialog(nIDTemplate, pParent) {
+	m_hook = hook;
+	m_hook->AddRef();
+
 	m_explorer = new CWebBrowser2;
 
 	//fixing a weird compiler warning on END_EVENTSINK_MAP() -- something like:
@@ -50,6 +53,10 @@ CBrowserHostDlg::~CBrowserHostDlg() {
 	delete[] m_eventsinkMap.lpEntries;
 	m_eventsinkMap.lpEntries = NULL;
 	m_eventsinkMap.lpEntryCount = NULL;
+
+	// Release the hook
+	//
+	m_hook->Release();
 }
 
 void CBrowserHostDlg::DoDataExchange(CDataExchange* pDX) {

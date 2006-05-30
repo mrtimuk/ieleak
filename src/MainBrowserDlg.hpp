@@ -16,8 +16,6 @@ private:
 	CStringW getUrlText();
 	void go();
 
-	CComObject<JSHook>*			m_hook;
-
 	std::vector<CBrowserPopupDlg*>	m_popups;
 
 	bool						m_waitingForDoc;
@@ -30,13 +28,12 @@ private:
 	DlgResizeHelper				m_resizeHelper;
 	CStringW					m_autoRefreshBtnTitle;
 
-	virtual CComObject<JSHook>* getHook() { return m_hook; }
 	virtual bool isHookActive() { return !m_waitingForBlankDoc && !m_autoRefreshMode; }
 
 public:
 	enum { IDD = IDD_BROWSER_DIALOG };
 
-	CMainBrowserDlg(CWnd* pParent = NULL);
+	CMainBrowserDlg(CComObject<JSHook>* hook, CWnd* pParent = NULL);
 	virtual ~CMainBrowserDlg();
 
 	DECLARE_MESSAGE_MAP()

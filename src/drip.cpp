@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "resource.h"
+#include "JSHook.hpp"
 #include "MainBrowserDlg.hpp"
 
 #include "nanocppunit/test.h"
@@ -23,12 +24,22 @@ public:
 
 #endif //#ifdef TEST
 
+		// Create the browser hook, which will be shared across all HTML documents.
+		//
+		CComObject<JSHook>* hook = NULL;
+		CComObject<JSHook>::CreateInstance(&hook);
+		hook->AddRef();
+
 		// Create the main dialog and display it.  The application
 		//   will end when this dialog is closed.
 		//
-		CMainBrowserDlg dlg;
+		CMainBrowserDlg dlg(hook);
 		m_pMainWnd = &dlg;
 		dlg.DoModal();
+
+		// Release the browser hook.
+		//
+		hook->Release();
 
 		return FALSE;
 	}
