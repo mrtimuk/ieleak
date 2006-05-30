@@ -16,7 +16,8 @@ bool GetHTML(const int& idrHTML, CString& rString)
             LPCSTR lpcHtml = static_cast<LPCSTR>(LockResource(hHeader));
             if (lpcHtml != NULL)
             {
-               rString = CString(lpcHtml);
+               DWORD size = SizeofResource(NULL, hSrc);
+               rString = CString(lpcHtml, size);
                retVal = true;
             }
             UnlockResource(hHeader);
