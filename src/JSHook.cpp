@@ -93,30 +93,34 @@ void JSHook::addNode(MSHTML::IHTMLDOMNode* node, MSHTML::IHTMLDocument2* doc) {
 		Node cachedNode(SysAllocString(doc->url));
 		m_nodes.insert(std::pair<IUnknown*,Node>(unk,cachedNode));
 
-		// Create a temporary parameter list to pass the node to the script, 
-		// in order to so attach events and override functions
+		// Text nodes have no expandos or events.
 		//
-		VARIANT vHook;
-		VariantInit(&vHook);
-		vHook.vt = VT_DISPATCH;
-		vHook.pdispVal = node;
-		node->AddRef();
+		if (node->nodeType != 3/*TEXT*/) {
+			// Create a temporary parameter list to pass the node to the script, 
+			// in order to so attach events and override functions
+			//
+			VARIANT vHook;
+			VariantInit(&vHook);
+			vHook.vt = VT_DISPATCH;
+			vHook.pdispVal = node;
+			node->AddRef();
 
-		DISPPARAMS params;
-		memset(&params, 0, sizeof(DISPPARAMS));
-		params.cArgs = 1;
-		params.rgvarg = &vHook;
+			DISPPARAMS params;
+			memset(&params, 0, sizeof(DISPPARAMS));
+			params.cArgs = 1;
+			params.rgvarg = &vHook;
 
-		CComPtr<IDispatch> scriptObj = doc->Script;
+			CComPtr<IDispatch> scriptObj = doc->Script;
 
-		DISPID dispId;
-		OLECHAR *name = SysAllocString(L"__drip_hookEvents");
-		scriptObj->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_SYSTEM_DEFAULT, &dispId);
-		SysFreeString(name);
+			DISPID dispId;
+			OLECHAR *name = SysAllocString(L"__drip_hookEvents");
+			scriptObj->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_SYSTEM_DEFAULT, &dispId);
+			SysFreeString(name);
 
-		scriptObj->Invoke(dispId, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &params, NULL, NULL, NULL);
+			scriptObj->Invoke(dispId, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &params, NULL, NULL, NULL);
 
-		VariantClear(&vHook);
+			VariantClear(&vHook);
+		}
 	}
 	else {
 		unk->Release();

@@ -126,6 +126,9 @@
 				RelativePath=".\DlgResizeHelper.cpp">
 			</File>
 			<File
+				RelativePath=".\DOMReportDlg.cpp">
+			</File>
+			<File
 				RelativePath=".\drip.cpp">
 			</File>
 			<File
@@ -133,9 +136,6 @@
 			</File>
 			<File
 				RelativePath=".\JSHook.cpp">
-			</File>
-			<File
-				RelativePath=".\DOMReportDlg.cpp">
 			</File>
 			<File
 				RelativePath=".\MainBrowserDlg.cpp">
@@ -170,13 +170,13 @@
 				RelativePath=".\DlgResizeHelper.h">
 			</File>
 			<File
+				RelativePath=".\DOMReportDlg.hpp">
+			</File>
+			<File
 				RelativePath=".\HtmlResource.h">
 			</File>
 			<File
 				RelativePath=".\JSHook.hpp">
-			</File>
-			<File
-				RelativePath=".\DOMReportDlg.hpp">
 			</File>
 			<File
 				RelativePath=".\MainBrowserDlg.hpp">
@@ -191,13 +191,13 @@
 				RelativePath=".\resource.h">
 			</File>
 			<File
-				RelativePath=".\NanoCppUnit\stdafx.h">
-			</File>
-			<File
 				RelativePath=".\UnitTests\stdafx.h">
 			</File>
 			<File
 				RelativePath=".\stdafx.h">
+			</File>
+			<File
+				RelativePath=".\NanoCppUnit\stdafx.h">
 			</File>
 			<File
 				RelativePath=".\NanoCppUnit\test.h">

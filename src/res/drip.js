@@ -44,31 +44,11 @@ function __drip_onFunctionCall(obj, functionName, returnValue) {
 	}
 }
 
-function __drip_safeGetObjectProperty(obj, name)
-{
-	// the XML island getter throws an exception; return undefined in that case
-	var retval;
-	try { retval = obj[name]; } catch (err) { }
-	return retval;
-}
-
-function __drip_safeSetObjectProperty(obj, name, value)
-{
-	// an exception may be thrown if the script does not have permission to attach
-	try { obj[name] = value; } catch (err) { }
-}
-
 /* This function attaches to a native function and triggers a notification when it gets called.
  * NOTE: This function allows only a limited number of parameters.
  */
-function __drip_captureFunction(obj, functionName) {
-	/* override the function and clear the reference to the object (to avoid memory leak) */
-	var nativeFunction = __drip_safeGetObjectProperty(obj, functionName);
-	if (typeof nativeFunction !== 'undefined')
-		__drip_safeSetObjectProperty(obj, functionName, override);
-	obj = void 0;
-
-	function override(arg1, arg2, arg3) {
+function __drip_createOverrideFunction(functionName, nativeFunction) {
+	return function(arg1, arg2, arg3) {
 		/* Because of the self-altering nature of the overridden functions, the value
 		 * of "this" must be preserved for the callback notification
 		 */
@@ -91,13 +71,22 @@ function __drip_hookEvents(elem) {
 	if (typeof elem.attachEvent !== 'undefined')
 		elem.attachEvent('onpropertychange', __drip_onPropertyChange);
 
-	__drip_captureFunction(elem, 'cloneNode');
-
 	/* Element references might change when an element is attached to the document */
-	__drip_captureFunction(elem, 'appendChild');
-	__drip_captureFunction(elem, 'insertBefore');
-	__drip_captureFunction(elem, 'insertAdjacentElement');
-	__drip_captureFunction(elem, 'insertAdjacentHTML');
-	
-	__drip_safeSetObjectProperty(elem, '__drip_hooked', true);
+	var functionNames = ['cloneNode','appendChild','insertBefore','insertAdjacentElement','insertAdjacentHTML'];
+	for (var i = 0; i < functionNames.length; i++) {
+		var name = functionNames[i];
+
+		// the XML island getter throws an exception
+		var nativeFunction;
+		try { nativeFunction = elem[name]; } catch (err) { }
+
+		if (typeof nativeFunction !== 'undefined') {
+			var override = __drip_createOverrideFunction(name, nativeFunction);
+			/* An exception may be thrown if properties cannot be set on the element. */
+			try { elem[name] = override; } catch (err)	{ }
+		}
+	}
+
+	/* An exception may be thrown if properties cannot be set on the element. */
+	try { elem.__drip_hooked = true; } catch(err) { }
 }
