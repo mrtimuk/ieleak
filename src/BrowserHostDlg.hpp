@@ -30,6 +30,8 @@ protected:
 
 	virtual bool isHookActive()=0;
 
+	virtual void onUpdateNavigateForward(bool enable) {}
+	virtual void onUpdateNavigateBack(bool enable) {}
 	virtual void onURLChange(LPCTSTR lpszText) {}
 	virtual void onTitleChange(LPCTSTR lpszText) {}
 	virtual void onWindowSetHeight(long height) {}
@@ -46,6 +48,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
+	void Event_CommandStateChange(long lCommand, BOOL bEnable);
 	void Event_TitleChange(LPCTSTR lpszText);
 	void Event_WindowSetHeight(long Height);
 	void Event_WindowSetWidth(long Width);

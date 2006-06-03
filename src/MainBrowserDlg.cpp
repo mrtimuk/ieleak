@@ -361,6 +361,14 @@ void CMainBrowserDlg::destroyFinishedPopups()
 	}
 }
 
+void CMainBrowserDlg::onUpdateNavigateForward(bool enable) {
+	GetDlgItem(IDC_FORWARD)->EnableWindow(enable);
+}
+
+void CMainBrowserDlg::onUpdateNavigateBack(bool enable) {
+	GetDlgItem(IDC_BACK)->EnableWindow(enable);
+}
+
 void CMainBrowserDlg::onURLChange(LPCTSTR lpszText) {
 	CStringW url = lpszText;
 	if (url.CompareNoCase(L"about:blank") == 0)

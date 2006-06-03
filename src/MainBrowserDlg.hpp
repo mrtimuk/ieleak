@@ -60,6 +60,8 @@ public:
 	void requestClosePopups();
 	void destroyFinishedPopups();
 
+	virtual void onUpdateNavigateForward(bool enable);
+	virtual void onUpdateNavigateBack(bool enable);
 	virtual void onURLChange(LPCTSTR lpszText);
 	virtual void onTitleChange(LPCTSTR lpszText);
 	virtual void onOuterDocumentLoad(MSHTML::IHTMLDocument2Ptr doc);

@@ -27,6 +27,7 @@ CBrowserHostDlg::CBrowserHostDlg(CComObject<JSHook>* hook, UINT explorerCtrlID, 
 	// The event sink is complicated somewhat by the fact that the ID of the web browser control is not known
 	// until the class is instantiated.
 	AFX_EVENTSINKMAP_ENTRY templateEventSink[] = {
+		ON_EVENT(CBrowserHostDlg, explorerCtrlID, DISPID_COMMANDSTATECHANGE, CBrowserHostDlg::Event_CommandStateChange, VTS_I4 VTS_BOOL)
 		ON_EVENT(CBrowserHostDlg, explorerCtrlID, DISPID_TITLECHANGE, CBrowserHostDlg::Event_TitleChange, VTS_BSTR)
 		ON_EVENT(CBrowserHostDlg, explorerCtrlID, DISPID_WINDOWSETHEIGHT, CBrowserHostDlg::Event_WindowSetHeight, VTS_I4)
 		ON_EVENT(CBrowserHostDlg, explorerCtrlID, DISPID_WINDOWSETWIDTH, CBrowserHostDlg::Event_WindowSetWidth, VTS_I4)
@@ -98,6 +99,20 @@ void CBrowserHostDlg::Stop() {
 
 LPDISPATCH CBrowserHostDlg::getDocument() {
 	return m_explorer->GetDocument();
+}
+
+void CBrowserHostDlg::Event_CommandStateChange(long lCommand, BOOL bEnable) {
+	bool enable = bEnable ? true : false;
+
+	switch (lCommand) {
+		case CSC_NAVIGATEFORWARD:
+			onUpdateNavigateForward(enable);
+			break;
+
+		case CSC_NAVIGATEBACK:
+			onUpdateNavigateBack(enable);
+			break;
+	}
 }
 
 void CBrowserHostDlg::Event_TitleChange(LPCTSTR lpszText) {
