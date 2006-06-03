@@ -286,7 +286,13 @@ void CMainBrowserDlg::OnBnClickedGo() {
 
 void CMainBrowserDlg::OnBnClickedCheckUsage() {
 	CDOMReportDlg usageDlg(L"Usage", this);
-	getHook()->showDOMReport(getWindow(), &usageDlg, JSHook::kUsage);
+
+	MSHTML::IHTMLDocument2Ptr doc;
+	getDocument()->QueryInterface(IID_IHTMLDocument2,(void**)&doc);
+	if (doc) {
+		getHook()->showDOMReport(doc->parentWindow, &usageDlg, JSHook::kUsage);
+		doc->Release();
+	}
 	usageDlg.DoModal();
 }
 

@@ -24,8 +24,7 @@ protected:
 	void GoForward();
 	void Stop();
 
-	MSHTML::IHTMLDocument2Ptr getDocument();
-	MSHTML::IHTMLWindow2Ptr getWindow();
+	LPDISPATCH getDocument();
 
 	CComObject<JSHook>* getHook() { return m_hook; }
 

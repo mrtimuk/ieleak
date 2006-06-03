@@ -41,16 +41,15 @@ public:
 			dlg.DoModal();
 		}
 
+		// JSHook::hookNewPage adds references when it calls __drip_initHook. However, it is unclear
+		// when this reference is freed. At this point, simply release all references to the nodes
+		// in case there are outstanding references to the hook.
+		//
+		hook->clearNodes();
+
 		// Release the browser hook.
 		//
 		int refCnt = hook->Release();
-
-		// JSHook::hookNewPage adds references when it calls __drip_initHook. However, it is unclear
-		// when this reference is freed. At this point, all references to the hook *should* have been
-		// released, so force the hook to be freed.
-		//
-		while (refCnt > 0)
-			refCnt = hook->Release();
 
 		return FALSE;
 	}

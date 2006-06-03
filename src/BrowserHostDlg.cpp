@@ -96,20 +96,9 @@ void CBrowserHostDlg::Stop() {
 	m_explorer->Stop();
 }
 
-MSHTML::IHTMLDocument2Ptr CBrowserHostDlg::getDocument() {
-	MSHTML::IHTMLDocument2Ptr doc = NULL;
-	m_explorer->GetDocument()->QueryInterface(IID_IHTMLDocument2,(void**)&doc);
-	return doc;
+LPDISPATCH CBrowserHostDlg::getDocument() {
+	return m_explorer->GetDocument();
 }
-
-MSHTML::IHTMLWindow2Ptr CBrowserHostDlg::getWindow() {
-	MSHTML::IHTMLDocument2Ptr doc = getDocument();
-	if (doc)
-		return doc->parentWindow;
-	else
-		return NULL;
-}
-
 
 void CBrowserHostDlg::Event_TitleChange(LPCTSTR lpszText) {
 	onTitleChange(lpszText);
@@ -138,8 +127,10 @@ void CBrowserHostDlg::Event_DocumentCompleteExplorer(LPDISPATCH pDisp, VARIANT* 
 	//
 	IDispatch* dispDoc = NULL;
 	sender->get_Document(&dispDoc);
-	if (!dispDoc)
+	if (!dispDoc) {
+		sender->Release();
 		return;
+	}
 
 	// The document pointer may be NULL if the user navigates to a folder on the hard drive
 	//
@@ -190,6 +181,7 @@ void CBrowserHostDlg::Event_NavigateComplete2Explorer(LPDISPATCH pDisp, VARIANT*
 		//
 		if (doc)
 			getHook()->hookNewPage(doc);
+		sender->Release();
 	}
 }
 

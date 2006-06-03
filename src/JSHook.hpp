@@ -31,7 +31,6 @@ private:
 	void addNode(MSHTML::IHTMLDOMNode* node, MSHTML::IHTMLDocument2* doc);
 	void addNodeRecursively(MSHTML::IHTMLDOMNode* node, MSHTML::IHTMLDocument2* doc);
 
-	void clearNodes();
 	void releaseExtraReferences(MSHTML::IHTMLWindow2Ptr wnd);
 
 	CStringW m_js;
@@ -48,12 +47,17 @@ public:
 		kLeaks,
 	};
 
+	// Page loading functions
 	void hookNewPage(MSHTML::IHTMLDocument2Ptr wnd);
 	void addStaticNodes(MSHTML::IHTMLWindow2Ptr wnd);
 
+	// Reporting functions
 	size_t getNodeCount() const;
 	void showDOMReport(MSHTML::IHTMLWindow2Ptr wnd, CDOMReportDlg* dlg, DOMReportType type);
 	void backgroundReleaseExtraReferences();
+
+	// Cleanup functions
+	void clearNodes();
 
 	BEGIN_COM_MAP(JSHook)
 		COM_INTERFACE_ENTRY(IDispatch)
