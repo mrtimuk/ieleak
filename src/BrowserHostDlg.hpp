@@ -30,6 +30,7 @@ protected:
 
 	virtual bool isHookActive()=0;
 
+	virtual void onURLChange(LPCTSTR lpszText) {}
 	virtual void onTitleChange(LPCTSTR lpszText) {}
 	virtual void onWindowSetHeight(long height) {}
 	virtual void onWindowSetWidth(long width) {}

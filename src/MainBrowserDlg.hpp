@@ -60,6 +60,7 @@ public:
 	void requestClosePopups();
 	void destroyFinishedPopups();
 
+	virtual void onURLChange(LPCTSTR lpszText);
 	virtual void onTitleChange(LPCTSTR lpszText);
 	virtual void onOuterDocumentLoad(MSHTML::IHTMLDocument2Ptr doc);
 	virtual void onNewWindow(CBrowserHostDlg** ppDlg);
@@ -67,6 +68,7 @@ public:
 public:
 	static CStringW GetMemoryUsage();
 public:
+	CEdit m_editURL;
 	CEdit m_CurrentMemoryBox, m_CurrentDOMNodesBox;
 	CListBox m_memList;
 };

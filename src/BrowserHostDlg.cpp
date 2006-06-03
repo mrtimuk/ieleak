@@ -165,6 +165,9 @@ void CBrowserHostDlg::Event_DocumentCompleteExplorer(LPDISPATCH pDisp, VARIANT* 
 //   (nor its onload event fired).
 //
 void CBrowserHostDlg::Event_NavigateComplete2Explorer(LPDISPATCH pDisp, VARIANT* URL) {
+	if (URL->vt == VT_BSTR)
+		onURLChange(URL->bstrVal);
+
 	// If we're waiting on the document (but not automatically refreshing), hook its
 	//   createElement() method, so that we can collect all dynamically-
 	//   created elements.

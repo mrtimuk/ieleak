@@ -61,6 +61,7 @@ CStringW CMainBrowserDlg::GetMemoryUsage()
 
 void CMainBrowserDlg::DoDataExchange(CDataExchange* pDX) {
 	CBrowserHostDlg::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_EDITURL, m_editURL);
 	DDX_Control(pDX, IDC_CURRENT_DOM_NODES_EDIT, m_CurrentDOMNodesBox);
 	DDX_Control(pDX, IDC_CURRENT_MEMORY_EDIT, m_CurrentMemoryBox);
 	DDX_Control(pDX, IDC_MEMLIST, m_memList);
@@ -80,7 +81,7 @@ BOOL CMainBrowserDlg::OnInitDialog() {
 
 	// Focus the URL edit control.
 	//
-	GetDlgItem(IDC_EDITURL)->SetFocus();
+	m_editURL.SetFocus();
 
 	// Enable memory monitoring
 	//
@@ -232,7 +233,7 @@ void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent) {
 //
 CStringW CMainBrowserDlg::getUrlText() {
 	CStringW url;
-	GetDlgItem(IDC_EDITURL)->GetWindowText(url);
+	m_editURL.GetWindowText(url);
 
 	// Navigating to a blank URL will cause the browser not to show a document at all.
 	// Either use about:blank or bulletproof this dialog against NULL document pointers.
@@ -358,6 +359,15 @@ void CMainBrowserDlg::destroyFinishedPopups()
 			it--;
 		}
 	}
+}
+
+void CMainBrowserDlg::onURLChange(LPCTSTR lpszText) {
+	CStringW url = lpszText;
+	if (url.CompareNoCase(L"about:blank") == 0)
+		url = "";
+
+	m_editURL.SetWindowText(url);
+	m_editURL.SetSel(0, -1);
 }
 
 void CMainBrowserDlg::onTitleChange(LPCTSTR lpszText) {
