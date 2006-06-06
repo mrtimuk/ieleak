@@ -163,15 +163,7 @@ void CBrowserHostDlg::Event_DocumentCompleteExplorer(LPDISPATCH pDisp, VARIANT* 
 	// Determine whether the completed document is the outer one that we are
 	//   actually waiting on (by comparing its URL with the outer browser's).
 	//
-	BSTR loadedLocation = NULL;
-	sender->get_LocationURL(&loadedLocation);
-
-	CString outerLocation = m_explorer->GetLocationURL();
-	bool isOuter = (0 == outerLocation.Compare(loadedLocation));
-
-	SysFreeString(loadedLocation);
-
-	if (isOuter)
+	if (isOuterLocation(sender))
 		onOuterDocumentLoad(doc);
 
 	dispDoc->Release();
@@ -182,9 +174,6 @@ void CBrowserHostDlg::Event_DocumentCompleteExplorer(LPDISPATCH pDisp, VARIANT* 
 //   (nor its onload event fired).
 //
 void CBrowserHostDlg::Event_NavigateComplete2Explorer(LPDISPATCH pDisp, VARIANT* URL) {
-	if (URL->vt == VT_BSTR)
-		onURLChange(URL->bstrVal);
-
 	// If we're waiting on the document (but not automatically refreshing), hook its
 	//   createElement() method, so that we can collect all dynamically-
 	//   created elements.
@@ -196,6 +185,9 @@ void CBrowserHostDlg::Event_NavigateComplete2Explorer(LPDISPATCH pDisp, VARIANT*
 		IDispatch* dispDoc = NULL;
 		sender->get_Document(&dispDoc);
 		MSHTML::IHTMLDocument2Ptr doc = dispDoc;
+
+		if (isOuterLocation(sender))
+			onURLChange(m_explorer->GetLocationURL());
 
 		// The document pointer may be NULL if the user navigates to a folder on the hard drive
 		//
@@ -222,4 +214,16 @@ void CBrowserHostDlg::Event_NewWindow2Explorer(LPDISPATCH* ppDisp, BOOL* Cancel)
 
 void CBrowserHostDlg::Event_WindowClosing(VARIANT_BOOL IsChildWindow, VARIANT_BOOL *&Cancel) {
 	onClosing();
+}
+
+bool CBrowserHostDlg::isOuterLocation(IWebBrowser2* sender) {
+	BSTR loadedLocation = NULL;
+	sender->get_LocationURL(&loadedLocation);
+
+	CString outerLocation = m_explorer->GetLocationURL();
+	bool isOuter = (0 == outerLocation.Compare(loadedLocation));
+
+	SysFreeString(loadedLocation);
+
+	return isOuter;
 }

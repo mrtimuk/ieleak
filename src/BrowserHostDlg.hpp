@@ -57,6 +57,8 @@ private:
 	void Event_NewWindow2Explorer(LPDISPATCH* ppDisp, BOOL* Cancel);
 	void Event_WindowClosing(VARIANT_BOOL IsChildWindow, VARIANT_BOOL *&Cancel);
 
+	bool isOuterLocation(IWebBrowser2* sender);
+
 	UINT					m_eventsinkmapEntryCount;
 	AFX_EVENTSINKMAP		m_eventsinkMap;
 
