@@ -159,8 +159,8 @@ void CDOMReportDlg::populateLeaks(bool showRecentOnly) {
 
 	m_leakList.DeleteAllItems();
 
-	for (std::vector<LeakEntry>::const_iterator it = m_leaks.begin(); it != m_leaks.end(); ++it) {
-		LeakEntry const& entry = *it;
+	for (size_t data_idx = 0; data_idx < m_leaks.size(); data_idx++) {
+		LeakEntry const& entry = m_leaks.at(data_idx);
 		if (showRecentOnly && !entry.isRecent)
 			continue;
 
@@ -170,18 +170,19 @@ void CDOMReportDlg::populateLeaks(bool showRecentOnly) {
 		CStringW refCountText;
 		refCountText.Format(L"%d", entry.refCount);
 
-		int idx = m_leakList.GetItemCount();
-		m_leakList.InsertItem(idx, entry.url);
-		m_leakList.SetItemText(idx, 1, refCountText);
-		m_leakList.SetItemText(idx, 2, node->nodeName);
+		int display_idx = m_leakList.GetItemCount();
+		m_leakList.InsertItem(display_idx, entry.url);
+		m_leakList.SetItemData(display_idx, data_idx);
+		m_leakList.SetItemText(display_idx, 1, refCountText);
+		m_leakList.SetItemText(display_idx, 2, node->nodeName);
 
 		if (elem) {
-			m_leakList.SetItemText(idx, 3, elem->id);
-			m_leakList.SetItemText(idx, 4, elem->innerHTML);
+			m_leakList.SetItemText(display_idx, 3, elem->id);
+			m_leakList.SetItemText(display_idx, 4, elem->innerHTML);
 		}
 		else {
-			m_leakList.SetItemText(idx, 3, L"");
-			m_leakList.SetItemText(idx, 4, L"");
+			m_leakList.SetItemText(display_idx, 3, L"");
+			m_leakList.SetItemText(display_idx, 4, L"");
 		}
 	}
 	if (m_leakList.GetItemCount() > 0)
@@ -228,7 +229,8 @@ void CDOMReportDlg::showItemProperties(UINT nItem)
 	//
 	ASSERT(nItem != -1);
 
-	LeakEntry& entry = m_leaks.at(nItem);
+	size_t data_idx = m_leakList.GetItemData(nItem);
+	LeakEntry& entry = m_leaks.at(data_idx);
 	CComQIPtr<IDispatchEx> disp = entry.node;
 
 	CPropDlg propDlg(CStringW(L"Memory Leak in ") + entry.url, this);
@@ -281,7 +283,8 @@ void CDOMReportDlg::CopySelectedItems()
 		CArray<CStringW> asNames, asValues;
 		
 		// Load object properties
-		LeakEntry& entry = m_leaks.at(iCurrentItem);
+		size_t data_idx = m_leakList.GetItemData(iCurrentItem);
+		LeakEntry& entry = m_leaks.at(data_idx);
 		GetObjectProperties((CComQIPtr<IDispatchEx>)entry.node, aDispIDs, asNames, asValues);
 
 		// Serialize object
