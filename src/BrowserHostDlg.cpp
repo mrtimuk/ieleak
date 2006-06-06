@@ -150,8 +150,10 @@ void CBrowserHostDlg::Event_DocumentCompleteExplorer(LPDISPATCH pDisp, VARIANT* 
 	// The document pointer may be NULL if the user navigates to a folder on the hard drive
 	//
 	MSHTML::IHTMLDocument2Ptr doc = dispDoc;
-	if (doc == NULL)
+	if (doc == NULL) {
+		dispDoc->Release();
 		return;
+	}
 
 	// If we're waiting for a normal document, hook all of its static elements.
 	//
@@ -168,12 +170,12 @@ void CBrowserHostDlg::Event_DocumentCompleteExplorer(LPDISPATCH pDisp, VARIANT* 
 	bool isOuter = (0 == outerLocation.Compare(loadedLocation));
 
 	SysFreeString(loadedLocation);
+
+	if (isOuter)
+		onOuterDocumentLoad(doc);
+
+	dispDoc->Release();
 	sender->Release();
-
-	if (!isOuter)
-		return;
-
-	onOuterDocumentLoad(doc);
 }
 
 // This event is fired when the document has been downloaded but not yet parsed
@@ -199,6 +201,8 @@ void CBrowserHostDlg::Event_NavigateComplete2Explorer(LPDISPATCH pDisp, VARIANT*
 		//
 		if (doc)
 			getHook()->hookNewPage(doc);
+
+		dispDoc->Release();
 		sender->Release();
 	}
 }
