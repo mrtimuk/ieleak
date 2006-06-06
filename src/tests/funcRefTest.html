@@ -1,0 +1,30 @@
+<html>
+<head>
+	<title>Function Reference Test</title>
+	<script type="text/javascript">
+		function autoReload() {
+			if (window.location.hash == "#auto")
+				window.location.reload();
+		}
+		function testLeak() {
+			for (var i = 0; i < 1000; i++) {
+				var elem = document.createElement('DIV');
+				var fn1 = elem.appendChild;
+				var fn2 = elem.removeChild;
+				var fn3 = elem.cloneNode;
+			}
+
+			window.setInterval(autoReload, 100);
+		}
+
+		window.onload = testLeak;
+	</script>
+</head>
+<body>
+	<p>This page leaks memory in Internet Explorer 7 Beta 2.</p>
+	<form>
+		<p><a href="#">Manual Refresh</a></p>
+		<p><a href="#auto">Auto-Refresh</a></p>
+	</form>
+</body>
+</html>
