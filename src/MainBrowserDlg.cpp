@@ -67,7 +67,7 @@ CMainBrowserDlg::~CMainBrowserDlg() {
 }
 
 
-CStringW CMainBrowserDlg::GetMemoryUsage()
+size_t CMainBrowserDlg::GetMemoryUsage()
 {
 	PROCESS_MEMORY_COUNTERS_EX procMem;
 	memset(&procMem, 0, sizeof(procMem));
@@ -75,14 +75,15 @@ CStringW CMainBrowserDlg::GetMemoryUsage()
 	GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&procMem, procMem.cb);
 
 	// Private usage is not available on all platforms
-	size_t memUsage;
 	if (procMem.cb >= sizeof(PROCESS_MEMORY_COUNTERS_EX))
-		memUsage = procMem.PrivateUsage;
+		return procMem.PrivateUsage;
 	else
-		memUsage = procMem.WorkingSetSize;
+		return procMem.WorkingSetSize;
+}
 
+CStringW CMainBrowserDlg::GetMemoryUsageStr() {
 	CStringW usage;
-	usage.Format(L"%d", memUsage);
+	usage.Format(L"%d", GetMemoryUsage());
 	return usage;
 }
 
@@ -96,6 +97,8 @@ void CMainBrowserDlg::DoDataExchange(CDataExchange* pDX) {
 
 BOOL CMainBrowserDlg::OnInitDialog() {
 	CBrowserHostDlg::OnInitDialog();
+
+	m_memGraph.SubclassDlgItem(IDC_GRAPH_STATIC, this);
 
 	// Set the application icon.
 	//
@@ -132,6 +135,7 @@ BOOL CMainBrowserDlg::OnInitDialog() {
 	m_resizeHelper.Fix(IDC_MEMLIST, DlgResizeHelper::kWidthRight, DlgResizeHelper::kTopBottom);
 	m_resizeHelper.Fix(IDC_EXPLORER, DlgResizeHelper::kLeftRight, DlgResizeHelper::kTopBottom);
 	m_resizeHelper.Fix(getExplorerHwnd(), DlgResizeHelper::kLeftRight, DlgResizeHelper::kTopBottom);
+	m_resizeHelper.Fix(IDC_GRAPH_STATIC, DlgResizeHelper::kLeftRight, DlgResizeHelper::kHeightBottom);
 
 	// Navigate to a page so that the border appears in the browser
 	//
@@ -230,7 +234,9 @@ void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent) {
 				nodes.Format(L"%i", getHook()->getNodeCount());
 				m_CurrentDOMNodesBox.SetWindowText(nodes);
 
-				m_CurrentMemoryBox.SetWindowText(GetMemoryUsage());
+				size_t usage = GetMemoryUsage();
+				m_memGraph.AddPoint((int)usage);
+				m_CurrentMemoryBox.SetWindowText(GetMemoryUsageStr());
 			}
 			break;
 
@@ -428,7 +434,7 @@ void CMainBrowserDlg::onOuterDocumentLoad(MSHTML::IHTMLDocument2Ptr doc)
 
 		// Get the process' memory usage and add it to the list.
 		//
-		m_memList.InsertString(0, GetMemoryUsage());
+		m_memList.InsertString(0, GetMemoryUsageStr());
 
 		// Reload the document in 500 ms.
 		//

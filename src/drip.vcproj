@@ -132,6 +132,9 @@
 				RelativePath=".\drip.cpp">
 			</File>
 			<File
+				RelativePath=".\Graph.cpp">
+			</File>
+			<File
 				RelativePath=".\HtmlResource.cpp">
 			</File>
 			<File
@@ -173,6 +176,9 @@
 				RelativePath=".\DOMReportDlg.hpp">
 			</File>
 			<File
+				RelativePath=".\Graph.h">
+			</File>
+			<File
 				RelativePath=".\HtmlResource.h">
 			</File>
 			<File
@@ -191,13 +197,13 @@
 				RelativePath=".\resource.h">
 			</File>
 			<File
+				RelativePath=".\UnitTests\stdafx.h">
+			</File>
+			<File
 				RelativePath=".\stdafx.h">
 			</File>
 			<File
 				RelativePath=".\NanoCppUnit\stdafx.h">
-			</File>
-			<File
-				RelativePath=".\UnitTests\stdafx.h">
 			</File>
 			<File
 				RelativePath=".\NanoCppUnit\test.h">

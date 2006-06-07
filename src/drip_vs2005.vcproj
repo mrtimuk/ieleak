@@ -203,6 +203,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Graph.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\HtmlResource.cpp"
 				>
 			</File>
@@ -295,6 +299,10 @@
 			</File>
 			<File
 				RelativePath=".\DOMReportDlg.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Graph.h"
 				>
 			</File>
 			<File

@@ -3,6 +3,7 @@
 #include "resource.h"
 #include "DlgResizeHelper.h"
 #include "BrowserHostDlg.hpp"
+#include "Graph.h"
 #include "afxwin.h"
 
 // Forward declaration
@@ -68,9 +69,11 @@ public:
 	virtual void onNewWindow(CBrowserHostDlg** ppDlg);
 
 public:
-	static CStringW GetMemoryUsage();
+	static size_t GetMemoryUsage();
+	static CStringW GetMemoryUsageStr();
 public:
 	CEdit m_editURL;
 	CEdit m_CurrentMemoryBox, m_CurrentDOMNodesBox;
 	CListBox m_memList;
+	CGraphCtrl m_memGraph;
 };
