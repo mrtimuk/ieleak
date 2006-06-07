@@ -15,14 +15,17 @@ MemoryUsageTest::~MemoryUsageTest(void)
 
 TEST_(MemoryUsageTest, TestMemoryIncreases)
 {
+	// Use a large enough buffer to ensure an increase in memory usage.
+	const int allocSize = 4*1024;
+
 	int before = ToInt(CMainBrowserDlg::GetMemoryUsage());
 	CPPUNIT_ASSERT(before > 0);
 
-	char* dummyBuffer = new char[500];
+	char* dummyBuffer = new char[allocSize];
 	int after = ToInt(CMainBrowserDlg::GetMemoryUsage());
 	delete [] dummyBuffer;
 	
-	CPPUNIT_ASSERT(before + 500 <= after);
+	CPPUNIT_ASSERT(before + allocSize <= after);
 }
 
 int MemoryUsageTest::ToInt(CStringW stringBuffer)
