@@ -12,6 +12,26 @@
 #define TIMER_MONITOR_MEMORY	1
 #define TIMER_CHECK_LEAKS	2
 
+#if (_WIN32_WINNT < 0x0501)
+
+typedef struct _PROCESS_MEMORY_COUNTERS_EX {
+  DWORD cb;
+  DWORD PageFaultCount;
+  SIZE_T PeakWorkingSetSize;
+  SIZE_T WorkingSetSize;
+  SIZE_T QuotaPeakPagedPoolUsage;
+  SIZE_T QuotaPagedPoolUsage;
+  SIZE_T QuotaPeakNonPagedPoolUsage;
+  SIZE_T QuotaNonPagedPoolUsage;
+  SIZE_T PagefileUsage;
+  SIZE_T PeakPagefileUsage;
+  SIZE_T PrivateUsage;
+} PROCESS_MEMORY_COUNTERS_EX, 
+*PPROCESS_MEMORY_COUNTERS_EX;
+
+#endif
+
+
 BEGIN_MESSAGE_MAP(CMainBrowserDlg, CBrowserHostDlg)
 	//{{AFX_MSG_MAP(CMainBrowserDlg)
 	ON_WM_PAINT()
@@ -49,13 +69,20 @@ CMainBrowserDlg::~CMainBrowserDlg() {
 
 CStringW CMainBrowserDlg::GetMemoryUsage()
 {
-	PROCESS_MEMORY_COUNTERS procMem;
-	memset(&procMem, 0, sizeof(PROCESS_MEMORY_COUNTERS));
-	procMem.cb = sizeof(PROCESS_MEMORY_COUNTERS);
-	GetProcessMemoryInfo(GetCurrentProcess(), &procMem, procMem.cb);
+	PROCESS_MEMORY_COUNTERS_EX procMem;
+	memset(&procMem, 0, sizeof(procMem));
+	procMem.cb = sizeof(procMem);
+	GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&procMem, procMem.cb);
+
+	// Private usage is not available on all platforms
+	size_t memUsage;
+	if (procMem.cb >= sizeof(PROCESS_MEMORY_COUNTERS_EX))
+		memUsage = procMem.PrivateUsage;
+	else
+		memUsage = procMem.WorkingSetSize;
 
 	CStringW usage;
-	usage.Format(L"%d", procMem.WorkingSetSize);
+	usage.Format(L"%d", memUsage);
 	return usage;
 }
 
