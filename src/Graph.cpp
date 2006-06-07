@@ -21,7 +21,7 @@ static char THIS_FILE[]=__FILE__;
 CGraph::CGraph()
 {
 	SetBackgroundColor(RGB(0,0,0));
-   SetGridLineColor(RGB(0, 128, 64));
+	SetGridLineColor(RGB(0, 128, 64));
 	SetGraphLineColor(RGB(0, 255, 0));
 	SetGridLineStep(12, 12);
 	m_PointStep = 1;
@@ -54,10 +54,10 @@ void CGraph::SetGridLineStep(int x, int y)
 
 void CGraph::AddPoint(int y)
 {
-   m_Values.push_back(y);
+	m_Values.push_back(y);
 }
 
-void CGraph::DrawGraph(CDC *pDC, CRect zone)
+void CGraph::DrawGraph(CDC* pDC, CRect zone)
 {
 	DrawGridLines(pDC, zone);
 	DrawGraphLine(pDC, zone);
@@ -68,36 +68,36 @@ void CGraph::DrawGridLines(CDC* pDC, CRect zone)
 	pDC->FillSolidRect(zone, m_BackgroundColor);
 
 	CPen vPen(PS_SOLID, 1, m_GridLineColor);
-   CPen *pOld = pDC->SelectObject(&vPen);
+	CPen* pOld = pDC->SelectObject(&vPen);
 
-   DrawHorzGridLines(pDC, zone);
-   DrawVertGridLines(pDC, zone);
+	DrawHorzGridLines(pDC, zone);
+	DrawVertGridLines(pDC, zone);
 
-   pDC->SelectObject(pOld);
+	pDC->SelectObject(pOld);
 }
 
-void CGraph::DrawHorzGridLines(CDC *pDC, CRect zone)
+void CGraph::DrawHorzGridLines(CDC* pDC, CRect zone)
 {
 	CPoint pt;
 	for (int y = zone.Height(); y >= 0; y -= m_HorzStep)
-   {
-      pt.x = zone.left;
+	{
+		pt.x = zone.left;
 		pt.y = zone.top + y;
 		pDC->MoveTo(pt);
-		
+
 		pt.x = zone.left + zone.Width();
 		pt.y = zone.top + y;
 		pDC->LineTo(pt);
 	}
 }
 
-void CGraph::DrawVertGridLines(CDC *pDC, CRect zone)
+void CGraph::DrawVertGridLines(CDC* pDC, CRect zone)
 {
 	CPoint pt;
-   for (int x = m_VertStep; x <= zone.Width(); x += m_VertStep)
+	for (int x = m_VertStep; x <= zone.Width(); x += m_VertStep)
 	{
 		pt.x = zone.left + x;
-		pt.y = zone.top; 
+		pt.y = zone.top;
 		pDC->MoveTo(pt);
 
 		pt.x = zone.left + x;
@@ -108,34 +108,34 @@ void CGraph::DrawVertGridLines(CDC *pDC, CRect zone)
 
 void CGraph::DrawGraphLine(CDC* pDC, CRect zone)
 {
-   CPen vPen(PS_SOLID, 1, m_GraphLineColor);
-	CPen *pOld = pDC->SelectObject(&vPen);
+	CPen vPen(PS_SOLID, 1, m_GraphLineColor);
+	CPen* pOld = pDC->SelectObject(&vPen);
 
-   // Draw all points, starting from the right. Do not draw more than PtCnt points.
-   list<int>::reverse_iterator iter = m_Values.rbegin();
-	
+	// Draw all points, starting from the right. Do not draw more than PtCnt points.
+	list<int>::reverse_iterator iter = m_Values.rbegin();
+
 	int numPoints = zone.Width() / m_PointStep;
-   int curPoint = numPoints-1;
+	int curPoint = numPoints-1;
 
 	int min, max;
 	CalcMinMax(numPoints, min, max);
 
-   while (iter != m_Values.rend() && curPoint >= 0)
-   {
+	while (iter != m_Values.rend() && curPoint >= 0)
+	{
 		CPoint pt;
 		pt.x = zone.left + zone.Width() * curPoint / numPoints;
 		pt.y = CalcYPlotPos(zone, min, max, *iter);
 
-      if (iter == m_Values.rbegin())
-         pDC->MoveTo(pt);
-      else
-		   pDC->LineTo(pt);
+		if (iter == m_Values.rbegin())
+			pDC->MoveTo(pt);
+		else
+			pDC->LineTo(pt);
 
 		iter++;
-      curPoint--;
-   }
+		curPoint--;
+	}
 
-   pDC->SelectObject(pOld);
+	pDC->SelectObject(pOld);
 }
 
 int CGraph::CalcYPlotPos(CRect zone, int min, int max, int y)
@@ -215,7 +215,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CGraphCtrl message handlers
 
-void CGraphCtrl::OnPaint() 
+void CGraphCtrl::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
 
@@ -227,18 +227,18 @@ void CGraphCtrl::OnPaint()
 
 	if (!m_pBitmap)
 	{
-      // Get the number of color planes and color bits used on the current display
+		// Get the number of color planes and color bits used on the current display
 		HDC hdcScreen = CreateDC(L"DISPLAY", NULL, NULL, NULL);
-      int iPlanes = GetDeviceCaps(hdcScreen, PLANES);
-      int iBitCount = GetDeviceCaps(hdcScreen, BITSPIXEL);
-      DeleteDC(hdcScreen);
+		int iPlanes = GetDeviceCaps(hdcScreen, PLANES);
+		int iBitCount = GetDeviceCaps(hdcScreen, BITSPIXEL);
+		DeleteDC(hdcScreen);
 
-      // Allocate and create the bitmap
-      m_pBitmap = new CBitmap;
+		// Allocate and create the bitmap
+		m_pBitmap = new CBitmap;
 		m_pBitmap->CreateBitmap(zone.Width(), zone.Height(), iPlanes, iBitCount, NULL);
 
-      // Save the dimensions of the bitmap.
-      m_pBitmap->SetBitmapDimension(zone.Width(), zone.Height());
+		// Save the dimensions of the bitmap.
+		m_pBitmap->SetBitmapDimension(zone.Width(), zone.Height());
 
 		CDC dcBitmapCache;
 		dcBitmapCache.CreateCompatibleDC(&dc);
@@ -247,9 +247,9 @@ void CGraphCtrl::OnPaint()
 	}
 
 	// Copy to the DC
-   CDC dcBitmap;
-   dcBitmap.CreateCompatibleDC(&dc);
-   dcBitmap.SelectObject(m_pBitmap);
+	CDC dcBitmap;
+	dcBitmap.CreateCompatibleDC(&dc);
+	dcBitmap.SelectObject(m_pBitmap);
 	dc.BitBlt(zone.left, zone.top, zone.Width(), zone.Height(), &dcBitmap, 0, 0, SRCCOPY);
 }
 

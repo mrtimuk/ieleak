@@ -13,7 +13,7 @@
 
 using namespace std;
 
-class CGraph  
+class CGraph
 {
 public:
 	CGraph();
@@ -26,17 +26,17 @@ public:
 
 	void AddPoint(int y);
 
-	void DrawGraph(CDC *pDC, CRect Zone);
+	void DrawGraph(CDC* pDC, CRect Zone);
 
 private:
 	COLORREF m_BackgroundColor, m_GridLineColor, m_GraphLineColor;
-   int m_VertStep, m_HorzStep, m_PointStep;
+	int m_VertStep, m_HorzStep, m_PointStep;
 
 	list<int> m_Values;
 
 	void DrawGridLines(CDC* pDC, CRect zone);
-	void DrawHorzGridLines(CDC *pDC, CRect zone);
-	void DrawVertGridLines(CDC *pDC, CRect zone);
+	void DrawHorzGridLines(CDC* pDC, CRect zone);
+	void DrawVertGridLines(CDC* pDC, CRect zone);
 
 	void DrawGraphLine(CDC* pDC, CRect Zone);
 	int CalcYPlotPos(CRect zone, int min, int max, int y);
@@ -84,7 +84,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 	virtual void DrawControl(CDC* pDC);
-   CGraph m_Graph;
+	CGraph m_Graph;
 public:
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 };
