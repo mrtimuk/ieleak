@@ -199,6 +199,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DOMReportDlg.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\drip.cpp"
 				>
 			</File>
@@ -212,10 +216,6 @@
 			</File>
 			<File
 				RelativePath=".\JSHook.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\DOMReportDlg.cpp"
 				>
 			</File>
 			<File
@@ -263,10 +263,6 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\ActivScp.h"
-				>
-			</File>
-			<File
 				RelativePath=".\BrowserHostDlg.hpp"
 				>
 			</File>
@@ -290,19 +286,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HtmlResource.h"
-				>
-			</File>
-			<File
-				RelativePath=".\JSHook.hpp"
-				>
-			</File>
-			<File
 				RelativePath=".\DOMReportDlg.hpp"
 				>
 			</File>
 			<File
 				RelativePath=".\Graph.h"
+				>
+			</File>
+			<File
+				RelativePath=".\HtmlResource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\JSHook.hpp"
 				>
 			</File>
 			<File
@@ -322,15 +318,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\UnitTests\stdafx.h"
-				>
-			</File>
-			<File
 				RelativePath=".\stdafx.h"
 				>
 			</File>
 			<File
 				RelativePath=".\NanoCppUnit\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\UnitTests\stdafx.h"
 				>
 			</File>
 			<File
