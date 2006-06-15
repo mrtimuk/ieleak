@@ -36,6 +36,7 @@ private:
 
 	void replaceRptTypeInTitle(CWnd* wnd);
 	void clearLeaks();
+	CStringW getIsNodeAttached(IUnknown* unk);
 	void populateLeaks(bool showRecentOnly);
 	void updateButtons();
 	void showItemProperties(UINT nItem);

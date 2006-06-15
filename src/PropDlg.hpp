@@ -6,6 +6,8 @@
 
 void GetObjectProperties(CComPtr<IDispatchEx> object, CArray<DISPID> &raDispIDs,
 						 CArray<CStringW> &rasNames, CArray<CStringW> &rasValues);
+bool getPropertyValue(CComPtr<IDispatchEx> object, CStringW propertyName, VARIANT& result);
+bool getPropertyValue(CComPtr<IDispatchEx> object, DISPID dispId, VARIANT& result);
 
 // A dialog box for displaying an object's properties and their values.
 //

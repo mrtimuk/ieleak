@@ -36,6 +36,18 @@ BEGIN_MESSAGE_MAP(CPropDlg, CDialog)
 	ON_BN_CLICKED(IDC_PROPERTIES_BUTTON, OnBnClickedPropertiesButton)
 END_MESSAGE_MAP()
 
+bool getPropertyValue(CComPtr<IDispatchEx> object, CStringW propertyName, VARIANT& result)
+{
+	DISPID dispId;
+	BSTR name = SysAllocString(propertyName);
+	HRESULT hr = object->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_SYSTEM_DEFAULT, &dispId);
+	SysFreeString(name);
+	if (FAILED(hr))
+		return false;
+
+	return getPropertyValue(object, dispId, result);
+}
+
 bool getPropertyValue(CComPtr<IDispatchEx> object, DISPID dispId, VARIANT& result)
 {
 	// Invoke the property get to get the property's value.

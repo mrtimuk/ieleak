@@ -61,8 +61,9 @@ BOOL CDOMReportDlg::OnInitDialog() {
 	m_leakList.InsertColumn(0, L"URL", LVCFMT_LEFT, 128);
 	m_leakList.InsertColumn(1, L"Refs", LVCFMT_LEFT, 40);
 	m_leakList.InsertColumn(2, L"Node Type", LVCFMT_LEFT, 72);
-	m_leakList.InsertColumn(3, L"ID", LVCFMT_LEFT, 128);
-	m_leakList.InsertColumn(4, L"Class", LVCFMT_LEFT, 256);
+	m_leakList.InsertColumn(3, L"Attached?", LVCFMT_LEFT, 68);
+	m_leakList.InsertColumn(4, L"ID", LVCFMT_LEFT, 128);
+	m_leakList.InsertColumn(5, L"Outer HTML", LVCFMT_LEFT, 256);
 
 	// Populate the leak list control from the list of LeakEntry structures.
 	//
@@ -144,6 +145,31 @@ void CDOMReportDlg::clearLeaks() {
 	m_leaks.clear();
 }
 
+CStringW CDOMReportDlg::getIsNodeAttached(IUnknown* unk) {
+	// Compare node.ownserDocument (MSDN: "document object that is used to create new nodes")
+	// with the node.document (the document or document fragment to which the node is 
+	// currently attached) to determine whether the element is attached to the document.
+	VARIANT ownerDocument, document;
+	VariantClear(&ownerDocument);
+	VariantClear(&document);
+
+	if (!getPropertyValue((CComQIPtr<IDispatchEx>)unk, L"ownerDocument", ownerDocument) ||
+		!getPropertyValue((CComQIPtr<IDispatchEx>)unk, L"document", document)) {
+		return L"";
+	}
+
+	if (ownerDocument.vt != VT_DISPATCH || document.vt != VT_DISPATCH) {
+		return L"";
+	}
+
+	if (ownerDocument.pdispVal == document.pdispVal) {
+		return L"Yes";
+	}
+	else {
+		return L"No";
+	}
+}
+
 // Take all entries in m_leaks and populate the leak list control with them.
 //
 void CDOMReportDlg::populateLeaks(bool showRecentOnly) {
@@ -175,14 +201,15 @@ void CDOMReportDlg::populateLeaks(bool showRecentOnly) {
 		m_leakList.SetItemData(display_idx, data_idx);
 		m_leakList.SetItemText(display_idx, 1, refCountText);
 		m_leakList.SetItemText(display_idx, 2, node->nodeName);
+		m_leakList.SetItemText(display_idx, 3, getIsNodeAttached(entry.node));
 
 		if (elem) {
-			m_leakList.SetItemText(display_idx, 3, elem->id);
-			m_leakList.SetItemText(display_idx, 4, elem->innerHTML);
+			m_leakList.SetItemText(display_idx, 4, elem->id);
+			m_leakList.SetItemText(display_idx, 5, elem->outerHTML);
 		}
 		else {
-			m_leakList.SetItemText(display_idx, 3, L"");
 			m_leakList.SetItemText(display_idx, 4, L"");
+			m_leakList.SetItemText(display_idx, 5, L"");
 		}
 	}
 	if (m_leakList.GetItemCount() > 0)
