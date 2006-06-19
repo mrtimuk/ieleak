@@ -284,7 +284,8 @@ void showHelp()
     if(hr1==S_OK)
     {
         VARIANT_BOOL pBool=true; //The browser is invisible
-		COleVariant vaURL(L"http://scrat.vanenburg.com/components/sieve") ; 
+		//COleVariant vaURL(L"http://scrat.vanenburg.com/components/sieve") ; 
+		COleVariant vaURL(L"http://sourceforge.net/projects/ieleak") ; 
 
 		m_pBrowser->put_MenuBar(true);
 		m_pBrowser->put_ToolBar(true);
@@ -307,7 +308,8 @@ void logDefect()
     if(hr1==S_OK)
     {
         VARIANT_BOOL pBool=true; //The browser is invisible
-  		COleVariant vaURL(L"http://scrat.vanenburg.com/components/sieve/newticket") ; 
+  		//COleVariant vaURL(L"http://scrat.vanenburg.com/components/sieve/newticket") ; 
+ 		COleVariant vaURL(L"http://sourceforge.net/tracker/?func=add&group_id=165799&atid=837173") ; 
 
 		m_pBrowser->put_MenuBar(true);
 		m_pBrowser->put_ToolBar(true);
