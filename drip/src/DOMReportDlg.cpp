@@ -150,24 +150,24 @@ CStringW CDOMReportDlg::getIsNodeAttached(IUnknown* unk) {
 	// with the node.document (the document or document fragment to which the node is 
 	// currently attached) to determine whether the element is attached to the document.
 	VARIANT ownerDocument, document;
-	VariantClear(&ownerDocument);
-	VariantClear(&document);
+	CStringW retVal = L"";
 
 	if (!getPropertyValue((CComQIPtr<IDispatchEx>)unk, L"ownerDocument", ownerDocument) ||
 		!getPropertyValue((CComQIPtr<IDispatchEx>)unk, L"document", document)) {
-		return L"";
+		retVal = L"";
 	}
-
-	if (ownerDocument.vt != VT_DISPATCH || document.vt != VT_DISPATCH) {
-		return L"";
+	else if (ownerDocument.vt != VT_DISPATCH || document.vt != VT_DISPATCH) {
+		retVal = L"";
 	}
-
-	if (ownerDocument.pdispVal == document.pdispVal) {
-		return L"Yes";
+	else if (ownerDocument.pdispVal == document.pdispVal) {
+		retVal = L"Yes";
 	}
 	else {
-		return L"No";
+		retVal = L"No";
 	}
+	VariantClear(&ownerDocument);
+	VariantClear(&document);
+	return retVal;
 }
 
 // Take all entries in m_leaks and populate the leak list control with them.

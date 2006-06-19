@@ -108,6 +108,7 @@ void GetObjectProperties(CComPtr<IDispatchEx> object, CArray<DISPID> &raDispIDs,
 			else {
 				sValue = "(unknown)";
 			}
+			VariantClear(&result);
 
 			raDispIDs.Add(dispId);
 			rasNames.Add(sName);
@@ -226,6 +227,7 @@ void CPropDlg::updateButtons()
 		VARIANT value;
 		bEnableProperties = getPropertyValue(m_object, dispId, value) &&
 			value.vt == VT_DISPATCH && value.pdispVal;
+		VariantClear(&value);
 	}
 
 	GetDlgItem(IDC_PROPERTIES_BUTTON)->EnableWindow(bEnableProperties);
@@ -250,7 +252,6 @@ void CPropDlg::OnBnClickedPropertiesButton()
 				propDlg.DoModal();
 			}
 		}
-
 		VariantClear(&value);
 	}
 }
