@@ -202,24 +202,21 @@ BOOL getIsNodeOrphan(IUnknown* unk) {
 	// with the node.document (the document or document fragment to which the node is 
 	// currently attached) to determine whether the element is attached to the document.
 	VARIANT ownerDocument, document;
-	VariantClear(&ownerDocument);
-	VariantClear(&document);
+	BOOL retVal = false;
 
 	if (!GetPropertyValue((CComQIPtr<IDispatchEx>)unk, L"ownerDocument", ownerDocument) ||
 		!GetPropertyValue((CComQIPtr<IDispatchEx>)unk, L"document", document)) {
-		return false;
+		retVal = false;
+	} else if (ownerDocument.vt != VT_DISPATCH || document.vt != VT_DISPATCH) {
+		retVal = false;
+	} else if (ownerDocument.pdispVal == document.pdispVal) {
+		retVal = false; // It is attached to ownerDocument
+	} else {
+		retVal = true; // It is an orphan node
 	}
-
-	if (ownerDocument.vt != VT_DISPATCH || document.vt != VT_DISPATCH) {
-		return false;
-	}
-
-	if (ownerDocument.pdispVal == document.pdispVal) {
-		return false; // It is attached to ownerDocument
-	}
-	else {
-		return true; // It is an orphan node
-	}
+	VariantClear(&ownerDocument);
+	VariantClear(&document);
+	return retVal;
 }
 
 // Take all entries in m_leaks and populate the leak list control with them.
