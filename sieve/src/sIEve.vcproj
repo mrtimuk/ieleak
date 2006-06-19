@@ -201,10 +201,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\dbgint.h"
-				>
-			</File>
-			<File
 				RelativePath=".\DlgResizeHelper.h"
 				>
 			</File>
@@ -352,6 +348,26 @@
 		<Filter
 			Name="Files Exluded From Build"
 			>
+			<File
+				RelativePath=".\dbgint.h"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
 			<File
 				RelativePath=".\ListCtrlEx.cpp"
 				>
