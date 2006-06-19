@@ -1,0 +1,296 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON2               ICON                    "res\\sIEve.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_BROWSER_DIALOG DIALOGEX 50, 50, 700, 483
+STYLE DS_SETFONT | DS_3DLOOK | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_WINDOWEDGE | WS_EX_APPWINDOW
+CAPTION "sIEve"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "<-",IDC_BACK,7,7,14,13
+    PUSHBUTTON      "->",IDC_FORWARD,22,7,14,13
+    LTEXT           "A&ddress:",IDC_ADDRESS_STATIC,40,9,28,8
+    EDITTEXT        IDC_EDITURL,71,7,358,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Go",IDC_GO,435,7,25,13
+    PUSHBUTTON      "about:blank",IDC_ABOUTBLANK,550,46,66,14
+    PUSHBUTTON      "Auto-Refresh",IDC_AUTOREFRESH,466,7,54,13
+    CTEXT           "Memory samples (KB)             Registered Items (#)",IDC_MEMLABEL,529,78,163,8
+    CONTROL         "",IDC_EXPLORER,"{8856F961-340A-11D0-A96B-00C04FD705A2}",WS_TABSTOP,7,26,513,375
+    PUSHBUTTON      "Clear in use",IDC_CLEAR_IN_USE,626,7,66,14
+    PUSHBUTTON      "Show in use",IDC_SHOW_IN_USE,626,26,66,14
+    CONTROL         "",IDC_MEMSAMPLES,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER,529,90,163,386,WS_EX_CLIENTEDGE
+    CONTROL         "Automatic memory cleanup",IDC_CHECK_AUTO_CLEANUP,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_DISABLED | WS_TABSTOP,550,64,98,10
+    PUSHBUTTON      "Show Leaks",IDC_SHOW_LEAKS,626,46,66,14
+    PUSHBUTTON      "Help",IDC_SHOW_HELP,550,7,66,14
+    PUSHBUTTON      "Log Defect",IDC_LOG_DEFECT,550,26,66,14
+    GROUPBOX        "Memory Samples History",IDC_STATIC_HISTORY,7,408,513,68
+    LTEXT           "Static",IDC_STATIC_GRAPH,14,418,498,51,0,WS_EX_CLIENTEDGE
+    CONTROL         "Slow",IDC_RADIO_SLOW,"Button",BS_AUTORADIOBUTTON,407,408,27,10
+    CONTROL         "Fast",IDC_RADIO_FAST,"Button",BS_AUTORADIOBUTTON,440,408,26,10
+    CONTROL         "Paused",IDC_RADIO_PAUSED,"Button",BS_AUTORADIOBUTTON,469,408,36,10
+    CONTROL         "Max (MB)    ",IDC_STATIC_MAX,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,15,419,32,8
+    CONTROL         "Min (MB)     ",IDC_STATIC_MIN,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,15,459,32,8
+END
+
+IDD_LEAKS DIALOGEX 500, 500, 574, 373
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Elements in use"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&Properties",IDC_PROPERTIES_BUTTON,507,7,60,14
+    PUSHBUTTON      "&Copy",IDC_COPY,507,24,60,14
+    PUSHBUTTON      "Close",IDOK,507,345,60,14,0,WS_EX_RTLREADING
+    LTEXT           "# Items",IDC_STATIC_ITEMS,507,110,60,8
+    EDITTEXT        IDC_EDIT_HIDDEN_ITEMS,507,153,60,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_VISIBLE | WS_DISABLED,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Clear in use",IDC_CLEAR,507,41,60,14,0,WS_EX_RTLREADING
+    PUSHBUTTON      "Show in use",IDC_REFRESH,507,59,60,14,0,WS_EX_RTLREADING
+    LTEXT           "New item",IDC_STATIC_RED,499,292,68,8,0,WS_EX_RIGHT
+    LTEXT           "Increased refcount",IDC_STATIC_BLUE,499,314,68,8,0,WS_EX_RIGHT
+    LTEXT           "No change",IDC_STATIC_BLACK,499,303,68,8,0,WS_EX_RIGHT
+    LTEXT           "Decreased refcount",IDC_STATIC_GREEN,499,325,68,8,0,WS_EX_RIGHT
+    LTEXT           "# Hidden items",IDC_STATIC_HIDDEN_ITEMS,507,142,60,8,NOT WS_VISIBLE | WS_DISABLED
+    EDITTEXT        IDC_EDIT_ITEMS,507,121,60,14,ES_AUTOHSCROLL | ES_READONLY,WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_LEAKLIST,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,491,359,WS_EX_CLIENTEDGE
+    CONTROL         "Show all",IDC_CHECK_SHOW_ALL,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_DISABLED | WS_TABSTOP,507,168,60,10
+    PUSHBUTTON      "Show leaks",IDC_REFRESH_LEAKS,507,77,60,14,0,WS_EX_RTLREADING
+END
+
+IDD_PROPERTIES DIALOGEX 0, 0, 348, 302
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Object Properties"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_PROPLIST,"SysListView32",LVS_REPORT | LVS_SORTASCENDING | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,278,287,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "&Properties",IDC_PROPERTIES_BUTTON,292,7,50,14
+    PUSHBUTTON      "Close",IDOK,292,24,50,14
+END
+
+IDD_BROWSER_POPUP_DIALOG DIALOGEX 0, 0, 312, 199
+STYLE DS_SETFONT | DS_3DLOOK | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW
+CAPTION "sIEve!"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_EXPLORER,"{8856F961-340A-11D0-A96B-00C04FD705A2}",WS_TABSTOP,0,0,311,199
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_BROWSER_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 692
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 476
+    END
+
+    IDD_LEAKS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 567
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 366
+    END
+
+    IDD_PROPERTIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 342
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 294
+    END
+
+    IDD_BROWSER_POPUP_DIALOG, DIALOG
+    BEGIN
+        RIGHTMARGIN, 311
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_BROWSER_DIALOG DLGINIT
+BEGIN
+    IDC_EXPLORER, 0x376, 160, 0
+0x0000, 0x0000, 0x004c, 0x0000, 0x4f95, 0x0000, 0x3ef1, 0x0000, 0x0000, 
+0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+0x0000, 0x0000, 0x004c, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0001, 
+0x0000, 0xd0e0, 0x0057, 0x3573, 0x11cf, 0x69ae, 0x0008, 0x2e2b, 0x6212, 
+0x0008, 0x0000, 0x0000, 0x0000, 0x004c, 0x0000, 0x1401, 0x0002, 0x0000, 
+0x0000, 0x00c0, 0x0000, 0x0000, 0x4600, 0x0080, 0x0000, 0x0000, 0x0000, 
+0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0001, 0x0000, 
+0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    0
+END
+
+IDD_BROWSER_POPUP_DIALOG DLGINIT
+BEGIN
+    IDC_EXPLORER, 0x376, 160, 0
+0x0000, 0x0000, 0x004c, 0x0000, 0x3044, 0x0000, 0x2162, 0x0000, 0x0000, 
+0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+0x0000, 0x0000, 0x004c, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0001, 
+0x0000, 0xd0e0, 0x0057, 0x3573, 0x11cf, 0x69ae, 0x0008, 0x2e2b, 0x6212, 
+0x0008, 0x0000, 0x0000, 0x0000, 0x004c, 0x0000, 0x1401, 0x0002, 0x0000, 
+0x0000, 0x00c0, 0x0000, 0x0000, 0x4600, 0x0080, 0x0000, 0x0000, 0x0000, 
+0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0001, 0x0000, 
+0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 0,0,3,0
+ PRODUCTVERSION 0,0,3,0
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "Based on Drip 0.3"
+            VALUE "CompanyName", "Cordys"
+            VALUE "FileDescription", "sIEve"
+            VALUE "FileVersion", "0, 0, 3, 0"
+            VALUE "InternalName", "sIEve"
+            VALUE "LegalCopyright", "Copyright (c) 2005, 2006"
+            VALUE "OriginalFilename", "sIEve.exe"
+            VALUE "ProductName", "sIEve"
+            VALUE "ProductVersion", "0, 0, 3, 0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// HTML
+//
+
+IDR_SIEVEHOOKS_JS       HTML                    "sIEveHooks.js"
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif //_WIN32
+#include "afxres.rc"         // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

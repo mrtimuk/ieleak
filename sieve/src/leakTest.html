@@ -1,0 +1,65 @@
+<html>
+<script>
+// This somewhat contrived application shows an example of memory leaks from
+//   a relatively common pattern for creating JavaScript UI class libraries.
+//
+// The leak occurs because of a circular reference involving both a JavaScript
+//   object (MyObject) and a DOM element (button) as follows:
+// MyObject - MyObject.elem - button - button.__obj - MyObject
+//
+
+// A simple JavaScript object that wraps a button element.  This is a common
+//   pattern for implementing UI class libraries.
+//
+function MyButton(parentElem) {
+	this.msg = 'You clicked me!';
+
+	this.elem = document.createElement('button');
+	this.elem.className = 'MyButton';
+	this.elem.innerHTML = 'Click me!';
+
+	// In order for click events to find their way back to this object,
+	//   we hang a reference to it from the button element.
+	//
+	this.elem.__obj = this;
+
+	// Hook the button's onclick event to the object's event handler.
+	//
+	this.elem.onclick = MyButton_onClick;
+
+	// Hang the object from its parent.
+	//
+	parentElem.appendChild(this.elem);
+
+	// Just for fun, let's keep a direct reference to the parent element.
+	//   This will cause that element to leak as well.
+	//
+	this.parentElem = parentElem;
+}
+
+// MyButton's click event handler.
+//
+function MyButton_onClick() {
+	// Retrieve the object from the source element's '__obj' expando.
+	//
+	var _this = this.__obj;
+
+	// Show the object's message via an alert.
+	//
+	window.alert(_this.msg);
+}
+
+function test_onLoad() {
+	// Create MyButton and hang it from 'outer'.
+	//
+	var obj = new MyButton(document.getElementById('outer'));
+}
+</script>
+
+<body onload='test_onLoad()'>
+	<div id='outer'></div>
+
+	<iframe src='innerLeakTest.html'></iframe>
+</body>
+</html>
+
