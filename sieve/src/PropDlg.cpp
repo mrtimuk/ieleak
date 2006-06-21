@@ -59,7 +59,7 @@ bool GetPropertyValue(CComPtr<IDispatchEx> object, DISPID dispId, VARIANT& resul
 	BSTR memberName = NULL;
 	if (SUCCEEDED(object->GetMemberName(dispId, &memberName))) {
 		// BEGIN HARDCODE - Accessing the "filters" property (for example, from Google Maps)
-		// BEGIN HARDCODE - Accessing the "filters" property (for example, from Google Maps)
+		// BEGIN HARDCODE - Accessing the "__sIEve_" property
 		// causes crashes access violations deep in MSHTML.
 		//
 
