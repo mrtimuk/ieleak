@@ -59,11 +59,15 @@ bool GetPropertyValue(CComPtr<IDispatchEx> object, DISPID dispId, VARIANT& resul
 	BSTR memberName = NULL;
 	if (SUCCEEDED(object->GetMemberName(dispId, &memberName))) {
 		// BEGIN HARDCODE - Accessing the "filters" property (for example, from Google Maps)
+		// BEGIN HARDCODE - Accessing the "filters" property (for example, from Google Maps)
 		// causes crashes access violations deep in MSHTML.
 		//
+
 		bool skip = CString(memberName).Compare(L"filters") == 0;
+		bool skip2 =CString(memberName).Find(L"__sIEve_",0) == 0; 
+
 		SysFreeString(memberName);
-		if (skip)
+		if (skip || skip2)
 			return false;
 	}
 
@@ -175,36 +179,38 @@ void GetObjectProperties(CComPtr<IDispatchEx> object, CArray<DISPID> &raDispIDs,
 		BSTR memberName = NULL;
 		if (SUCCEEDED(object->GetMemberName(dispId, &memberName))) {
 			CStringW sName(memberName), sValue;
-			VARIANT result;
-			if (GetPropertyValue(object, dispId, result)) {
-				// Add the new property to the list, changing the value to a string.
-				//
+			if ( ! sName.Find(L"__sIEve_",0) )  // Hide sIEve internals to avoid confusion
+				VARIANT result;
+				if (GetPropertyValue(object, dispId, result)) {
+					// Add the new property to the list, changing the value to a string.
+					//
 
-				if (result.vt == VT_DISPATCH) {
-					if (result.pdispVal)
-					{
-						sValue = CComBSTR(L"[object]");
+					if (result.vt == VT_DISPATCH) {
+						if (result.pdispVal)
+						{
+							sValue = CComBSTR(L"[object]");
+						}
+						else
+							sValue = CComBSTR(L"[null object]");
 					}
-					else
-						sValue = CComBSTR(L"[null object]");
+					else {
+						VariantChangeType(&result, &result, 0, VT_BSTR);
+						if ((result.vt == VT_BSTR) && (result.bstrVal != NULL))
+							sValue = CComBSTR(result.bstrVal);
+					}
 				}
 				else {
-					VariantChangeType(&result, &result, 0, VT_BSTR);
-					if ((result.vt == VT_BSTR) && (result.bstrVal != NULL))
-						sValue = CComBSTR(result.bstrVal);
+					sValue = CComBSTR(L"(unknown)");
 				}
-			}
-			else {
-				sValue = CComBSTR(L"(unknown)");
-			}
-			VariantClear(&result);
+				VariantClear(&result);
 
-			raDispIDs.Add(dispId);
-			rasNames.Add(sName);
-			rasValues.Add(sValue);
+				raDispIDs.Add(dispId);
+				rasNames.Add(sName);
+				rasValues.Add(sValue);
 
-			SysFreeString(memberName);
-		}
+				SysFreeString(memberName);
+			}
+		}	
 
 		hr = object->GetNextDispID(fdexEnumAll, dispId, &dispId);
 	}
