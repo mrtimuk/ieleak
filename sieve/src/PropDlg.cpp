@@ -180,6 +180,7 @@ void GetObjectProperties(CComPtr<IDispatchEx> object, CArray<DISPID> &raDispIDs,
 		if (SUCCEEDED(object->GetMemberName(dispId, &memberName))) {
 			CStringW sName(memberName), sValue;
 			if ( ! sName.Find(L"__sIEve_",0) )  // Hide sIEve internals to avoid confusion
+			{
 				VARIANT result;
 				if (GetPropertyValue(object, dispId, result)) {
 					// Add the new property to the list, changing the value to a string.
