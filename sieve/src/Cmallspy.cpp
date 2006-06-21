@@ -190,7 +190,7 @@ void *CMallocSpy::PreFree(void *pRequest, BOOL fSpyed)
         // Mark the allocation as inactive in the map.
         //
         int counter;
-		wchar_t	buf[50];
+		//wchar_t	buf[50];
 
 		pRequest = (void*)(((BYTE*)pRequest) - HEADERSIZE);
 
