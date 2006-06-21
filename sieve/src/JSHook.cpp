@@ -217,6 +217,8 @@ Elem* JSHook::getWindow(MSHTML::IHTMLWindow2* wnd)
 //  its current document.
 //
 void JSHook::addElement(MSHTML::IHTMLDOMNode* elem) {
+	if ( elem->nodeType == NODE_TEXT )
+		return; // No need to register NODE_TEXT; They never leak;
 	MSHTML::IHTMLDOMNode2Ptr	node= elem;
 	MSHTML::IHTMLDocument2Ptr	doc = node->ownerDocument;
 	MSHTML::IHTMLWindow2Ptr		wnd = doc ? doc->parentWindow : NULL;
