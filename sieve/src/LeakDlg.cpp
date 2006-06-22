@@ -198,25 +198,8 @@ void CLeakDlg::clearLeaks() {
 }
 
 BOOL getIsNodeOrphan(IUnknown* unk) {
-	// Compare node.ownerDocument (MSDN: "document object that is used to create new nodes")
-	// with the node.document (the document or document fragment to which the node is 
-	// currently attached) to determine whether the element is attached to the document.
-	VARIANT ownerDocument, document;
-	BOOL retVal = false;
-
-	if (!GetPropertyValue((CComQIPtr<IDispatchEx>)unk, L"ownerDocument", ownerDocument) ||
-		!GetPropertyValue((CComQIPtr<IDispatchEx>)unk, L"document", document)) {
-		retVal = false;
-	} else if (ownerDocument.vt != VT_DISPATCH || document.vt != VT_DISPATCH) {
-		retVal = false;
-	} else if (ownerDocument.pdispVal == document.pdispVal) {
-		retVal = false; // It is attached to ownerDocument
-	} else {
-		retVal = true; // It is an orphan node
-	}
-	VariantClear(&ownerDocument);
-	VariantClear(&document);
-	return retVal;
+	MSHTML::IHTMLElementPtr	element = unk;
+	return ( element && element->parentElement == NULL );
 }
 
 // Take all entries in m_leaks and populate the leak list control with them.
