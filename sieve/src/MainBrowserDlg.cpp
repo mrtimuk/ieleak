@@ -36,13 +36,14 @@ LONG nrMemSamples = 0;
 LONG autoFreedRefs = 0;
 
 
-void showMemoryUsageAndAvarageGrowth(CListCtrl &m_memsamples, int items) // Return memoryusage in KB    (bytes >> 10)
+void showMemoryUsageAndAvarageGrowth(CListCtrl &m_memsamples, int items, int itemsLeaked, int hiddenItems)
 {
 	TCHAR memUsageText[32];
 	TCHAR memDeltaText[32];
 	TCHAR memAvgDeltaText[32];
-	TCHAR itemsInUse[32];
-	TCHAR autoFreedRefsText[32];
+	TCHAR itemsInUseText[32];
+	TCHAR itemsLeakedText[32];
+	//TCHAR autoFreedRefsText[32];
 	LONG currentMemUsage;
 
 
@@ -60,8 +61,8 @@ void showMemoryUsageAndAvarageGrowth(CListCtrl &m_memsamples, int items) // Retu
 	wsprintf(memUsageText,L"%d",memUsage >> 10);
 	wsprintf(memDeltaText,L"%d",incr >> 10);
 	wsprintf(memAvgDeltaText,L"%d",avgIncr >> 10);
-	wsprintf(itemsInUse,L"%d",items);
-	wsprintf(autoFreedRefsText,L"%d",autoFreedRefs);
+	wsprintf(itemsInUseText,L"%d",items - hiddenItems);
+	wsprintf(itemsLeakedText,L"%d",itemsLeaked);
 
 	nrMemSamples++;
 
@@ -69,8 +70,8 @@ void showMemoryUsageAndAvarageGrowth(CListCtrl &m_memsamples, int items) // Retu
 	m_memsamples.SetItemText(0, 1, memUsageText);
 	m_memsamples.SetItemText(0, 2, memDeltaText);
 	m_memsamples.SetItemText(0, 3, memAvgDeltaText);
-	m_memsamples.SetItemText(0, 4, itemsInUse);
-	//m_memsamples.SetItemText(0, 5, autoFreedRefsText);
+	m_memsamples.SetItemText(0, 4, itemsInUseText);
+	m_memsamples.SetItemText(0, 5, itemsLeakedText);
 	m_memsamples.SetItemData(0,(DWORD_PTR)incr);
 
 	if ( nrMemSamples > 200 ) m_memsamples.DeleteItem(200);  // Show maximum 200 samples to avoid leaking in this tool :-)
@@ -352,11 +353,10 @@ BOOL CMainBrowserDlg::OnInitDialog() {
 
 	m_memsamples.InsertColumn(0, L" ", LVCFMT_LEFT, 1);
 	m_memsamples.InsertColumn(1, L"usage", LVCFMT_RIGHT, 50);
-	m_memsamples.InsertColumn(2, L"delta", LVCFMT_RIGHT, 45);
-	m_memsamples.InsertColumn(3, L"avg", LVCFMT_RIGHT, 45);
-	m_memsamples.InsertColumn(4, L"#inUse", LVCFMT_RIGHT, 50);
-	//m_memsamples.InsertColumn(5, L"#hidden", LVCFMT_RIGHT, 55);
-	//m_memsamples.InsertColumn(6, L"#freed", LVCFMT_RIGHT, 45);
+	m_memsamples.InsertColumn(2, L"delta", LVCFMT_RIGHT, 40);
+	m_memsamples.InsertColumn(3, L"avg", LVCFMT_RIGHT, 40);
+	m_memsamples.InsertColumn(4, L"#inUse", LVCFMT_RIGHT, 48);
+	m_memsamples.InsertColumn(5, L"#leaks", LVCFMT_RIGHT, 45);
 
 	// Set up resizing
 	m_resizeHelper.Init(m_hWnd);
@@ -538,7 +538,7 @@ void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent)
 				GetDlgItem(IDC_ABOUTBLANK)->EnableWindow(FALSE);
 			}
 			if ( m_check_auto_cleanup ) autoCleanup();
-
+			if ( m_leakDlg ) OnBnClickedShowLeaks();
 			break;
 	}
 }
@@ -548,10 +548,13 @@ void CMainBrowserDlg::updateStatistics()
 	TCHAR min_text[32]; TCHAR max_text[32];
 	int min, max;
 	int items;
+	int leakedItems;
+	int hiddenItems;
 
 	items = (int) (getHook()->m_elements.size());
 	items += (int) (getHook()->m_runningDocs.size());
-	showMemoryUsageAndAvarageGrowth(m_memsamples, items);
+	getHook()->countElements(m_loadedDoc->parentWindow,leakedItems, hiddenItems);
+	showMemoryUsageAndAvarageGrowth(m_memsamples, items, leakedItems, hiddenItems);
 	m_memGraph.AddPoint((int)memUsage >> 10);
 
 	m_memGraph.GetMinMax(min,max);
