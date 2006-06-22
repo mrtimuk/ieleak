@@ -179,7 +179,7 @@ void GetObjectProperties(CComPtr<IDispatchEx> object, CArray<DISPID> &raDispIDs,
 		BSTR memberName = NULL;
 		if (SUCCEEDED(object->GetMemberName(dispId, &memberName))) {
 			CStringW sName(memberName), sValue;
-			if ( ! sName.Find(L"__sIEve_",0) )  // Hide sIEve internals to avoid confusion
+			if ( sName.Find(L"__sIEve_",0) != 0 )  // Hide sIEve internals to avoid confusion
 			{
 				VARIANT result;
 				if (GetPropertyValue(object, dispId, result)) {
