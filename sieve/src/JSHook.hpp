@@ -14,6 +14,7 @@ struct Elem {
 		this->url = url;
 		this->nodeName = nodeName;
 		this->reported = 0; // To support red coloring of new reported elements
+		this->leakReported = 0; // To support red coloring of new reported elements
 		this->running = true; // To indicate a real leaked element
 		this->hide = false;  // To support clear in use functionality
 		this->docId = 0;
@@ -24,6 +25,7 @@ struct Elem {
 	BSTR		url;
 	BSTR		nodeName;
 	int			reported;
+	int			leakReported;
 	BOOL		running;
 	BOOL		hide;
 	int			docId;
@@ -68,7 +70,7 @@ public:
 
 	void showLeaks(MSHTML::IHTMLWindow2Ptr wnd, CLeakDlg* dlg, bool showLeaks);
 	void rescanForElements(MSHTML::IHTMLDocument2Ptr doc);
-	bool hasElements();
+	void countElements(MSHTML::IHTMLWindow2Ptr wnd,int& leakedItems, int& hiddenItems);
 	void setMainBrowserDlg(CMainBrowserDlg* dlg);
 	void backgroundReleaseExtraReferences();
 
