@@ -2,6 +2,8 @@
 
 #define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
 
+#define WINVER 0x0500
+
 #include <afxwin.h>
 #include <afxext.h>
 #include <afxhtml.h>
