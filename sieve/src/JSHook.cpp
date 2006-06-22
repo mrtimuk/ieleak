@@ -259,7 +259,7 @@ void JSHook::addElement(MSHTML::IHTMLDOMNode* elem) {
 					cachedElem.docElem = docElem;
 				}
 				m_elements.insert(std::pair<IUnknown*,Elem>(unkElem,cachedElem));
-				//hookNewElement(elem,doc);  //????????
+				hookNewElement(elem,doc);
 			}
 			else
 			{
@@ -276,29 +276,32 @@ void JSHook::addElement(MSHTML::IHTMLDOMNode* elem) {
 
 void JSHook::hookNewElement(MSHTML::IHTMLDOMNodePtr elem, MSHTML::IHTMLDocument2Ptr doc ) {
 
-	// Create a parameter list containing the hook, then invoke the
-	//   temporary function to attach it to the document.
-	//
-	VARIANT vHook;
-	VariantInit(&vHook);
-	vHook.vt = VT_DISPATCH;
-	vHook.pdispVal = elem;
-	this->AddRef();
+	if ( elem->nodeType != NODE_TEXT )
+	{
+		// Create a parameter list containing the hook, then invoke the
+		//   temporary function to attach it to the document.
+		//
+		VARIANT vHook;
+		VariantInit(&vHook);
+		vHook.vt = VT_DISPATCH;
+		vHook.pdispVal = elem;
+		elem->AddRef();
 
-	DISPPARAMS params;
-	memset(&params, 0, sizeof(DISPPARAMS));
-	params.cArgs = 1;
-	params.rgvarg = &vHook;
-
-	CComPtr<IDispatch> scriptObj = doc->Script;
-
-	DISPID dispId;
-	OLECHAR *name = SysAllocString(L"__sIEve_overloadCloneNode");
-	scriptObj->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_SYSTEM_DEFAULT, &dispId);
-	SysFreeString(name);
-	scriptObj->Invoke(dispId, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &params, NULL, NULL, NULL);
-
-	VariantClear(&vHook);
+		DISPPARAMS params;
+		memset(&params, 0, sizeof(DISPPARAMS));
+		params.cArgs = 1;
+		params.rgvarg = &vHook;
+	
+		CComPtr<IDispatch> scriptObj = doc->Script;
+	
+		DISPID dispId;
+		OLECHAR *name = SysAllocString(L"__sIEve_overloadCloneNode");
+		scriptObj->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_SYSTEM_DEFAULT, &dispId);
+		SysFreeString(name);
+		scriptObj->Invoke(dispId, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &params, NULL, NULL, NULL);
+	
+		VariantClear(&vHook);
+	}
 }
 
 // This method is called when a document is finished loading.  It will hook the
@@ -460,9 +463,9 @@ void JSHook::showLeaks(MSHTML::IHTMLWindow2Ptr wnd, CLeakDlg* dlg, bool showLeak
 			// Only show all leaks
 			if ( !elem.docElem->running && refCount > 1)
 			{
-				dlg->addElement(unk, &elem, refCount - 1, false, 0, elem.reported );
+				dlg->addElement(unk, &elem, refCount - 1, false, 0, elem.leakReported );
+				elem.leakReported = refCount - 1;
 			}
-			elem.reported = refCount - 1;
 		}
 		else
 		{
@@ -493,9 +496,9 @@ void JSHook::showLeaks(MSHTML::IHTMLWindow2Ptr wnd, CLeakDlg* dlg, bool showLeak
 			// Only show all leaks
 			if ( !elem.docElem->running && refCount > 1)
 			{
-				dlg->addElement(unk, &elem, refCount - 1, false, 0, elem.reported );
+				dlg->addElement(unk, &elem, refCount - 1, false, 0, elem.leakReported );
+				elem.leakReported = refCount - 1;
 			}
-			elem.reported = refCount - 1;
 		}
 		else
 		{
@@ -507,10 +510,52 @@ void JSHook::showLeaks(MSHTML::IHTMLWindow2Ptr wnd, CLeakDlg* dlg, bool showLeak
 	}
 }
 
-// Returns true if the hook contains any elements.
-//
-bool JSHook::hasElements() {
-	return (m_elements.size() > 0);
+void JSHook::countElements(MSHTML::IHTMLWindow2Ptr wnd, int& leakedItems, int& hiddenItems) {
+	// Free non-leaked nodes
+	//
+	leakedItems = 0;
+	hiddenItems = 0;
+	releaseExtraReferences(wnd);
+
+	for (std::map<IUnknown*,Elem>::iterator it = m_elements.begin(); it != m_elements.end(); ++it) {
+		IUnknown *unk = it->first;
+		Elem &elem = it->second;
+
+		unk->AddRef();
+		int refCount = unk->Release();
+
+		// If any references (other than the one that we hold) are outstanding, then
+		//   the element has been leaked.
+		//
+
+		if ( !elem.docElem->running && refCount > 1)
+		{
+			leakedItems++;
+		}
+		if ( elem.hide || refCount <= 1 )
+		{
+			hiddenItems++;
+		}
+	}
+
+	for (std::map<IUnknown*,Elem>::iterator it = m_runningDocs.begin(); it != m_runningDocs.end(); ++it) {
+		IUnknown *unk = it->first;
+		Elem &elem = it->second;
+
+		unk->AddRef();
+		int refCount = unk->Release();
+
+		// If any references (other than the one that we hold) are outstanding, then
+		//   the element has been leaked.
+		if ( !elem.docElem->running && refCount > 1)
+		{
+			leakedItems++;
+		}
+		if ( elem.hide || refCount <= 1 )
+		{
+			hiddenItems++;
+		}
+	}
 }
 
 // Clear all unused elements and documents in the hook.
@@ -591,7 +636,7 @@ void JSHook::releaseExtraReferences(MSHTML::IHTMLWindow2Ptr wnd) {
 		// Ensure that all garbage collection is completed so that elements will
 		//   be released.
 		//
-		wnd->execScript(L"window.CollectGarbage()", L"javascript");
+		if ( wnd ) wnd->execScript(L"window.CollectGarbage()", L"javascript");
 
 		// Release extra references for all elements
 		//
@@ -622,7 +667,8 @@ void JSHook::backgroundReleaseExtraReferences() {
 	int i = unk->Release();
 	if (i == 1) {
 		// If this is the only outstanding reference, free it.
-		SysFreeString(node.url);
+		if ( node.url ) SysFreeString(node.url);
+		if ( node.nodeName ) SysFreeString(node.nodeName);
 		VERIFY(unk->Release() == 0);
 		m_itNextNode = m_elements.erase(m_itNextNode);
 	}
