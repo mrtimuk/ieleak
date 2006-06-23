@@ -92,8 +92,12 @@ function __sIEve_overloadCloneNode(elem)
 {
 	if (elem.nodeType == 1 && !elem.__sIEve_nativeCloneNode)
 	{
-		elem.__sIEve_nativeCloneNode = elem.cloneNode;
-		elem.cloneNode = __sIEve_customCloneNode;
+		try
+		{
+			elem.__sIEve_nativeCloneNode = elem.cloneNode;
+			elem.cloneNode = __sIEve_customCloneNode;
+		}
+		catch ( err ) { /* Some elements doesn't allow override e.g. <EMBED> */ }
 	}
 }
 
