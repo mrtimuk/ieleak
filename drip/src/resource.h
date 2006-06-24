@@ -8,6 +8,7 @@
 #define IDD_PROPERTIES                  135
 #define IDD_BROWSER_POPUP_DIALOG        136
 #define IDR_DRIP_JS                     140
+#define IDR_GRAPH_MENU                  141
 #define IDC_EXPLORER                    1000
 #define IDC_BACK                        1001
 #define IDC_FORWARD                     1002
@@ -31,13 +32,18 @@
 #define IDC_CURRENT_DOM_NODES_EDIT      1022
 #define IDC_TOTALDOMNODES_STATIC        1023
 #define IDC_GRAPH_STATIC                1024
+#define ID_GRAPHMENU_UPDATESPEED        32771
+#define ID_GRAPHUPDATESPEED_HIGH        32776
+#define ID_GRAPHUPDATESPEED_NORMAL      32777
+#define ID_GRAPHUPDATESPEED_LOW         32778
+#define ID_GRAPHUPDATESPEED_PAUSED      32779
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        141
-#define _APS_NEXT_COMMAND_VALUE         32771
+#define _APS_NEXT_RESOURCE_VALUE        142
+#define _APS_NEXT_COMMAND_VALUE         32780
 #define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
