@@ -3,7 +3,7 @@
 #include "resource.h"
 #include "DlgResizeHelper.h"
 #include "BrowserHostDlg.hpp"
-#include "Graph.h"
+#include "MemoryGraphCtrl.h"
 #include "afxwin.h"
 
 // Forward declaration
@@ -75,5 +75,5 @@ public:
 	CEdit m_editURL;
 	CEdit m_CurrentMemoryBox, m_CurrentDOMNodesBox;
 	CListBox m_memList;
-	CGraphCtrl m_memGraph;
+	CMemoryGraphCtrl m_memGraph;
 };

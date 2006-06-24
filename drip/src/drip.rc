@@ -273,6 +273,28 @@ END
 //
 
 IDR_DRIP_JS             HTML                    "res\\drip.js"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_GRAPH_MENU MENU 
+BEGIN
+    POPUP "Graph Menu"
+    BEGIN
+        POPUP "&Update Speed"
+        BEGIN
+            MENUITEM "&High",                       ID_GRAPHUPDATESPEED_HIGH
+            MENUITEM "&Normal",                     ID_GRAPHUPDATESPEED_NORMAL
+
+            MENUITEM "&Low",                        ID_GRAPHUPDATESPEED_LOW
+            MENUITEM "&Paused",                     ID_GRAPHUPDATESPEED_PAUSED
+
+        END
+    END
+END
+
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

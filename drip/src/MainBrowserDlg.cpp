@@ -9,8 +9,7 @@
 #include <afxpriv.h>
 
 #define TIMER_AUTO_REFRESH		0
-#define TIMER_MONITOR_MEMORY	1
-#define TIMER_CHECK_LEAKS	2
+#define TIMER_CHECK_LEAKS	1
 
 #if (_WIN32_WINNT < 0x0501)
 
@@ -54,7 +53,7 @@ BEGIN_MESSAGE_MAP(CMainBrowserDlg, CBrowserHostDlg)
 END_MESSAGE_MAP()
 
 CMainBrowserDlg::CMainBrowserDlg(CComObject<JSHook>* hook, CWnd* pParent)	: CBrowserHostDlg(hook, IDC_EXPLORER, CMainBrowserDlg::IDD, pParent),
-	m_waitingForDoc(false), m_waitingForBlankDoc(false), m_autoRefreshMode(false), m_checkLeakDoc(NULL)
+	m_waitingForDoc(false), m_waitingForBlankDoc(false), m_autoRefreshMode(false), m_checkLeakDoc(NULL), m_memGraph(hook)
 {
 	//{{AFX_DATA_INIT(CMainBrowserDlg)
 		// NOTE: the ClassWizard will add member initialization here
@@ -112,10 +111,6 @@ BOOL CMainBrowserDlg::OnInitDialog() {
 	// Focus the URL edit control.
 	//
 	m_editURL.SetFocus();
-
-	// Enable memory monitoring
-	//
-	SetTimer(TIMER_MONITOR_MEMORY, 100, NULL);
 
 	// Set up resizing
 	m_resizeHelper.Init(m_hWnd);
@@ -224,20 +219,6 @@ void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent) {
 		case TIMER_AUTO_REFRESH:
 			KillTimer(nIDEvent);
 			go();
-			break;
-
-		case TIMER_MONITOR_MEMORY:
-			{
-				// Update the node count and memory usage
-				//
-				CStringW nodes;
-				nodes.Format(L"%i", getHook()->getNodeCount());
-				m_CurrentDOMNodesBox.SetWindowText(nodes);
-
-				size_t usage = GetMemoryUsage();
-				m_memGraph.AddPoint((int)usage);
-				m_CurrentMemoryBox.SetWindowText(GetMemoryUsageStr());
-			}
 			break;
 
 		case TIMER_CHECK_LEAKS:
