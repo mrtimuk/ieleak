@@ -240,7 +240,7 @@ void CMemoryGraphCtrl::OnRButtonUp(UINT nFlags, CPoint point)
 	CMemDCCtrl::OnRButtonUp(nFlags, point);
 }
 
-LRESULT CMemoryGraphCtrl::OnNcHitTest(CPoint point)
+NCHITTEST_RESULT CMemoryGraphCtrl::OnNcHitTest(CPoint point)
 {
 	// to allow right-click events (instead of the SS_NOTIFY style)
 	return HTCLIENT;

@@ -35,7 +35,7 @@ protected:
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
-	afx_msg LRESULT OnNcHitTest(CPoint point);
+	afx_msg NCHITTEST_RESULT OnNcHitTest(CPoint point);
 	afx_msg void OnGraphUpdateSpeedHigh();
 	afx_msg void OnGraphUpdateSpeedLow();
 	afx_msg void OnGraphUpdateSpeedNormal();
