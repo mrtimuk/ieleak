@@ -4,6 +4,20 @@
 #include "PropDlg.hpp"
 #include <afxtempl.h>
 
+#define COL_URL			0
+#define COL_REFS			1
+#define COL_NODETYPE		2
+#define COL_ATTACHED		3
+#define COL_ID				4
+#define COL_OUTERHTML	5
+#define NUM_COLS			6
+
+int CALLBACK DOMReportSortFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+	CDOMReportDlg* dlg = (CDOMReportDlg*)lParamSort;
+	return dlg->compareEntries(lParam1, lParam2);
+}
+
 CDOMReportDlg::CDOMReportDlg(CStringW domReportType, CWnd* pParent) : CDialog(CDOMReportDlg::IDD, pParent) {
 	//{{AFX_DATA_INIT(CDOMReportDlg)
 		// NOTE: the ClassWizard will add member initialization here
@@ -11,6 +25,9 @@ CDOMReportDlg::CDOMReportDlg(CStringW domReportType, CWnd* pParent) : CDialog(CD
 
 	m_isShowingRecentOnly = false;
 	m_domReportType = domReportType;
+
+	m_sortByColumn = COL_URL;
+	m_reverseSort = false;
 }
 
 void CDOMReportDlg::DoDataExchange(CDataExchange* pDX) {
@@ -39,6 +56,7 @@ BEGIN_MESSAGE_MAP(CDOMReportDlg, CDialog)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LEAKLIST, OnLvnItemChangedLeaklist)
 	ON_BN_CLICKED(IDC_COPY, CopySelectedItems)
 	ON_NOTIFY(LVN_KEYDOWN, IDC_LEAKLIST, OnLvnKeydownLeaklist)
+	ON_NOTIFY(HDN_ITEMCLICK, 0, OnHdnItemClickLeaklist)
 	ON_BN_CLICKED(IDC_SHOW_ALL_RADIO, OnBnClickedAllRadio)
 	ON_BN_CLICKED(IDC_SHOW_RECENT_RADIO, OnBnClickedRecentRadio)
 END_MESSAGE_MAP()
@@ -58,12 +76,12 @@ BOOL CDOMReportDlg::OnInitDialog() {
 
 	// Set up the columns for the leak list.
 	//
-	m_leakList.InsertColumn(0, L"URL", LVCFMT_LEFT, 128);
-	m_leakList.InsertColumn(1, L"Refs", LVCFMT_LEFT, 40);
-	m_leakList.InsertColumn(2, L"Node Type", LVCFMT_LEFT, 72);
-	m_leakList.InsertColumn(3, L"Attached?", LVCFMT_LEFT, 68);
-	m_leakList.InsertColumn(4, L"ID", LVCFMT_LEFT, 128);
-	m_leakList.InsertColumn(5, L"Outer HTML", LVCFMT_LEFT, 256);
+	m_leakList.InsertColumn(COL_URL, L"URL", LVCFMT_LEFT, 128);
+	m_leakList.InsertColumn(COL_REFS, L"Refs", LVCFMT_LEFT, 40);
+	m_leakList.InsertColumn(COL_NODETYPE, L"Node Type", LVCFMT_LEFT, 72);
+	m_leakList.InsertColumn(COL_ATTACHED, L"Attached?", LVCFMT_LEFT, 68);
+	m_leakList.InsertColumn(COL_ID, L"ID", LVCFMT_LEFT, 128);
+	m_leakList.InsertColumn(COL_OUTERHTML, L"Outer HTML", LVCFMT_LEFT, 256);
 
 	// Populate the leak list control from the list of LeakEntry structures.
 	//
@@ -170,6 +188,42 @@ CStringW CDOMReportDlg::getIsNodeAttached(IUnknown* unk) {
 	return retVal;
 }
 
+CStringW CDOMReportDlg::getColumnText(const LeakEntry& entry, int column) {
+	MSHTML::IHTMLDOMNodePtr node = entry.node;
+	MSHTML::IHTMLElementPtr elem = entry.node;
+
+	CStringW tmp;
+
+	switch (column) {
+		case COL_URL:
+			return entry.url;
+
+		case COL_REFS:
+			tmp.Format(L"%d", entry.refCount);
+			return tmp;
+
+		case COL_NODETYPE:
+			return (LPCTSTR)node->nodeName;
+
+		case COL_ATTACHED:
+			return getIsNodeAttached(entry.node);
+
+		case COL_ID:
+			if (elem)
+				return (LPCTSTR)elem->id;
+			return L"";
+
+		case COL_OUTERHTML:
+			if (elem)
+				return (LPCTSTR)elem->outerHTML;
+			return L"";
+
+		default:
+			ASSERT(false);
+			return L"";
+	}
+}
+
 // Take all entries in m_leaks and populate the leak list control with them.
 //
 void CDOMReportDlg::populateLeaks(bool showRecentOnly) {
@@ -190,31 +244,17 @@ void CDOMReportDlg::populateLeaks(bool showRecentOnly) {
 		if (showRecentOnly && !entry.isRecent)
 			continue;
 
-		MSHTML::IHTMLDOMNodePtr node = entry.node;
-		MSHTML::IHTMLElementPtr elem = entry.node;
-
-		CStringW refCountText;
-		refCountText.Format(L"%d", entry.refCount);
-
 		int display_idx = m_leakList.GetItemCount();
-		m_leakList.InsertItem(display_idx, entry.url);
+		m_leakList.InsertItem(display_idx, L"");
 		m_leakList.SetItemData(display_idx, data_idx);
-		m_leakList.SetItemText(display_idx, 1, refCountText);
-		m_leakList.SetItemText(display_idx, 2, node->nodeName);
-		m_leakList.SetItemText(display_idx, 3, getIsNodeAttached(entry.node));
 
-		if (elem) {
-			m_leakList.SetItemText(display_idx, 4, elem->id);
-			m_leakList.SetItemText(display_idx, 5, elem->outerHTML);
-		}
-		else {
-			m_leakList.SetItemText(display_idx, 4, L"");
-			m_leakList.SetItemText(display_idx, 5, L"");
-		}
+		for (int column = 0; column < NUM_COLS; column++)
+			m_leakList.SetItemText(display_idx, column, getColumnText(entry, column));
 	}
 	if (m_leakList.GetItemCount() > 0)
 		m_leakList.SetItemState(0, LVIS_SELECTED, LVIS_SELECTED);
 
+	m_leakList.SortItems(DOMReportSortFunc, (DWORD_PTR)this);
 	UnlockWindowUpdate();
 }
 
@@ -350,4 +390,59 @@ void CDOMReportDlg::OnBnClickedAllRadio()
 void CDOMReportDlg::OnBnClickedRecentRadio()
 {
 	populateLeaks(true);
+}
+
+int CDOMReportDlg::compareEntries(size_t left_idx, size_t right_idx) {
+	const LeakEntry& left = m_leaks.at(left_idx);
+	const LeakEntry& right = m_leaks.at(right_idx);
+
+	// primary sort by user-selected column
+	int result = compareColumns(left, right, m_sortByColumn);
+
+	// secondary sort by URL
+	if (result == 0 && m_sortByColumn != COL_URL)
+		result = compareColumns(left, right, COL_URL);
+
+	if (m_reverseSort)
+		result *= -1;
+	return result;
+}
+
+int CDOMReportDlg::compareColumns(const LeakEntry& left, const LeakEntry& right, int column) {
+	if (column == COL_REFS) {
+		// must compare refCount numerically
+		if (left.refCount < right.refCount)
+			return -1;
+		else if (left.refCount == right.refCount)
+			return 0;
+		else
+			return 1;
+	}
+
+	// compare text only
+	CStringW leftText = getColumnText(left, column);
+	CStringW rightText = getColumnText(right, column);
+
+	int result = leftText.Compare(rightText);
+
+	// reverse sort blank items
+	if (leftText == "" || rightText == "")
+		result *= -1;
+
+	return result;
+}
+
+void CDOMReportDlg::OnHdnItemClickLeaklist(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMHEADER phdr = reinterpret_cast<LPNMHEADER>(pNMHDR);
+
+	if (phdr->iItem == m_sortByColumn) 
+		m_reverseSort = !m_reverseSort;
+	else
+		m_reverseSort = false;
+	m_sortByColumn = phdr->iItem;
+
+	m_leakList.SortItems(DOMReportSortFunc, (DWORD_PTR)this);
+
+	*pResult = 0;
 }
