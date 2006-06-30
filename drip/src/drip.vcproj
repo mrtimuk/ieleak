@@ -147,6 +147,9 @@
 				RelativePath=".\MemoryGraphCtrl.cpp">
 			</File>
 			<File
+				RelativePath=".\UnitTests\MemoryGraphCtrlTest.cpp">
+			</File>
+			<File
 				RelativePath=".\UnitTests\MemoryUsageTest.cpp">
 			</File>
 			<File
@@ -200,6 +203,9 @@
 				RelativePath=".\MemoryGraphCtrl.h">
 			</File>
 			<File
+				RelativePath=".\UnitTests\MemoryGraphCtrlTest.h">
+			</File>
+			<File
 				RelativePath=".\UnitTests\MemoryUsageTest.h">
 			</File>
 			<File
@@ -209,13 +215,13 @@
 				RelativePath=".\resource.h">
 			</File>
 			<File
-				RelativePath=".\NanoCppUnit\stdafx.h">
+				RelativePath=".\UnitTests\stdafx.h">
 			</File>
 			<File
 				RelativePath=".\stdafx.h">
 			</File>
 			<File
-				RelativePath=".\UnitTests\stdafx.h">
+				RelativePath=".\NanoCppUnit\stdafx.h">
 			</File>
 			<File
 				RelativePath=".\NanoCppUnit\test.h">

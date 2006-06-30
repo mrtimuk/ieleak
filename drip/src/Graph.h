@@ -26,8 +26,10 @@ public:
 	size_t GetNumSeries();
 	size_t AddSeries(COLORREF color);
 	COLORREF GetSeriesColor(size_t series);
+	bool IsSeriesVisible(size_t series);
 
 	void AddPoint(size_t series, int y);
+	void SetSeriesVisible(size_t series, bool visible);
 
 	// returns the right edge if there are no points
 	int GetLeftMostPointInAnySeries(CRect zone);
@@ -43,6 +45,7 @@ private:
 	{
 		COLORREF color;
 		vector<int> values;
+		bool visible;
 	};
 	vector<Series*> m_Series;
 

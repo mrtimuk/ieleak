@@ -21,6 +21,19 @@ public:
 public:
 	void addPoint(int memUsage, int domNodes);
 
+	enum UpdateSpeed {
+		kHigh,
+		kNormal,
+		kLow,
+		kPaused
+	};
+	enum GraphSeries {
+		kMemory,
+		kDOM
+	};
+	// for testing
+	static CMenu* getPopupMenu(GraphSeries activeSeries, UpdateSpeed updateSpeed);
+
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CGraphCtrl)
@@ -36,6 +49,8 @@ protected:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 	afx_msg NCHITTEST_RESULT OnNcHitTest(CPoint point);
+	afx_msg void OnGraphShowMemory();
+	afx_msg void OnGraphShowDOM();
 	afx_msg void OnGraphUpdateSpeedHigh();
 	afx_msg void OnGraphUpdateSpeedLow();
 	afx_msg void OnGraphUpdateSpeedNormal();
@@ -48,15 +63,9 @@ protected:
 	virtual void drawControl(CDC* pDC, CRect zone);
 
 private:
-	enum UpdateSpeed {
-		kHigh,
-		kNormal,
-		kLow,
-		kPaused
-	};
-
 	int getMouseXPos(CRect zone);
 	void setUpdateSpeed(UpdateSpeed speed);
+	void setActiveSeries(GraphSeries series);
 
 	CComObject<JSHook>* m_hook;
 	CGraph m_graph;
@@ -65,4 +74,5 @@ private:
 	CFont m_statsFont;
 
 	UpdateSpeed m_updateSpeed;
+	GraphSeries m_activeSeries;
 };

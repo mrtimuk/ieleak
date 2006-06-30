@@ -62,6 +62,7 @@ size_t CGraph::AddSeries(COLORREF color)
 {
 	Series* series = new Series;
 	series->color = color;
+	series->visible = true;
 	m_Series.push_back(series);
 	return m_Series.size()-1;
 }
@@ -72,10 +73,22 @@ COLORREF CGraph::GetSeriesColor(size_t series)
 	return m_Series.at(series)->color;
 }
 
+bool CGraph::IsSeriesVisible(size_t series)
+{
+	ASSERT(series >= 0 && series < m_Series.size());
+	return m_Series.at(series)->visible;
+}
+
 void CGraph::AddPoint(size_t series, int y)
 {
 	ASSERT(series >= 0 && series < m_Series.size());
 	m_Series.at(series)->values.push_back(y);
+}
+
+void CGraph::SetSeriesVisible(size_t series, bool visible)
+{
+	ASSERT(series >= 0 && series < m_Series.size());
+	m_Series.at(series)->visible = visible;
 }
 
 int CGraph::GetLeftMostPointInAnySeries(CRect zone)
@@ -119,7 +132,8 @@ void CGraph::DrawGraph(CDC* pDC, CRect zone)
 	vector<Series*>::iterator iter = m_Series.begin();
 	while (iter != m_Series.end())
 	{
-		DrawGraphLine(*iter, pDC, zone);
+		if ((*iter)->visible)
+			DrawGraphLine(*iter, pDC, zone);
 		iter++;
 	}
 }

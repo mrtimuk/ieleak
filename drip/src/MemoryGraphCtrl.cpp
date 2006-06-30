@@ -21,6 +21,7 @@ CMemoryGraphCtrl::CMemoryGraphCtrl(CComObject<JSHook>* hook) {
 	VERIFY(m_statsFont.CreatePointFont(90, L"Sans Serif"));
 
 	m_updateSpeed = kPaused;
+	setActiveSeries(kMemory);
 }
 
 CMemoryGraphCtrl::~CMemoryGraphCtrl() {
@@ -36,6 +37,8 @@ BEGIN_MESSAGE_MAP(CMemoryGraphCtrl, CMemDCCtrl)
 	ON_WM_TIMER()
 	ON_WM_RBUTTONUP()
 	ON_WM_NCHITTEST()
+	ON_COMMAND(ID_GRAPH_SHOW_MEMORY, OnGraphShowMemory)
+	ON_COMMAND(ID_GRAPH_SHOW_DOM, OnGraphShowDOM)
 	ON_COMMAND(ID_GRAPHUPDATESPEED_HIGH, OnGraphUpdateSpeedHigh)
 	ON_COMMAND(ID_GRAPHUPDATESPEED_LOW, OnGraphUpdateSpeedLow)
 	ON_COMMAND(ID_GRAPHUPDATESPEED_NORMAL, OnGraphUpdateSpeedNormal)
@@ -81,6 +84,34 @@ void CMemoryGraphCtrl::addPoint(int memUsage, int domNodes) {
 	RedrawWindow();
 }
 
+CMenu* CMemoryGraphCtrl::getPopupMenu(GraphSeries activeSeries, UpdateSpeed updateSpeed) {
+	UINT id = 0;
+
+	// load the menu
+	CMenu* menu = CMenu::FromHandle(LoadMenu(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_GRAPH_MENU)));
+	menu = menu->GetSubMenu(0);
+
+	// set the radio button for the current view
+	switch (activeSeries) {
+		case kMemory:	id = ID_GRAPH_SHOW_MEMORY; break;
+		case kDOM:		id = ID_GRAPH_SHOW_DOM; break;
+		default:		id = 0; ASSERT(false); break;
+	}
+	VERIFY(menu->CheckMenuRadioItem(ID_GRAPH_SHOW_MEMORY, ID_GRAPH_SHOW_DOM, id, MF_BYCOMMAND));
+
+	// set the radio button for the update speed
+	switch (updateSpeed)  {
+		case kHigh:		id = ID_GRAPHUPDATESPEED_HIGH; break;
+		case kNormal:	id = ID_GRAPHUPDATESPEED_NORMAL; break;
+		case kLow:		id = ID_GRAPHUPDATESPEED_LOW; break;
+		case kPaused:	id = ID_GRAPHUPDATESPEED_PAUSED; break;
+		default:		id = 0; ASSERT(false); break;
+	}
+	VERIFY(menu->CheckMenuRadioItem(ID_GRAPHUPDATESPEED_HIGH, ID_GRAPHUPDATESPEED_PAUSED, id, MF_BYCOMMAND));
+
+	return menu;
+}
+
 bool CMemoryGraphCtrl::shouldRedrawControl(CRect zone) {
 	if (CMemDCCtrl::shouldRedrawControl(zone))
 		return true;
@@ -105,33 +136,22 @@ void CMemoryGraphCtrl::drawControl(CDC* pDC, CRect zone) {
 	pDC->SelectObject(oldPen);
 
 	// Determine the statistics to display
+	size_t series;
+	string desc;
+	switch (m_activeSeries) {
+		case kMemory:	series = m_memSeries; desc = "Memory Usage:"; break;
+		case kDOM:		series = m_domSeries; desc = "Total DOM Nodes:"; break;
+		default:		ASSERT(false); return;
+	}
+
 	vector<string> stats;
-
-	int mem = 0;
-	if (m_graph.GetValueAtPoint(m_memSeries, zone, m_displayedMouseXPos, mem)) {
-		stats.push_back("Memory Usage: ");
-		CStringA memStats;
-		memStats.Format("%i", mem);
-		stats.push_back((const char*)memStats);
+	int statVal = 0;
+	if (m_graph.GetValueAtPoint(series, zone, m_displayedMouseXPos, statVal)) {
+		stats.push_back(desc);
+		CStringA statDisp;
+		statDisp.Format("%i", statVal);
+		stats.push_back((const char*)statDisp);
 	}
-	else {
-		stats.push_back("");
-		stats.push_back("");
-	}
-
-	int nodes = 0;
-	if (m_graph.GetValueAtPoint(m_domSeries, zone, m_displayedMouseXPos, nodes)) {
-        CStringA nodeStats;
-		nodeStats.Format("%i", nodes);
-		stats.push_back("Total DOM Nodes: ");
-		stats.push_back((const char*)nodeStats);
-	}
-	else {
-		stats.push_back("");
-		stats.push_back("");
-	}
-
-	ASSERT(stats.size() == m_graph.GetNumSeries()*2);
 
 	// Determine the positions of the stats
 	const int margin = 5;
@@ -154,15 +174,14 @@ void CMemoryGraphCtrl::drawControl(CDC* pDC, CRect zone) {
 	if (zone.PtInRect(dimensions.TopLeft()) && zone.PtInRect(dimensions.BottomRight())) {
 		int oldMode = pDC->SetBkMode(TRANSPARENT);
 		CFont* oldFont = pDC->SelectObject(&m_statsFont);
+		int oldColor = pDC->SetTextColor(m_graph.GetSeriesColor(series));
 
 		for (size_t i = 0; i < stats.size(); i++) {
 			CPoint pos = statPos.at(i).TopLeft();
-
-			int oldColor = pDC->SetTextColor(m_graph.GetSeriesColor(i/2));
 			pDC->TextOut(pos.x, pos.y, stats.at(i).c_str());
-			pDC->SetTextColor(oldColor);
 		}
 
+		pDC->SetTextColor(oldColor);
 		pDC->SelectObject(oldFont);
 		pDC->SetBkMode(oldMode);
 	}
@@ -186,8 +205,7 @@ int CMemoryGraphCtrl::getMouseXPos(CRect zone) {
 	return x;
 }
 
-void CMemoryGraphCtrl::setUpdateSpeed(UpdateSpeed speed)
-{
+void CMemoryGraphCtrl::setUpdateSpeed(UpdateSpeed speed) {
 	m_updateSpeed = speed;
 
 	KillTimer(TIMER_STATS);
@@ -213,28 +231,19 @@ void CMemoryGraphCtrl::setUpdateSpeed(UpdateSpeed speed)
 	SetTimer(TIMER_STATS, interval, NULL);
 }
 
-void CMemoryGraphCtrl::OnRButtonUp(UINT nFlags, CPoint point)
-{
+void CMemoryGraphCtrl::setActiveSeries(GraphSeries series) {
+	m_activeSeries = series;
+	m_graph.SetSeriesVisible(m_memSeries, m_activeSeries == kMemory);
+	m_graph.SetSeriesVisible(m_domSeries, m_activeSeries == kDOM);
+	emptyPaintCache();
+}
+
+void CMemoryGraphCtrl::OnRButtonUp(UINT nFlags, CPoint point) {
 	// the event's point is relative to the client, but the menu is displayed relative to the screen.
 	CPoint screen = point;
 	ClientToScreen(&screen);
 
-	// load the menu
-	CMenu* menu = CMenu::FromHandle(LoadMenu(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_GRAPH_MENU)));
-	menu = menu->GetSubMenu(0);
-
-	// set the radio button for the update speed
-	UINT id = 0;
-	switch (m_updateSpeed)  {
-		case kHigh:		id = ID_GRAPHUPDATESPEED_HIGH; break;
-		case kNormal:	id = ID_GRAPHUPDATESPEED_NORMAL; break;
-		case kLow:		id = ID_GRAPHUPDATESPEED_LOW; break;
-		case kPaused:	id = ID_GRAPHUPDATESPEED_PAUSED; break;
-		default:		ASSERT(false); break;
-	}
-	CMenu* updateSpeedMenu = menu->GetSubMenu(0);
-	updateSpeedMenu->CheckMenuRadioItem(ID_GRAPHUPDATESPEED_HIGH, ID_GRAPHUPDATESPEED_PAUSED, id, MF_BYCOMMAND);
-
+	CMenu* menu = getPopupMenu(m_activeSeries, m_updateSpeed);
 	menu->TrackPopupMenu(TPM_LEFTBUTTON|TPM_RIGHTBUTTON, screen.x, screen.y, this, NULL);
 
 	CMemDCCtrl::OnRButtonUp(nFlags, point);
@@ -244,6 +253,16 @@ NCHITTEST_RESULT CMemoryGraphCtrl::OnNcHitTest(CPoint point)
 {
 	// to allow right-click events (instead of the SS_NOTIFY style)
 	return HTCLIENT;
+}
+
+void CMemoryGraphCtrl::OnGraphShowMemory()
+{
+	setActiveSeries(kMemory);
+}
+
+void CMemoryGraphCtrl::OnGraphShowDOM()
+{
+	setActiveSeries(kDOM);
 }
 
 void CMemoryGraphCtrl::OnGraphUpdateSpeedHigh()

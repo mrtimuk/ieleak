@@ -283,15 +283,13 @@ IDR_GRAPH_MENU MENU
 BEGIN
     POPUP "Graph Menu"
     BEGIN
-        POPUP "&Update Speed"
-        BEGIN
-            MENUITEM "&High",                       ID_GRAPHUPDATESPEED_HIGH
-            MENUITEM "&Normal",                     ID_GRAPHUPDATESPEED_NORMAL
-
-            MENUITEM "&Low",                        ID_GRAPHUPDATESPEED_LOW
-            MENUITEM "&Paused",                     ID_GRAPHUPDATESPEED_PAUSED
-
-        END
+        MENUITEM "Show &Memory Usage",          ID_GRAPH_SHOW_MEMORY
+        MENUITEM "Show &DOM Nodes",             ID_GRAPH_SHOW_DOM
+        MENUITEM SEPARATOR
+        MENUITEM "&High",                       ID_GRAPHUPDATESPEED_HIGH
+        MENUITEM "&Normal",                     ID_GRAPHUPDATESPEED_NORMAL
+        MENUITEM "&Low",                        ID_GRAPHUPDATESPEED_LOW
+        MENUITEM "&Paused",                     ID_GRAPHUPDATESPEED_PAUSED
     END
 END
 

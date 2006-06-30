@@ -37,13 +37,15 @@
 #define ID_GRAPHUPDATESPEED_NORMAL      32777
 #define ID_GRAPHUPDATESPEED_LOW         32778
 #define ID_GRAPHUPDATESPEED_PAUSED      32779
+#define ID_GRAPH_SHOW_MEMORY            32782
+#define ID_GRAPH_SHOW_DOM               32783
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        142
-#define _APS_NEXT_COMMAND_VALUE         32780
+#define _APS_NEXT_COMMAND_VALUE         32784
 #define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
