@@ -44,7 +44,6 @@
 #define IDC_STATIC_BLUE                 1029
 #define IDC_STATIC_BLACK                1030
 #define IDC_STATIC_GREEN                1031
-#define IDC_CHECK1                      1033
 #define IDC_CHECK_SHOW_ALL              1033
 #define IDC_CHECK_AUTO_CLEANUP          1033
 #define IDC_SHOW_HELP                   1036
@@ -56,6 +55,8 @@
 #define IDC_RADIO_PAUSED                1042
 #define IDC_STATIC_MAX                  1043
 #define IDC_STATIC_MIN                  1044
+#define IDC_CROSSREF_SCAN               1045
+#define IDC_CHECK_CYCLE_DETECTION       1046
 
 // Next default values for new objects
 // 
@@ -63,7 +64,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        145
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1045
+#define _APS_NEXT_CONTROL_VALUE         1048
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
