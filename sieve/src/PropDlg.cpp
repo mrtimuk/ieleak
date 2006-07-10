@@ -36,6 +36,21 @@ BEGIN_MESSAGE_MAP(CPropDlg, CDialog)
 	ON_BN_CLICKED(IDC_PROPERTIES_BUTTON, OnBnClickedPropertiesButton)
 END_MESSAGE_MAP()
 
+
+BEGIN_EASYSIZE_MAP(CPropDlg)
+	//EASYSIZE(<control id>,		left,			top,			right,			bottom,		options)
+
+	//Anchored to top/right
+	EASYSIZE(IDC_PROPERTIES_BUTTON,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDOK,					ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+
+	//Anchored to left + top + right + bottom
+	EASYSIZE(IDC_PROPLIST,			ES_BORDER,		ES_BORDER,		ES_BORDER,		ES_BORDER,		0)
+
+	//EASYSIZE(<control id>,		left,			top,			right,			bottom,		options)	
+END_EASYSIZE_MAP
+
+
 bool GetPropertyValue(CComPtr<IDispatchEx> object, CStringW propertyName, VARIANT& result)
 {
 	DISPID dispId;
@@ -247,27 +262,19 @@ BOOL CPropDlg::OnInitDialog() {
 	if (m_propList.GetItemCount() > 0)
 		m_propList.SetItemState(0, LVIS_SELECTED, LVIS_SELECTED);
 
-	// Set up resizing
-	//
-	m_resizeHelper.Init(m_hWnd);
-	m_resizeHelper.Fix(IDC_PROPLIST, DlgResizeHelper::kLeftRight, DlgResizeHelper::kTopBottom);
-	m_resizeHelper.Fix(IDC_PROPERTIES_BUTTON, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDOK, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-
 	updateButtons();
 
+	INIT_EASYSIZE;
 	return TRUE;
 }
 
 void CPropDlg::OnPaint() {
 	CDialog::OnPaint();
-	m_resizeHelper.OnGripperPaint();
 }
 
 UINT CPropDlg::OnNcHitTest(CPoint point)
 {
 	UINT ht = CDialog::OnNcHitTest(point);
-	m_resizeHelper.OnGripperNcHitTest(point, ht);
 	return ht;
 }
 
@@ -353,7 +360,8 @@ void CPropDlg::OnBnClickedPropertiesButton()
 }
 
 void CPropDlg::OnSize(UINT nType, int cx, int cy) {
-	m_resizeHelper.OnSize();
+	CDialog::OnSize(nType, cx, cy);
+	UPDATE_EASYSIZE;
 }
 
 void CPropDlg::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI)

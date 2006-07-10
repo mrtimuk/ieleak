@@ -2,7 +2,6 @@
 
 #include <afxtempl.h>
 #include "resource.h"
-#include "DlgResizeHelper.h"
 
 void GetObjectProperties(CComPtr<IDispatchEx> object, CArray<DISPID> &raDispIDs,
 						 CArray<CStringW> &rasNames, CArray<CStringW> &rasValues);
@@ -18,12 +17,12 @@ bool GetLibraryURL(CComPtr<IDispatchEx> object, BSTR *url);
 // A dialog box for displaying an object's properties and their values.
 //
 class CPropDlg : public CDialog {
+	DECLARE_EASYSIZE
 private:
 	enum { IDD = IDD_PROPERTIES };
 	CListCtrl				m_propList;
 	CComPtr<IDispatchEx>	m_object;
 	CStringW				m_titleDesc;
-	DlgResizeHelper			m_resizeHelper;
 
 	CStringW getPropName(int idx);
 	void updateButtons();
