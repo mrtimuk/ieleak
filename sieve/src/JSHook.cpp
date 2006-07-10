@@ -3,6 +3,7 @@
 #include "LeakDlg.hpp"
 #include "PropDlg.hpp"
 #include "HtmlResource.h"
+#include "MainBrowserDlg.hpp"
 
 JSHook::JSHook() {
 	m_itNextNode = m_elements.begin();
@@ -82,8 +83,7 @@ STDMETHODIMP JSHook::Invoke(DISPID dispId, REFIID riid, LCID lcid, WORD flags, D
 		Elem* docElem = getDocument(doc);
 		if ( docElem )
 		{
-			rescanForElements(doc);
-			docElem->running = false;  // invalidate the running boolean
+			unloadWindow(doc);
 		}
 		else
 		{
@@ -291,17 +291,79 @@ void JSHook::hookNewElement(MSHTML::IHTMLDOMNodePtr elem, MSHTML::IHTMLDocument2
 		memset(&params, 0, sizeof(DISPPARAMS));
 		params.cArgs = 1;
 		params.rgvarg = &vHook;
-	
+
 		CComPtr<IDispatch> scriptObj = doc->Script;
-	
+
 		DISPID dispId;
 		OLECHAR *name = SysAllocString(L"__sIEve_overloadCloneNode");
 		scriptObj->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_SYSTEM_DEFAULT, &dispId);
 		SysFreeString(name);
 		scriptObj->Invoke(dispId, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &params, NULL, NULL, NULL);
-	
+
 		VariantClear(&vHook);
 	}
+}
+
+void JSHook::crossRefScan(MSHTML::IHTMLDocument2Ptr doc, CButton* button)
+{
+	int i = 0;
+	TCHAR buttonTxt[50];
+	TCHAR oldButtonTxt[50];
+	if ( button ) button->GetWindowTextW(oldButtonTxt,50);
+	Elem* docElem = getDocument(doc); // Search for registered document
+	for (std::map<IUnknown*,Elem>::iterator it = m_elements.begin(); it != m_elements.end(); ++it) {
+		IUnknown *unk = it->first;
+		Elem& elem = it->second;
+
+
+		MSHTML::IHTMLDOMNode2Ptr element = unk;
+		MSHTML::IHTMLDOMNodePtr node = unk;
+
+		if ( element )
+		{
+			// If 'doc' is NULL then Scan all elements of all documents
+			// Otherwise only scan the elements of a specified doc;
+			if ( (doc == NULL || elem.docElem == docElem) && elem.docElem->running && node->nodeType != NODE_TEXT)
+			{
+				if ( button )
+				{
+					wsprintf(buttonTxt,L"Scan: %d",++i);
+					button->SetWindowTextW(buttonTxt);
+				}
+				crossRefScanElement(node);
+			}
+		}
+	}
+	if ( button ) button->SetWindowTextW(oldButtonTxt);
+}
+
+void JSHook::crossRefScanElement(MSHTML::IHTMLDOMNode2Ptr elem)
+{
+	// Create a parameter list containing the hook, then invoke the
+	//   temporary function to attach it to the document.
+	//
+	VARIANT vHook;
+	VariantInit(&vHook);
+	vHook.vt = VT_DISPATCH;
+	vHook.pdispVal = elem;
+	elem->AddRef();
+
+	DISPPARAMS params;
+	memset(&params, 0, sizeof(DISPPARAMS));
+	params.cArgs = 1;
+	params.rgvarg = &vHook;
+
+
+	MSHTML::IHTMLDocument2Ptr doc = elem->ownerDocument;
+	CComPtr<IDispatch> scriptObj = doc->Script;
+
+	DISPID dispId;
+	OLECHAR *name = SysAllocString(L"___sIEve_crossRefScan");
+	scriptObj->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_SYSTEM_DEFAULT, &dispId);
+	SysFreeString(name);
+	scriptObj->Invoke(dispId, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &params, NULL, NULL, NULL);
+
+	VariantClear(&vHook);
 }
 
 // This method is called when a document is finished loading.  It will hook the
@@ -373,6 +435,20 @@ void JSHook::addStaticElements(MSHTML::IHTMLDocument2Ptr doc) {
 		MSHTML::IHTMLDocument3Ptr document = doc;
 		MSHTML::IHTMLDOMNodePtr documentElementNode = document->documentElement;
 		addElementRecursively(documentElementNode);
+	}
+}
+
+void JSHook::unloadWindow(MSHTML::IHTMLDocument2Ptr doc)
+{
+	Elem* docElem = getDocument(doc);
+	if ( docElem )
+	{
+		rescanForElements(doc);
+		if ( m_mainBrowserDlg->m_check_cycle_detection )
+		{
+			crossRefScan(doc,(CButton*)(m_mainBrowserDlg->GetDlgItem(IDC_CROSSREF_SCAN)));
+		}
+		docElem->running = false; // Invalidate the running state
 	}
 }
 

@@ -73,7 +73,10 @@ public:
 	void countElements(MSHTML::IHTMLWindow2Ptr wnd,int& leakedItems, int& hiddenItems);
 	void setMainBrowserDlg(CMainBrowserDlg* dlg);
 	void backgroundReleaseExtraReferences();
-
+	void unloadWindow(MSHTML::IHTMLDocument2Ptr doc);
+	void crossRefScan(MSHTML::IHTMLDocument2Ptr doc, CButton* button);
+	void crossRefScanElement(MSHTML::IHTMLDOMNode2Ptr elem);
+	
 	BEGIN_COM_MAP(JSHook)
 		COM_INTERFACE_ENTRY(IDispatch)
 		COM_INTERFACE_ENTRY(IJSHook)
