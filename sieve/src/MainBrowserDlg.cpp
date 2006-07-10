@@ -1,18 +1,12 @@
 #include "stdafx.h"
 #include "MainBrowserDlg.hpp"
 #include "BrowserPopupDlg.hpp"
-#include "DlgResizeHelper.h"
 #include "JSHook.hpp"
 #include "LeakDlg.hpp"
 #include "resource.h"
 #include "Cmallspy.h"
 #include "VORegistry.h"
-#include ".\mainbrowserdlg.hpp"
-
-//#include <Mshtmdid.h>
-//#include <Afxctl.h>
-//#include "shlwapi.h"
-
+#include "mainbrowserdlg.hpp"
 #include <afxpriv.h>
 
 #define TIMER_AUTO_REFRESH			0
@@ -23,24 +17,14 @@
 #define TIMER_MONITOR_MEMORY_FAST	1000
 #define TIMER_MONITOR_MEMORY_PAUSED	0
 
-#ifdef NEVER // Separate browser POC-code
-IMPLEMENT_DYNCREATE(CMainBrowserDlg, CCmdTarget)
-
-DWORD m_dwCookie;
-IWebBrowser2* m_pBrowser;
-#endif
-
 LONG memUsage = 0;
-LONG totIncr = 0;
 LONG nrMemSamples = 0;
 LONG autoFreedRefs = 0;
-
 
 void showMemoryUsageAndAvarageGrowth(CListCtrl &m_memsamples, int items, int itemsLeaked, int hiddenItems)
 {
 	TCHAR memUsageText[32];
 	TCHAR memDeltaText[32];
-	TCHAR memAvgDeltaText[32];
 	TCHAR itemsInUseText[32];
 	TCHAR itemsLeakedText[32];
 	//TCHAR autoFreedRefsText[32];
@@ -55,12 +39,9 @@ void showMemoryUsageAndAvarageGrowth(CListCtrl &m_memsamples, int items, int ite
 
 	if ( ! memUsage ) memUsage = currentMemUsage; //First 
 	LONG incr =  currentMemUsage - memUsage;
-	totIncr +=  incr;
-	LONG avgIncr = (nrMemSamples == 0) ? 0 : (totIncr / nrMemSamples);
 	memUsage = currentMemUsage;
 	wsprintf(memUsageText,L"%d",memUsage >> 10);
 	wsprintf(memDeltaText,L"%d",incr >> 10);
-	wsprintf(memAvgDeltaText,L"%d",avgIncr >> 10);
 	wsprintf(itemsInUseText,L"%d",items - hiddenItems);
 	wsprintf(itemsLeakedText,L"%d",itemsLeaked);
 
@@ -69,9 +50,8 @@ void showMemoryUsageAndAvarageGrowth(CListCtrl &m_memsamples, int items, int ite
 	m_memsamples.InsertItem(0,L"");
 	m_memsamples.SetItemText(0, 1, memUsageText);
 	m_memsamples.SetItemText(0, 2, memDeltaText);
-	m_memsamples.SetItemText(0, 3, memAvgDeltaText);
-	m_memsamples.SetItemText(0, 4, itemsInUseText);
-	m_memsamples.SetItemText(0, 5, itemsLeakedText);
+	m_memsamples.SetItemText(0, 3, itemsInUseText);
+	m_memsamples.SetItemText(0, 4, itemsLeakedText);
 	m_memsamples.SetItemData(0,(DWORD_PTR)incr);
 
 	if ( nrMemSamples > 200 ) m_memsamples.DeleteItem(200);  // Show maximum 200 samples to avoid leaking in this tool :-)
@@ -81,7 +61,6 @@ void showMemoryUsageAndAvarageGrowth(CListCtrl &m_memsamples, int items, int ite
 void initializeMemorySamples(CMainBrowserDlg* dlg)
 {
 	memUsage = 0;
-	totIncr = 0;
 	nrMemSamples = 0;
 	autoFreedRefs = 0;
 	dlg->m_memsamples.DeleteAllItems();
@@ -111,125 +90,65 @@ BEGIN_MESSAGE_MAP(CMainBrowserDlg, CBrowserHostDlg)
 	ON_BN_CLICKED(IDC_SHOW_LEAKS, OnBnClickedShowLeaks)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_MEMSAMPLES, OnNMCustomdrawMemsamples)
 	ON_BN_CLICKED(IDC_CHECK_AUTO_CLEANUP, &CMainBrowserDlg::OnBnClickedCheckAutoCleanup)
+	ON_BN_CLICKED(IDC_CHECK_CYCLE_DETECTION, &CMainBrowserDlg::OnBnClickedCheckCycleDetection)
 	ON_BN_CLICKED(IDC_LOG_DEFECT, &CMainBrowserDlg::OnBnClickedLogDefect)
 	ON_BN_CLICKED(IDC_SHOW_HELP, &CMainBrowserDlg::OnBnClickedShowHelp)
 	ON_BN_CLICKED(IDC_RADIO_SLOW, &CMainBrowserDlg::OnBnClickedRadioSlow)
 	ON_BN_CLICKED(IDC_RADIO_FAST, &CMainBrowserDlg::OnBnClickedRadioFast)
 	ON_BN_CLICKED(IDC_RADIO_PAUSED, &CMainBrowserDlg::OnBnClickedRadioPaused)
+	ON_BN_CLICKED(IDC_CROSSREF_SCAN, &CMainBrowserDlg::OnBnClickedCrossrefScan)
 END_MESSAGE_MAP()
 
+//EASYSIZE(<control id>,left,top,right,bottom,options)
+//l,t,r,b = ES_KEEPSIZE or ES_BORDER or <control id> (keep distance to border or <control id>)
+//options = ES_HCENTER | ES_VCENTER or 0
 
-#ifdef NEVER // Separate browser POC-code
-// these are the events we want to monitor. 
-// The events are explained below above their function implementations.
-BEGIN_DISPATCH_MAP(CMainBrowserDlg, CCmdTarget)
-	DISP_FUNCTION_ID(CMainBrowserDlg, "OnQuit",DISPID_ONQUIT,OnQuit,VT_EMPTY, VTS_NONE)
-	DISP_FUNCTION_ID(CMainBrowserDlg, "BeforeNavigate2",DISPID_BEFORENAVIGATE2,BeforeNavigate2,
-					 VT_EMPTY, VTS_DISPATCH VTS_PVARIANT VTS_PVARIANT VTS_PVARIANT VTS_PVARIANT VTS_PVARIANT VTS_PBOOL)
-	DISP_FUNCTION_ID(CMainBrowserDlg, "DocumentComplete",DISPID_DOCUMENTCOMPLETE,DocumentComplete,
-					 VT_EMPTY, VTS_DISPATCH VTS_PVARIANT)				 
-	DISP_FUNCTION_ID(CMainBrowserDlg, "DownloadBegin",DISPID_DOWNLOADBEGIN,DownloadBegin,VT_EMPTY, VTS_NONE)
-	DISP_FUNCTION_ID(CMainBrowserDlg, "DownloadEnd",DISPID_DOWNLOADCOMPLETE,DownloadEnd,VT_EMPTY, VTS_NONE)
-	DISP_FUNCTION_ID(CMainBrowserDlg, "NavigateComplete2", DISPID_NAVIGATECOMPLETE2, NavigateComplete2, VT_EMPTY, VTS_DISPATCH VTS_PVARIANT)
-END_DISPATCH_MAP()
+BEGIN_EASYSIZE_MAP(CMainBrowserDlg)
+	//EASYSIZE(<control id>,		left,			top,			right,			bottom,		options)
 
+	//Anchored to top/right
+	EASYSIZE(IDC_AUTOREFRESH,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_ABOUTBLANK,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_CLEAR_IN_USE,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_SHOW_IN_USE,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_SHOW_LEAKS,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_SHOW_HELP,			ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_LOG_DEFECT,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_CHECK_AUTO_CLEANUP,ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_CROSSREF_SCAN,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_CHECK_CYCLE_DETECTION,ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_GO,				ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_MEMLABEL,			ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
 
+	//Anchored to right + bottom
+	EASYSIZE(IDC_RADIO_FAST,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
+	EASYSIZE(IDC_RADIO_SLOW,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
+	EASYSIZE(IDC_RADIO_PAUSED,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
 
+	//Anchored to top + right + bottom
+	EASYSIZE(IDC_MEMSAMPLES,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_BORDER,		0)
 
-// stop capture of DWebBrowserEvents2 events
-BOOL CMainBrowserDlg::UnAdviseSink()
-{
-	BOOL bOK = TRUE;
-	// kill event sink if cookie is not 0
-	if(m_dwCookie != 0)
-	{
-		LPUNKNOWN pUnkSink = GetIDispatch(FALSE);
-		bOK = AfxConnectionUnadvise((LPUNKNOWN)m_pBrowser, DIID_DWebBrowserEvents2, pUnkSink, FALSE, m_dwCookie);
-		m_dwCookie = 0;
-	}
-	return bOK;
-}
+	//Anchored to left + top + right
+	EASYSIZE(IDC_EDITURL,			ES_BORDER,		ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
 
-// browser is quiting so kill events
-void CMainBrowserDlg::OnQuit()
-{
-	UnAdviseSink();	
-}
+	//Anchored to left + bottom
+	EASYSIZE(IDC_STATIC_MIN,		ES_BORDER,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		0)
+	EASYSIZE(IDC_STATIC_MAX,		ES_BORDER,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		0)
 
-// Fires before a navigation occurs in the given object 
-void CMainBrowserDlg::BeforeNavigate2(LPDISPATCH pDisp, VARIANT FAR *url, VARIANT FAR *Flags, 
-			VARIANT FAR *TargetFrameName, VARIANT FAR *PostData, VARIANT FAR *Headers, VARIANT_BOOL* Cancel)
-{
-}
+	//Anchored to left + right + bottom
+	EASYSIZE(IDC_STATIC_GRAPH,		ES_BORDER,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
+	EASYSIZE(IDC_STATIC_HISTORY,	ES_BORDER,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
 
-// Fires when the document that is being navigated to reaches the READYSTATE_COMPLETE state
-void CMainBrowserDlg::DocumentComplete(IDispatch *pDisp,VARIANT *URL)
-{
-	IWebBrowser2* sender = NULL;
-	pDisp->QueryInterface(IID_IWebBrowser2, (void**)&sender);
+	//Anchored to left + top + right + bottom
+	EASYSIZE(IDC_EXPLORER,			ES_BORDER,		ES_BORDER,		ES_BORDER,		ES_BORDER,		0)
 
-	if ( sender)
-	{
-		IDispatch* dispDoc = NULL;
-		sender->get_Document(&dispDoc);
-		sender->Release();
-		MSHTML::IHTMLDocument2Ptr doc = dispDoc;
+	//EASYSIZE(<control id>,		left,			top,			right,			bottom,		options)	
+END_EASYSIZE_MAP
 
-		// The document pointer may be NULL if the user navigates to a folder on the hard drive
-		//
-		if ( doc )
-		{
-			//AfxMessageBox(L"DocumentComplete");
-			//AfxMessageBox(doc->url);
-			getHook()->addStaticElements(doc);
-		}
-	}
-}
-
-void CMainBrowserDlg::NavigateComplete2(LPDISPATCH pDisp, VARIANT* URL) {
-	// If we're waiting on the document (but not automatically refreshing), hook its
-	//   createElement() method, so that we can collect all dynamically-
-	//   created elements.
-	//
-	IWebBrowser2* sender = NULL;
-	pDisp->QueryInterface(IID_IWebBrowser2, (void**)&sender);
-
-	if ( sender)
-	{
-		IDispatch* dispDoc = NULL;
-		sender->get_Document(&dispDoc);
-		sender->Release();
-		MSHTML::IHTMLDocument2Ptr doc = dispDoc;
-	
-		// The document pointer may be NULL if the user navigates to a folder on the hard drive
-		//
-		if ( doc )
-		{
-			//AfxMessageBox(L"NavigateComplete2");
-			//AfxMessageBox(doc->url);
-			//m_loadedDoc = doc;
-
-			getHook()->hookNewPage(doc);
-		}
-	}
-}
-
-
-
-// Fires when a navigation operation is beginning.
-void CMainBrowserDlg::DownloadBegin()
-{
-}
-
-// Fires when a navigation operation finishes, is halted, or fails.
-void CMainBrowserDlg::DownloadEnd()
-{
-}
-#endif NEVER
 
 CMainBrowserDlg::CMainBrowserDlg(CComObject<JSHook>* hook, CWnd* pParent)	: CBrowserHostDlg(hook, IDC_EXPLORER, CMainBrowserDlg::IDD, pParent),
-	m_waitingForDoc(false), m_waitingForBlankDoc(false), m_autoRefreshMode(false), m_checkLeakDoc(NULL), m_reg(HKEY_LOCAL_MACHINE, TEXT("Software\\Cordys Systems\\sIEve"))
-	, m_check_auto_cleanup(false)
+	m_waitingForDoc(false), m_waitingForBlankDoc(false), m_autoRefreshMode(false), m_checkLeakDoc(NULL), m_reg(HKEY_LOCAL_MACHINE, TEXT("Software\\IE Sieve"))
+	, m_check_auto_cleanup(false), m_check_cycle_detection(false)
 {
 	//{{AFX_DATA_INIT(CMainBrowserDlg)
 		// NOTE: the ClassWizard will add member initialization here
@@ -239,37 +158,6 @@ CMainBrowserDlg::CMainBrowserDlg(CComObject<JSHook>* hook, CWnd* pParent)	: CBro
 	m_leakDlg = NULL;
 
 	getHook()->setMainBrowserDlg(this);
-
-
-#ifdef NEVER
-//========= START STANDALONE BROWSER AND CATCH EVENTS
-	HRESULT hr1 ;
-
-    //Create an Instance of web browser
-    hr1 = CoCreateInstance (CLSID_InternetExplorer, NULL, 
-        CLSCTX_LOCAL_SERVER, 
-        IID_IWebBrowser2, (LPVOID *)&m_pBrowser); 
-    if(hr1==S_OK)
-    {
-        VARIANT_BOOL pBool=true; //The browser is invisible
-        m_pBrowser->put_Visible( pBool ) ; 
-        //Gmail login page
-EnableAutomation();
-COleVariant vaURL(L"http://localhost/cordys/wcp/drip.htm") ; 
-        COleVariant null; 
-
-		m_pBrowser->put_MenuBar(false);
-		m_pBrowser->put_ToolBar(true);
-
-        //Open the mail login page
-        m_pBrowser->Navigate2(vaURL,null,null,null,null) ; 
-
-		LPUNKNOWN pUnkSink = GetIDispatch(FALSE);
-		AfxConnectionAdvise((LPUNKNOWN)m_pBrowser,DIID_DWebBrowserEvents2,pUnkSink,FALSE,&m_dwCookie); 
-	}
-//========= START STANDALONE BROWSER AND CATCH EVENTS
-#endif NEVER
-
 }
 
 void showHelp()
@@ -285,7 +173,7 @@ void showHelp()
     if(hr1==S_OK)
     {
         VARIANT_BOOL pBool=true; //The browser is invisible
-		//COleVariant vaURL(L"http://scrat.vanenburg.com/components/sieve") ; 
+		//COleVariant vaURL(L"http://cwiki/wiki/index.php/SIEve") ; 
 		COleVariant vaURL(L"http://sourceforge.net/projects/ieleak") ; 
 
 		m_pBrowser->put_MenuBar(true);
@@ -339,7 +227,7 @@ BOOL CMainBrowserDlg::OnInitDialog() {
 	m_radioSlow.SetCheck(0);
 	m_radioFast.SetCheck(0);
 	m_radioPaused.SetCheck(1);
-	m_timerMemoryMonitor = TIMER_MONITOR_MEMORY_SLOW; // Default slow
+	m_timerMemoryMonitor = TIMER_MONITOR_MEMORY_FAST; // Default slow
 
 
 	// Set the application icon.
@@ -352,40 +240,10 @@ BOOL CMainBrowserDlg::OnInitDialog() {
 	GetDlgItem(IDC_ABOUTBLANK)->EnableWindow(FALSE);
 
 	m_memsamples.InsertColumn(0, L" ", LVCFMT_LEFT, 1);
-	m_memsamples.InsertColumn(1, L"usage", LVCFMT_RIGHT, 50);
-	m_memsamples.InsertColumn(2, L"delta", LVCFMT_RIGHT, 40);
-	m_memsamples.InsertColumn(3, L"avg", LVCFMT_RIGHT, 40);
-	m_memsamples.InsertColumn(4, L"#inUse", LVCFMT_RIGHT, 48);
-	m_memsamples.InsertColumn(5, L"#leaks", LVCFMT_RIGHT, 45);
-
-	// Set up resizing
-	m_resizeHelper.Init(m_hWnd);
-	m_resizeHelper.Fix(IDC_AUTOREFRESH, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_ABOUTBLANK, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_CLEAR_IN_USE, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_SHOW_IN_USE, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_SHOW_LEAKS, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_SHOW_HELP, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_LOG_DEFECT, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_CHECK_AUTO_CLEANUP, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_GO, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_EDITURL, DlgResizeHelper::kLeftRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_ADDRESS_STATIC, DlgResizeHelper::kWidthLeft, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_FORWARD, DlgResizeHelper::kWidthLeft, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_BACK, DlgResizeHelper::kWidthLeft, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_MEMLABEL, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	//m_resizeHelper.Fix(IDC_STATIC_RESCANS, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	//m_resizeHelper.Fix(IDC_EDIT_RESCANS, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_MEMSAMPLES, DlgResizeHelper::kWidthRight, DlgResizeHelper::kTopBottom);
-	m_resizeHelper.Fix(IDC_EXPLORER, DlgResizeHelper::kLeftRight, DlgResizeHelper::kTopBottom);
-	m_resizeHelper.Fix(getExplorerHwnd(), DlgResizeHelper::kLeftRight, DlgResizeHelper::kTopBottom);
-	m_resizeHelper.Fix(IDC_STATIC_GRAPH, DlgResizeHelper::kLeftRight, DlgResizeHelper::kHeightBottom);
-	m_resizeHelper.Fix(IDC_STATIC_HISTORY, DlgResizeHelper::kLeftRight, DlgResizeHelper::kHeightBottom);
-	m_resizeHelper.Fix(IDC_RADIO_SLOW, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightBottom);
-	m_resizeHelper.Fix(IDC_RADIO_FAST, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightBottom);
-	m_resizeHelper.Fix(IDC_RADIO_PAUSED, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightBottom);
-	m_resizeHelper.Fix(IDC_STATIC_MAX, DlgResizeHelper::kWidthLeft, DlgResizeHelper::kHeightBottom);
-	m_resizeHelper.Fix(IDC_STATIC_MIN, DlgResizeHelper::kWidthLeft, DlgResizeHelper::kHeightBottom);
+	m_memsamples.InsertColumn(1, L"usage", LVCFMT_RIGHT, 55);
+	m_memsamples.InsertColumn(2, L"delta", LVCFMT_RIGHT, 50);
+	m_memsamples.InsertColumn(3, L"#inUse", LVCFMT_RIGHT, 48);
+	m_memsamples.InsertColumn(4, L"#leaks", LVCFMT_RIGHT, 45);
 
 	// Navigate to a page so that the border appears in the browser
 	//
@@ -400,6 +258,7 @@ BOOL CMainBrowserDlg::OnInitDialog() {
 	GetDlgItem(IDC_EDITURL)->SendMessage(EM_SETSEL,0,-1);
 
 	m_brush.CreateSysColorBrush( COLOR_3DFACE  );
+	INIT_EASYSIZE;
 	// Must return false when focusing a control.
 	//
 	return FALSE;
@@ -464,7 +323,8 @@ HCURSOR CMainBrowserDlg::OnQueryDragIcon() {
 }
 
 void CMainBrowserDlg::OnSize(UINT nType, int cx, int cy) {
-	m_resizeHelper.OnSize();
+	CDialog::OnSize(nType, cx, cy);
+	UPDATE_EASYSIZE;
 }
 
 void CMainBrowserDlg::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI)
@@ -485,9 +345,6 @@ void CMainBrowserDlg::OnDestroy() {
 	// Destroy the popups without navigating to blank page
 	//
 
-#ifdef NEVER // Separate browser POC-code
-	m_pBrowser->Quit();
-#endif
 	for (std::vector<CBrowserPopupDlg*>::const_iterator it = m_popups.begin(); it != m_popups.end(); ++it) {
 		CBrowserPopupDlg *dlg = *it;
 		dlg->DestroyWindow();
@@ -535,7 +392,6 @@ void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent)
 			destroyFinishedPopups();
 			if (m_popups.begin() == m_popups.end()) {
 				KillTimer(nIDEvent);
-				GetDlgItem(IDC_ABOUTBLANK)->EnableWindow(FALSE);
 			}
 			if ( m_check_auto_cleanup ) autoCleanup();
 			if ( m_leakDlg ) OnBnClickedShowLeaks();
@@ -677,7 +533,6 @@ void CMainBrowserDlg::OnBnClickedGo() {
 		GetDlgItem(IDC_GO)->SendMessage(WM_SETTEXT, 0, (LPARAM)L"Stop");
 		GetDlgItem(IDC_SIEVE)->EnableWindow(FALSE);
 		GetDlgItem(IDC_AUTOREFRESH)->EnableWindow(FALSE);
-		initializeMemorySamples(this);
 		if ( m_timerMemoryMonitor )	SetTimer(TIMER_MONITOR_MEMORY, m_timerMemoryMonitor, NULL);
 		m_radioSlow.SetCheck(0);
 		m_radioFast.SetCheck(0);
@@ -699,6 +554,7 @@ void CMainBrowserDlg::OnBnClickedAboutBlank() {
 	requestClosePopups();
 	Navigate(L"about:blank");
 	m_waitingForBlankDoc = true;
+	GetDlgItem(IDC_ABOUTBLANK)->EnableWindow(FALSE);
 }
 
 void CMainBrowserDlg::OnBnClickedAutoRefresh() {
@@ -766,6 +622,16 @@ void CMainBrowserDlg::destroyFinishedPopups()
 	}
 }
 
+void CMainBrowserDlg::BeginWaitCursor()
+{
+	CDialog::BeginWaitCursor();
+}
+
+void CMainBrowserDlg::EndWaitCursor()
+{
+	CDialog::EndWaitCursor();
+}
+
 void CMainBrowserDlg::onTitleChange(LPCTSTR lpszText) {
 	CStringW title(lpszText);
 	if (title.IsEmpty())
@@ -815,7 +681,7 @@ void CMainBrowserDlg::onOuterDocumentLoad(MSHTML::IHTMLDocument2Ptr doc)
 		GetDlgItem(IDC_AUTOREFRESH)->EnableWindow(TRUE);
 		GetDlgItem(IDC_GO)->SendMessage(WM_SETTEXT, 0, (LPARAM)L"Go");
 		GetDlgItem(IDC_ABOUTBLANK)->EnableWindow(TRUE);
-		m_waitingForDoc = false;
+		m_waitingForDoc = NULL;
 	}
 }
 
@@ -873,34 +739,10 @@ void CMainBrowserDlg::OnBnClickedClearInUse()
 
 	getHook()->clearElements();
 	m_mallocspy->Clear();
-/*
-	{
-
-		IDispatch *dispatch;
-		IHTMLDocument *mydoc;
-		IHTMLDocument *mydoc2;
-		IUnknown *ptr;
-		IUnknown *unk;
-		HRESULT ok;
-
-		IHTMLDocument* doc;
-		ok = CoCreateInstance(CLSID_HTMLDocument,NULL,CLSCTX_ALL,IID_IHTMLDocument,(void **)&doc);
-		ok = ok;
-
-		ok = doc->QueryInterface(IID_IUnknown,(void **)&unk);
-		ok = unk->QueryInterface(IID_IUnknown,(void **)&ptr);
-		ok = doc->QueryInterface(IID_IHTMLDocument,(void **)&mydoc);
-		ok = unk->QueryInterface(IID_IHTMLDocument,(void **)&mydoc2);
-		ok = unk->QueryInterface(IID_IDispatch,(void **)&dispatch);
-		ok = ok;
-	}
-*/
-
 	if ( m_leakDlg && m_leakDlg->IsWindowVisible() )
 	{
 		OnBnClickedShowInUse();
 	}
-	//initializeMemorySamples(this);
 }
 
 void CMainBrowserDlg::OnNMCustomdrawMemsamples(NMHDR *pNMHDR, LRESULT *pResult)
@@ -942,6 +784,10 @@ void CMainBrowserDlg::OnNMCustomdrawMemsamples(NMHDR *pNMHDR, LRESULT *pResult)
 
 }
 
+void CMainBrowserDlg::OnBnClickedCheckCycleDetection()
+{
+	m_check_cycle_detection = ! m_check_cycle_detection;
+}
 
 void CMainBrowserDlg::OnBnClickedCheckAutoCleanup()
 {
@@ -977,4 +823,11 @@ void CMainBrowserDlg::OnBnClickedRadioPaused()
 {
 	m_timerMemoryMonitor = TIMER_MONITOR_MEMORY_PAUSED;
 	KillTimer(TIMER_MONITOR_MEMORY);
+}
+
+void CMainBrowserDlg::OnBnClickedCrossrefScan()
+{
+	BeginWaitCursor();
+	getHook()->crossRefScan(NULL, (CButton *)GetDlgItem(IDC_CROSSREF_SCAN));
+	EndWaitCursor();
 }

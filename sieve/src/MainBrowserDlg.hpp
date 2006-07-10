@@ -1,7 +1,6 @@
 #pragma once
 
 #include "resource.h"
-#include "DlgResizeHelper.h"
 #include "BrowserHostDlg.hpp"
 #include "JSHook.hpp"
 #include "LeakDlg.hpp"
@@ -10,11 +9,6 @@
 #include "Graph.h"
 #include "afxwin.h"
 
-#ifdef NEVER // Separate browser POC-code
-#include <exdisp.h> //For IWebBrowser2* and others
-#include <exdispid.h>
-#endif
-
 // Forward declaration
 class CBrowserPopupDlg;
 class JSHook;
@@ -22,9 +16,7 @@ class JSHook;
 // The main sIEve dialog box, containing the browser control.
 //
 class CMainBrowserDlg : public CBrowserHostDlg {
-#ifdef NEVER // Separate browser POC-code
-	DECLARE_DYNCREATE(CMainBrowserDlg)
-#endif
+	DECLARE_EASYSIZE
 
 private:
 	wchar_t* getUrlText();
@@ -42,8 +34,6 @@ private:
 	CVORegistry					m_reg;
 	CLeakDlg*					m_leakDlg;
 	CBrush						m_brush;
-
-	DlgResizeHelper				m_resizeHelper;
 	virtual bool isHookActive() { return !m_waitingForBlankDoc && !m_autoRefreshMode; }
 
 public:
@@ -55,13 +45,15 @@ public:
 	CButton m_radioPaused;
 	int m_timerMemoryMonitor;
 	bool m_check_auto_cleanup;
+	bool m_check_cycle_detection;
 	CGraphCtrl m_memGraph;
 
 	CMainBrowserDlg(CComObject<JSHook>* hook, CWnd* pParent = NULL);
 	virtual ~CMainBrowserDlg();
+	void BeginWaitCursor();
+	void EndWaitCursor();
 	afx_msg void OnBnClickedShowInUse();
 	afx_msg void OnBnClickedClearInUse();
-	//void rescans();
 
 	DECLARE_MESSAGE_MAP()
 #ifdef NEVER // Separate browser POC-code
@@ -102,6 +94,7 @@ public:
 	afx_msg void OnBnClickedLogDefect();
 	afx_msg void OnBnClickedShowHelp();
 	afx_msg void OnBnClickedCheckAutoCleanup();
+	afx_msg void OnBnClickedCheckCycleDetection();
 
 
 #ifdef NEVER // Separate browser POC-code
@@ -126,4 +119,6 @@ public:
 	afx_msg void OnBnClickedRadioFast();
 public:
 	afx_msg void OnBnClickedRadioPaused();
+public:
+	afx_msg void OnBnClickedCrossrefScan();
 };
