@@ -1,7 +1,6 @@
 #pragma once
 
 #include "resource.h"
-#include "DlgResizeHelper.h"
 #include "JSHook.hpp"
 
 // This structure is used to keep track of leaked elements, the URL of their
@@ -30,12 +29,12 @@ struct LeakEntry
 // The dialog box for displaying all leaked elements.
 //
 class CLeakDlg : public CDialog {
+	DECLARE_EASYSIZE
 private:
 	enum { IDD = IDD_LEAKS };
 	CListCtrl				m_leakList;
 	CPoint					m_point;
 	std::vector<LeakEntry>	m_leaks;
-	DlgResizeHelper			m_resizeHelper;
 	int						m_lastSortedColumn;
 	//CToolTipCtrl*			m_toolTip;
 	CBrush m_brush;
@@ -84,6 +83,5 @@ public:
 //	afx_msg void OnNMClickLeaklist(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedCheckShowAll();
 	afx_msg void OnStnClickedStaticBlack();
-public:
 	afx_msg void OnBnClickedRefreshLeaks();
 };

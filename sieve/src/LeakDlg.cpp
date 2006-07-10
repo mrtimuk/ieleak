@@ -5,8 +5,6 @@
 #include "MainBrowserDlg.hpp"
 #include "PropDlg.hpp"
 #include <afxtempl.h>
-#include "./LeakDlg.hpp"
-
 
 int g_sortOrder = 1;
 
@@ -57,6 +55,38 @@ BEGIN_MESSAGE_MAP(CLeakDlg, CDialog)
 	ON_BN_CLICKED(IDC_REFRESH_LEAKS, OnBnClickedRefreshLeaks)
 END_MESSAGE_MAP()
 
+//EASYSIZE(<control id>,left,top,right,bottom,options)
+//l,t,r,b = ES_KEEPSIZE or ES_BORDER or <control id> (keep distance to border or <control id>)
+//options = ES_HCENTER | ES_VCENTER or 0
+
+BEGIN_EASYSIZE_MAP(CLeakDlg)
+	//EASYSIZE(<control id>,		left,			top,			right,			bottom,		options)
+
+	//Anchored to top/right
+	EASYSIZE(IDC_PROPERTIES_BUTTON,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_COPY,				ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_CLEAR,				ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_REFRESH,			ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_REFRESH_LEAKS,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_EDIT_ITEMS,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_EDIT_HIDDEN_ITEMS,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_CHECK_SHOW_ALL,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_STATIC_ITEMS,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+	EASYSIZE(IDC_STATIC_HIDDEN_ITEMS,ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
+
+	//Anchored to right + bottom
+	EASYSIZE(IDOK,					ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
+	EASYSIZE(IDC_STATIC_RED,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
+	EASYSIZE(IDC_STATIC_BLUE,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
+	EASYSIZE(IDC_STATIC_BLACK,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
+	EASYSIZE(IDC_STATIC_GREEN,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
+
+	//Anchored to left + top + right + bottom
+	EASYSIZE(IDC_LEAKLIST,			ES_BORDER,		ES_BORDER,		ES_BORDER,		ES_BORDER,		0)
+
+	//EASYSIZE(<control id>,		left,			top,			right,			bottom,		options)	
+END_EASYSIZE_MAP
+
 #define COL_NR			0
 #define COL_DOC			1
 #define COL_URL			2
@@ -65,10 +95,9 @@ END_MESSAGE_MAP()
 #define COL_ID			5
 #define COL_ORPHAN		6
 #define COL_LEAK		7
-#define COL_RUNNING		8
-#define COL_OUTERHTML	9
-#define COL_ADDRESS		10
-#define COL_SIZE		11
+#define COL_OUTERHTML	8
+#define COL_ADDRESS		9
+#define COL_SIZE		10
 
 BOOL CLeakDlg::OnInitDialog() {
 	CDialog::OnInitDialog();
@@ -87,36 +116,12 @@ BOOL CLeakDlg::OnInitDialog() {
 	m_leakList.InsertColumn(COL_ID, L"ID", LVCFMT_LEFT, 80);
 	m_leakList.InsertColumn(COL_ORPHAN, L"Orphan", LVCFMT_LEFT, 50);
 	m_leakList.InsertColumn(COL_LEAK, L"Leak", LVCFMT_LEFT, 40);
-	m_leakList.InsertColumn(COL_RUNNING, L"Running", LVCFMT_LEFT, 55);
 	m_leakList.InsertColumn(COL_OUTERHTML, L"outerHTML", LVCFMT_LEFT, 800);
 	m_leakList.InsertColumn(COL_ADDRESS, L"Address", LVCFMT_LEFT, 80);
 	m_leakList.InsertColumn(COL_SIZE,L"Size", LVCFMT_LEFT, 50);
 
 	// Set up resizing
 	//
-	m_resizeHelper.Init(m_hWnd);
-	m_resizeHelper.Fix(IDC_LEAKLIST, DlgResizeHelper::kLeftRight, DlgResizeHelper::kTopBottom);
-	m_resizeHelper.Fix(IDC_PROPERTIES_BUTTON, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_COPY, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_CLEAR, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_REFRESH, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_REFRESH_LEAKS, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDOK, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightBottom);
-	m_resizeHelper.Fix(IDC_STATIC_RED, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightBottom);
-	m_resizeHelper.Fix(IDC_STATIC_BLUE, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightBottom);
-	m_resizeHelper.Fix(IDC_STATIC_BLACK, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightBottom);
-	m_resizeHelper.Fix(IDC_STATIC_GREEN, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightBottom);
-
-	m_resizeHelper.Fix(IDC_EDIT_ITEMS, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_EDIT_HIDDEN_ITEMS, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_CHECK_SHOW_ALL, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	//m_resizeHelper.Fix(IDC_EDIT_BYTES, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	//m_resizeHelper.Fix(IDC_EDIT_KBYTES, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_STATIC_ITEMS, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_STATIC_HIDDEN_ITEMS, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	//m_resizeHelper.Fix(IDC_STATIC_BYTES, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	//m_resizeHelper.Fix(IDC_STATIC_KBYTES, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-
 	//EnableToolTips(TRUE);
 
 	//m_toolTip = new CToolTipCtrl();
@@ -125,18 +130,17 @@ BOOL CLeakDlg::OnInitDialog() {
 	//m_toolTip->Activate(TRUE);
 
 	m_brush.CreateSysColorBrush( COLOR_3DFACE  );
+	INIT_EASYSIZE;
 	return TRUE;
 }
 
 void CLeakDlg::OnPaint() {
 	CDialog::OnPaint();
-	m_resizeHelper.OnGripperPaint();
 }
 
 UINT CLeakDlg::OnNcHitTest(CPoint point)
 {
 	UINT ht = CDialog::OnNcHitTest(point);
-	m_resizeHelper.OnGripperNcHitTest(point, ht);
 	return ht;
 }
 
@@ -197,7 +201,7 @@ void CLeakDlg::clearLeaks() {
 	UpdateData(FALSE); // From members to controls
 }
 
-BOOL getIsNodeOrphan(IUnknown* unk) {
+BOOL getIsNodeOrphan(IUnknown* unk) { 
 	MSHTML::IHTMLElementPtr	element = unk;
 	return ( element && element->parentElement == NULL );
 }
@@ -249,7 +253,6 @@ void CLeakDlg::populateLeaks() {
 			m_leakList.SetItemText(idx, COL_REFS, refCountText);
 			m_leakList.SetItemText(idx, COL_ADDRESS, address);
 			m_leakList.SetItemText(idx, COL_SIZE, size);
-			m_leakList.SetItemText(idx, COL_RUNNING, (entry.hookElem->docElem->running) ? L"" : L"No");
 			// Leak if:  !running && refcount > 0.
 			m_leakList.SetItemText(idx, COL_ORPHAN, (getIsNodeOrphan(entry.elem)) ? L"Yes" : L"");
 			m_leakList.SetItemText(idx, COL_LEAK, (!entry.hookElem->docElem->running && entry.refCount > 0) ? L"leak!" : L"");
@@ -557,7 +560,8 @@ void CLeakDlg::CopySelectedItems()
 }
 
 void CLeakDlg::OnSize(UINT nType, int cx, int cy) {
-	m_resizeHelper.OnSize();
+	CDialog::OnSize(nType, cx, cy);
+	UPDATE_EASYSIZE;
 }
 
 void CLeakDlg::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI)
@@ -624,7 +628,6 @@ int CALLBACK SortFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 		return (entry2->size < entry1->size ? -1 : ( entry2->size > entry1->size ? 1 : 0))  * g_sortOrder;
 
 	case COL_LEAK:
-	case COL_RUNNING:
 		if ( entry1->hookElem->docElem->running == entry2->hookElem->docElem->running ) return 0;
 		if ( entry1->hookElem->docElem->running ) return 1 * g_sortOrder;
 		if ( entry2->hookElem->docElem->running ) return -1 * g_sortOrder;
