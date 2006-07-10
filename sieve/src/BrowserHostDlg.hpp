@@ -15,6 +15,7 @@ class CBrowserHostDlg : public CDialog
 public:
 	CBrowserHostDlg(CComObject<JSHook>* hook, UINT explorerCtrlID, UINT nIDTemplate, CWnd* pParent = NULL);   // standard constructor
 	virtual ~CBrowserHostDlg();
+	CComObject<JSHook>* getHook() { return m_hook; }
 
 // for derived classes
 protected:
@@ -23,8 +24,6 @@ protected:
 	void GoBack();
 	void GoForward();
 	void Stop();
-
-	CComObject<JSHook>* getHook() { return m_hook; }
 
 	virtual bool isHookActive()=0;
 
