@@ -29,7 +29,7 @@ private:
 	DlgResizeHelper				m_resizeHelper;
 	CStringW					m_autoRefreshBtnTitle;
 
-	virtual bool isHookActive() { return !m_waitingForBlankDoc && !m_autoRefreshMode; }
+	virtual bool isHookActive() { return !m_waitingForBlankDoc; }
 
 public:
 	enum { IDD = IDD_BROWSER_DIALOG };
