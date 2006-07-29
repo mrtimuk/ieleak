@@ -73,7 +73,5 @@ public:
 	static CStringW GetMemoryUsageStr();
 public:
 	CEdit m_editURL;
-	CEdit m_CurrentMemoryBox, m_CurrentDOMNodesBox;
-	CListBox m_memList;
 	CMemoryGraphCtrl m_memGraph;
 };

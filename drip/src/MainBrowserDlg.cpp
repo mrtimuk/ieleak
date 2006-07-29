@@ -89,9 +89,6 @@ CStringW CMainBrowserDlg::GetMemoryUsageStr() {
 void CMainBrowserDlg::DoDataExchange(CDataExchange* pDX) {
 	CBrowserHostDlg::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_EDITURL, m_editURL);
-	DDX_Control(pDX, IDC_CURRENT_DOM_NODES_EDIT, m_CurrentDOMNodesBox);
-	DDX_Control(pDX, IDC_CURRENT_MEMORY_EDIT, m_CurrentMemoryBox);
-	DDX_Control(pDX, IDC_MEMLIST, m_memList);
 }
 
 BOOL CMainBrowserDlg::OnInitDialog() {
@@ -115,19 +112,13 @@ BOOL CMainBrowserDlg::OnInitDialog() {
 	// Set up resizing
 	m_resizeHelper.Init(m_hWnd);
 	m_resizeHelper.Fix(IDC_AUTOREFRESH, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_CHECKUSAGE, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_CHECKLEAKS, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
+	m_resizeHelper.Fix(IDC_CHECKUSAGE, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightBottom);
+	m_resizeHelper.Fix(IDC_CHECKLEAKS, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightBottom);
 	m_resizeHelper.Fix(IDC_GO, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
 	m_resizeHelper.Fix(IDC_EDITURL, DlgResizeHelper::kLeftRight, DlgResizeHelper::kHeightTop);
 	m_resizeHelper.Fix(IDC_ADDRESS_STATIC, DlgResizeHelper::kWidthLeft, DlgResizeHelper::kHeightTop);
 	m_resizeHelper.Fix(IDC_FORWARD, DlgResizeHelper::kWidthLeft, DlgResizeHelper::kHeightTop);
 	m_resizeHelper.Fix(IDC_BACK, DlgResizeHelper::kWidthLeft, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_TOTALDOMNODES_STATIC, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_CURRENT_DOM_NODES_EDIT, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_TOTALMEMLABEL, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_CURRENT_MEMORY_EDIT, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_MEMLABEL, DlgResizeHelper::kWidthRight, DlgResizeHelper::kHeightTop);
-	m_resizeHelper.Fix(IDC_MEMLIST, DlgResizeHelper::kWidthRight, DlgResizeHelper::kTopBottom);
 	m_resizeHelper.Fix(IDC_EXPLORER, DlgResizeHelper::kLeftRight, DlgResizeHelper::kTopBottom);
 	m_resizeHelper.Fix(getExplorerHwnd(), DlgResizeHelper::kLeftRight, DlgResizeHelper::kTopBottom);
 	m_resizeHelper.Fix(IDC_GRAPH_STATIC, DlgResizeHelper::kLeftRight, DlgResizeHelper::kHeightBottom);
@@ -336,7 +327,6 @@ void CMainBrowserDlg::OnBnClickedAutoRefresh() {
 		GetDlgItem(IDC_AUTOREFRESH)->SendMessage(WM_SETTEXT, 0, (LPARAM)L"Stop");
 		GetDlgItem(IDC_GO)->EnableWindow(FALSE);
 		GetDlgItem(IDC_DRIP)->EnableWindow(FALSE);
-		m_memList.ResetContent();
 
 		// Load the specified document, which will start the auto-refresh cycle.
 		//
@@ -412,10 +402,6 @@ void CMainBrowserDlg::onOuterDocumentLoad(MSHTML::IHTMLDocument2Ptr doc)
 		//   as-yet-uncollected memory.
 		//
 		doc->parentWindow->execScript(L"window.CollectGarbage()", L"javascript");
-
-		// Get the process' memory usage and add it to the list.
-		//
-		m_memList.InsertString(0, GetMemoryUsageStr());
 
 		// Reload the document in 500 ms.
 		//
