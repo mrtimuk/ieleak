@@ -1,4 +1,4 @@
-Drip -- Memory Leak Detector for Internet Explorer (version 0.4)
+Drip -- Memory Leak Detector for Internet Explorer (version 0.5)
 
 This software is distributed under the BSD license included below. The
 source code and compiled binary, as well as further resources, can be found
