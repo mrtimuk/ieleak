@@ -1,0 +1,14 @@
+<html>
+<head>
+	<title>DOM Expando Test</title>
+	<script>
+		var x = document.createElement("DIV");
+		x.expando = x.focus;
+		x = null;
+	</script>
+	</head>
+<body>
+	<p>From <a href="http://sourceforge.net/forum/message.php?msg_id=3849557">http://sourceforge.net/forum/message.php?msg_id=3849557</a>.</p>
+	<p>This page should not leak any elements.</p>
+</body>
+</html>
