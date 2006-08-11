@@ -62,14 +62,39 @@ function __sIEve_initializeHooks(jsHook)
 	window.__sIEve_logElement = function(elem)
 	{
 		jsHook.logElement(elem);
-		__sIEve_overloadCloneNode(elem);
 		var child = elem.firstChild;
 		while ( child ) {
 			__sIEve_logElement(child);
 			child = child.nextSibling;
 		}
 	};
+	
+	window.__sIEve_clearClones = function(elem)
+	{
+		if ( elem.nodeType == 1 )
+		{
+			elem.removeAttribute("cloneNode");
+			elem.removeAttribute("__sIEve_nativeCloneNode");
+			var child = elem.firstChild;
+			while ( child ) {
+				window.__sIEve_clearClones(child);
+				child = child.nextSibling;
+			}
+		}
+	}
 
+	window.__sIEve_resetClones = function(elem)
+	{
+		if ( elem.nodeType == 1 )
+		{
+			window.__sIEve_overloadCloneNode(elem);
+			var child = elem.firstChild;
+			while ( child ) {
+				window.__sIEve_resetClones(child);
+				child = child.nextSibling;
+			}
+		}
+	}
 	var nativeCreateElement = window.document.createElement;
 	window.document.createElement = function(tag) {
 		var elem = nativeCreateElement(tag);
@@ -102,8 +127,11 @@ function __sIEve_overloadCloneNode(elem)
 }
 
 function __sIEve_customCloneNode(deep)
-{
-	var clone = this.__sIEve_nativeCloneNode(deep);
+{	
+	window.__sIEve_clearClones(this);
+	var clone = this.cloneNode(deep);
+	window.__sIEve_resetClones(this);
+	
 	if ( clone )
 	{
 		window.__sIEve_logElement(clone);
