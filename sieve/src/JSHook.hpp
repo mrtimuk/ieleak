@@ -20,6 +20,7 @@ struct Elem {
 		this->docId = 0;
 		this->docElem = NULL;
 		this->documentHasLeaks = false;
+		this->cycleDetected = false;
 	}
 	int			seqNr;
 	BSTR		url;
@@ -31,6 +32,7 @@ struct Elem {
 	int			docId;
 	Elem*		docElem;
 	BOOL		documentHasLeaks;
+	BOOL		cycleDetected;
 };
 
 class __declspec(uuid("8340a7f2-413a-46dd-9f95-fbad5d455a90")) IJSHook: public IDispatch { };
@@ -45,6 +47,7 @@ class __declspec(uuid("8340a7f2-413a-46dd-9f95-fbad5d455a90")) IJSHook: public I
 class JSHook: public IJSHook, public ATL::CComObjectRoot {
 private:
 	void addElement(MSHTML::IHTMLDOMNode* elem);
+	Elem* getElement(MSHTML::IHTMLDOMNodePtr elem);
 	void addElementRecursively(MSHTML::IHTMLDOMNode* elem);
 	void releaseExtraReferences(MSHTML::IHTMLWindow2Ptr wnd);
 	Elem* addDocument(MSHTML::IHTMLDocument2* doc, MSHTML::IHTMLWindow2* wnd);

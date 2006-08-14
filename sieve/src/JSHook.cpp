@@ -45,6 +45,8 @@ STDMETHODIMP JSHook::GetIDsOfNames(REFIID iid, OLECHAR **names, UINT nameCount, 
 			dispIds[i] = 1;
 		else if (!wcscmp(names[i], L"rescanForElements"))
 			dispIds[i] = 2;
+		else if (!wcscmp(names[i], L"logDetectedCycle"))
+			dispIds[i] = 3;
 		else	
 		{
 			dispIds[i] = -1;
@@ -108,6 +110,26 @@ STDMETHODIMP JSHook::Invoke(DISPID dispId, REFIID riid, LCID lcid, WORD flags, D
 		else
 		{
 			rescanForElements(NULL);
+		}
+		return S_OK;
+	}
+	else if ( dispId == 3 )
+	{
+		// logDetectedCycle() takes one argument, elem
+		//
+		if (dispParams->cArgs != 1)
+			return DISP_E_BADPARAMCOUNT;
+
+		if (dispParams->rgvarg[0].vt != VT_DISPATCH)
+			return DISP_E_BADVARTYPE;
+
+		// Get the element, and add the element to the list.
+		//
+		MSHTML::IHTMLDOMNodePtr elem = dispParams->rgvarg[0].pdispVal;
+		Elem* cachedElem = getElement(elem);
+		if ( cachedElem )
+		{
+			cachedElem->cycleDetected = true;
 		}
 		return S_OK;
 	}
@@ -272,6 +294,22 @@ void JSHook::addElement(MSHTML::IHTMLDOMNode* elem) {
 			unkElem->Release();
 		}
 	}
+}
+
+Elem* JSHook::getElement(MSHTML::IHTMLDOMNodePtr elem)
+{
+	if ( elem )
+	{
+		IUnknown *unkElem;
+		elem->QueryInterface(IID_IUnknown, (void**)&unkElem);		
+		std::map<IUnknown*,Elem>::iterator pair = m_elements.find(unkElem);
+		unkElem->Release();
+
+		if ( pair == m_elements.end() ) return NULL;
+		Elem& cachedElem =  pair->second;
+		return &cachedElem;
+	}
+	return NULL;
 }
 
 void JSHook::hookNewElement(MSHTML::IHTMLDOMNodePtr elem, MSHTML::IHTMLDocument2Ptr doc ) {
@@ -536,8 +574,8 @@ void JSHook::showLeaks(MSHTML::IHTMLWindow2Ptr wnd, CLeakDlg* dlg, bool showLeak
 
 		if ( showLeaks )
 		{
-			// Only show all leaks
-			if ( !elem.docElem->running && refCount > 1)
+			// Only show all leaks (And thus also the detected cycles)
+			if ( (!elem.docElem->running && refCount > 1) || elem.cycleDetected )
 			{
 				dlg->addElement(unk, &elem, refCount - 1, false, 0, elem.leakReported );
 				elem.leakReported = refCount - 1;
@@ -602,9 +640,9 @@ void JSHook::countElements(MSHTML::IHTMLWindow2Ptr wnd, int& leakedItems, int& h
 
 		// If any references (other than the one that we hold) are outstanding, then
 		//   the element has been leaked.
-		//
+		// OR if we detected a cycle
 
-		if ( !elem.docElem->running && refCount > 1)
+		if ( (!elem.docElem->running && refCount > 1) || elem.cycleDetected )
 		{
 			leakedItems++;
 		}

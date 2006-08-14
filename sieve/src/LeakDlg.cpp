@@ -95,9 +95,10 @@ END_EASYSIZE_MAP
 #define COL_ID			5
 #define COL_ORPHAN		6
 #define COL_LEAK		7
-#define COL_OUTERHTML	8
-#define COL_ADDRESS		9
-#define COL_SIZE		10
+#define COL_CYCLE		8
+#define COL_OUTERHTML	9
+#define COL_ADDRESS		10
+#define COL_SIZE		11
 
 BOOL CLeakDlg::OnInitDialog() {
 	CDialog::OnInitDialog();
@@ -116,6 +117,7 @@ BOOL CLeakDlg::OnInitDialog() {
 	m_leakList.InsertColumn(COL_ID, L"ID", LVCFMT_LEFT, 80);
 	m_leakList.InsertColumn(COL_ORPHAN, L"Orphan", LVCFMT_LEFT, 50);
 	m_leakList.InsertColumn(COL_LEAK, L"Leak", LVCFMT_LEFT, 40);
+	m_leakList.InsertColumn(COL_CYCLE, L"Cycle", LVCFMT_LEFT, 40);
 	m_leakList.InsertColumn(COL_OUTERHTML, L"outerHTML", LVCFMT_LEFT, 800);
 	m_leakList.InsertColumn(COL_ADDRESS, L"Address", LVCFMT_LEFT, 80);
 	m_leakList.InsertColumn(COL_SIZE,L"Size", LVCFMT_LEFT, 50);
@@ -256,6 +258,7 @@ void CLeakDlg::populateLeaks() {
 			// Leak if:  !running && refcount > 0.
 			m_leakList.SetItemText(idx, COL_ORPHAN, (getIsNodeOrphan(entry.elem)) ? L"Yes" : L"");
 			m_leakList.SetItemText(idx, COL_LEAK, (!entry.hookElem->docElem->running && entry.refCount > 0) ? L"leak!" : L"");
+			m_leakList.SetItemText(idx, COL_CYCLE, ( entry.hookElem->cycleDetected ) ? L"cycle!" : L"");
 			m_leakList.SetItemData(idx,(DWORD_PTR) &entry);
 
 			if ( element )
@@ -631,6 +634,12 @@ int CALLBACK SortFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 		if ( entry1->hookElem->docElem->running == entry2->hookElem->docElem->running ) return 0;
 		if ( entry1->hookElem->docElem->running ) return 1 * g_sortOrder;
 		if ( entry2->hookElem->docElem->running ) return -1 * g_sortOrder;
+		return 0;
+
+	case COL_CYCLE:
+		if ( entry1->hookElem->cycleDetected == entry2->hookElem->cycleDetected ) return 0;
+		if ( entry1->hookElem->cycleDetected ) return 1 * g_sortOrder;
+		if ( entry2->hookElem->cycleDetected ) return -1 * g_sortOrder;
 		return 0;
 
 	case COL_ORPHAN:

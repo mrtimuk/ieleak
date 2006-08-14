@@ -69,38 +69,44 @@ function __sIEve_initializeHooks(jsHook)
 		}
 	};
 	
-	window.__sIEve_clearClones = function(elem)
+	window.__sIEve_logDetectedCycle = function(elem)
 	{
-		if ( elem.nodeType == 1 )
-		{
-			elem.removeAttribute("cloneNode");
-			elem.removeAttribute("__sIEve_nativeCloneNode");
-			var child = elem.firstChild;
-			while ( child ) {
-				window.__sIEve_clearClones(child);
-				child = child.nextSibling;
-			}
-		}
-	}
-
-	window.__sIEve_resetClones = function(elem)
-	{
-		if ( elem.nodeType == 1 )
-		{
-			window.__sIEve_overloadCloneNode(elem);
-			var child = elem.firstChild;
-			while ( child ) {
-				window.__sIEve_resetClones(child);
-				child = child.nextSibling;
-			}
-		}
-	}
+		jsHook.logDetectedCycle(elem);
+	};
+	
 	var nativeCreateElement = window.document.createElement;
 	window.document.createElement = function(tag) {
 		var elem = nativeCreateElement(tag);
 		__sIEve_logElement(elem);
 		return elem;
 	};
+}
+
+function __sIEve_clearClones(elem)
+{
+	if ( elem.nodeType == 1 )
+	{
+		elem.removeAttribute("cloneNode");
+		elem.removeAttribute("__sIEve_nativeCloneNode");
+		var child = elem.firstChild;
+		while ( child ) {
+			window.__sIEve_clearClones(child);
+			child = child.nextSibling;
+		}
+	}
+}
+
+function __sIEve_resetClones(elem)
+{
+	if ( elem.nodeType == 1 )
+	{
+		window.__sIEve_overloadCloneNode(elem);
+		var child = elem.firstChild;
+		while ( child ) {
+			window.__sIEve_resetClones(child);
+			child = child.nextSibling;
+		}
+	}
 }
 
 function __sIEve_setRescanForElementsTimeout()
@@ -188,6 +194,7 @@ function ___sIEve_crossRefScanObject(sourceObject, object, crossRefScanId, refer
 			if ( sourceObject == object )
 			{
 				sourceObject["_CIRCULAR REFERENCE: "+ referencePath] = "path = " + referencePath;
+				__sIEve_logDetectedCycle(sourceObject);
 			}
 		}
 		else		
@@ -261,11 +268,6 @@ function ___sIEve_isValidTarget(target)
 				return false;  // Don't scan <LINK>
 			}
 		} 
-		if ( typeof(target.___sIEve_circularReference) != "undefined" )
-		{
-			// Don't scan again circular references.
-			return false;
-		}
 		var type = typeof(target);
 		if ( type == "object" || type == "function" )
 		{
