@@ -22,15 +22,19 @@ CGraph::CGraph()
 {
 	SetBackgroundColor(RGB(0,0,0));
 	SetGridLineColor(RGB(0, 128, 64));
-	SetGraphLineColor(RGB(0, 255, 0));
 	SetGridLineStep(12, 12);
 	m_PointStep = 1;
-	m_Min = 0;
-	m_Max = 0;
 }
 
 CGraph::~CGraph()
 {
+	vector<Series*>::iterator iter = m_Series.begin();
+	while (iter != m_Series.end())
+	{
+		delete *iter;
+		iter++;
+	}
+	m_Series.clear();
 }
 
 void CGraph::SetBackgroundColor(COLORREF cl)
@@ -43,26 +47,95 @@ void CGraph::SetGridLineColor(COLORREF cl)
 	m_GridLineColor = cl;
 }
 
-void CGraph::SetGraphLineColor(COLORREF cl)
-{
-	m_GraphLineColor = cl;
-}
-
 void CGraph::SetGridLineStep(int x, int y)
 {
 	m_VertStep = x;
 	m_HorzStep = y;
 }
 
-void CGraph::AddPoint(int y)
+size_t CGraph::GetNumSeries()
 {
-	m_Values.push_back(y);
+	return m_Series.size();
+}
+
+size_t CGraph::AddSeries(COLORREF color)
+{
+	Series* series = new Series;
+	series->color = color;
+	series->visible = true;
+	m_Series.push_back(series);
+	return m_Series.size()-1;
+}
+
+COLORREF CGraph::GetSeriesColor(size_t series)
+{
+	ASSERT(series >= 0 && series < m_Series.size());
+	return m_Series.at(series)->color;
+}
+
+bool CGraph::IsSeriesVisible(size_t series)
+{
+	ASSERT(series >= 0 && series < m_Series.size());
+	return m_Series.at(series)->visible;
+}
+
+void CGraph::AddPoint(size_t series, int y)
+{
+	ASSERT(series >= 0 && series < m_Series.size());
+	m_Series.at(series)->values.push_back(y);
+}
+
+void CGraph::SetSeriesVisible(size_t series, bool visible)
+{
+	ASSERT(series >= 0 && series < m_Series.size());
+	m_Series.at(series)->visible = visible;
+}
+
+int CGraph::GetLeftMostPointInAnySeries(CRect zone)
+{
+	size_t maxItems = 0;
+
+	// count the number of items
+	vector<Series*>::iterator iter = m_Series.begin();
+	while (iter != m_Series.end())
+	{
+		maxItems = max(maxItems, (*iter)->values.size());
+		iter++;
+	}
+
+	if (maxItems == 0)
+		return zone.right;
+	else if (maxItems > (size_t)zone.Width())
+		return zone.left;
+	else
+		return zone.right - (int)maxItems + 1;
+}
+
+bool CGraph::GetValueAtPoint(size_t series, CRect zone, int x, OUT int& value)
+{
+	ASSERT(series >= 0 && series < m_Series.size());
+	vector<int>* values = &m_Series.at(series)->values;
+	size_t numItems = values->size();
+
+	size_t index = numItems - 1 - (zone.right - x);
+	if (index < 0 || index >= numItems)
+		return false;
+
+	value = values->at(index);
+	return true;
 }
 
 void CGraph::DrawGraph(CDC* pDC, CRect zone)
 {
 	DrawGridLines(pDC, zone);
-	DrawGraphLine(pDC, zone);
+
+	vector<Series*>::iterator iter = m_Series.begin();
+	while (iter != m_Series.end())
+	{
+		if ((*iter)->visible)
+			DrawGraphLine(*iter, pDC, zone);
+		iter++;
+	}
 }
 
 void CGraph::DrawGridLines(CDC* pDC, CRect zone)
@@ -108,27 +181,27 @@ void CGraph::DrawVertGridLines(CDC* pDC, CRect zone)
 	}
 }
 
-void CGraph::DrawGraphLine(CDC* pDC, CRect zone)
+void CGraph::DrawGraphLine(Series* series, CDC* pDC, CRect zone)
 {
-	CPen vPen(PS_SOLID, 1, m_GraphLineColor);
+	CPen vPen(PS_SOLID, 1, series->color);
 	CPen* pOld = pDC->SelectObject(&vPen);
 
 	// Draw all points, starting from the right. Do not draw more than PtCnt points.
-	list<int>::reverse_iterator iter = m_Values.rbegin();
+	vector<int>::reverse_iterator iter = series->values.rbegin();
 
 	int numPoints = zone.Width() / m_PointStep;
 	int curPoint = numPoints-1;
 
 	int min, max;
-	CalcMinMax(numPoints, min, max);
+	CalcMinMax(series, numPoints, min, max);
 
-	while (iter != m_Values.rend() && curPoint >= 0)
+	while (iter != series->values.rend() && curPoint >= 0)
 	{
 		CPoint pt;
 		pt.x = zone.left + zone.Width() * curPoint / numPoints;
 		pt.y = CalcYPlotPos(zone, min, max, *iter);
 
-		if (iter == m_Values.rbegin())
+		if (iter == series->values.rbegin())
 			pDC->MoveTo(pt);
 		else
 			pDC->LineTo(pt);
@@ -162,7 +235,7 @@ int CGraph::CalcYPlotPos(CRect zone, int min, int max, int y)
 	return adjZone.bottom - (int)offset;
 }
 
-void CGraph::CalcMinMax(int numPoints, int& min, int& max)
+void CGraph::CalcMinMax(Series* series, int numPoints, int& min, int& max)
 {
 	min = 0;
 	max = 0;
@@ -170,8 +243,8 @@ void CGraph::CalcMinMax(int numPoints, int& min, int& max)
 	bool hasMinMax = false;
 
 	int i = 0;
-	list<int>::reverse_iterator iter = m_Values.rbegin();
-	while (iter != m_Values.rend() && i < numPoints)
+	vector<int>::reverse_iterator iter = series->values.rbegin();
+	while (iter != series->values.rend() && i < numPoints)
 	{
 		if (hasMinMax)
 		{
@@ -188,104 +261,4 @@ void CGraph::CalcMinMax(int numPoints, int& min, int& max)
 		i++;
 		iter++;
 	}
-	m_Min = min;
-	m_Max = max;
 }
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////
-// CGraphCtrl
-
-CGraphCtrl::CGraphCtrl()
-{
-	m_pBitmap = NULL;
-}
-
-CGraphCtrl::~CGraphCtrl()
-{
-	ResetPaintCache();
-}
-
-
-BEGIN_MESSAGE_MAP(CGraphCtrl, CStatic)
-	//{{AFX_MSG_MAP(CGraphCtrl)
-	ON_WM_PAINT()
-	//}}AFX_MSG_MAP
-	ON_WM_ERASEBKGND()
-END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// CGraphCtrl message handlers
-
-void CGraphCtrl::OnPaint()
-{
-	CPaintDC dc(this); // device context for painting
-
-	// Ensure that the bitmap has been created and is up-to-date
-	CRect zone;
-	GetClientRect(zone);
-	if (m_pBitmap && m_pBitmap->GetBitmapDimension() != CSize(zone.BottomRight()))
-		ResetPaintCache();
-
-	if (!m_pBitmap)
-	{
-		// Get the number of color planes and color bits used on the current display
-		HDC hdcScreen = CreateDC(L"DISPLAY", NULL, NULL, NULL);
-		int iPlanes = GetDeviceCaps(hdcScreen, PLANES);
-		int iBitCount = GetDeviceCaps(hdcScreen, BITSPIXEL);
-		DeleteDC(hdcScreen);
-
-		// Allocate and create the bitmap
-		m_pBitmap = new CBitmap;
-		m_pBitmap->CreateBitmap(zone.Width(), zone.Height(), iPlanes, iBitCount, NULL);
-
-		// Save the dimensions of the bitmap.
-		m_pBitmap->SetBitmapDimension(zone.Width(), zone.Height());
-
-		CDC dcBitmapCache;
-		dcBitmapCache.CreateCompatibleDC(&dc);
-		dcBitmapCache.SelectObject(m_pBitmap);
-		m_Graph.DrawGraph(&dcBitmapCache, zone);
-	}
-
-	// Copy to the DC
-	CDC dcBitmap;
-	dcBitmap.CreateCompatibleDC(&dc);
-	dcBitmap.SelectObject(m_pBitmap);
-	dc.BitBlt(zone.left, zone.top, zone.Width(), zone.Height(), &dcBitmap, 0, 0, SRCCOPY);
-}
-
-void CGraphCtrl::ResetPaintCache()
-{
-	delete m_pBitmap;
-	m_pBitmap = NULL;
-}
-
-void CGraphCtrl::AddPoint(int y)
-{
-	m_Graph.AddPoint(y);
-	ResetPaintCache();
-	RedrawWindow();
-}
-
-void CGraphCtrl::DrawControl(CDC* pDC)
-{
-	CRect zone;
-	GetClientRect(zone);
-	m_Graph.DrawGraph(pDC, zone);
-}
-
-BOOL CGraphCtrl::OnEraseBkgnd(CDC* pDC)
-{
-	return false;
-}
-
-void CGraphCtrl::GetMinMax(int& min, int& max)
-{
-	min = m_Graph.m_Min;
-	max = m_Graph.m_Max;
-}
-
-

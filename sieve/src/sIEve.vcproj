@@ -225,6 +225,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MemDCCtrl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MemoryGraphCtrl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\PropDlg.hpp"
 				>
 			</File>
@@ -318,6 +326,14 @@
 			</File>
 			<File
 				RelativePath=".\MainBrowserDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MemDCCtrl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MemoryGraphCtrl.cpp"
 				>
 			</File>
 			<File

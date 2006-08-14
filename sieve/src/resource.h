@@ -50,13 +50,14 @@
 #define IDC_LOG_DEFECT                  1037
 #define IDC_STATIC_GRAPH                1038
 #define IDC_STATIC_HISTORY              1039
-#define IDC_RADIO_SLOW                  1040
-#define IDC_RADIO_FAST                  1041
+#define IDC_RADIO_NORMAL                1040
+#define IDC_RADIO_HIGH                  1041
 #define IDC_RADIO_PAUSED                1042
-#define IDC_STATIC_MAX                  1043
-#define IDC_STATIC_MIN                  1044
+#define IDC_RADIO_LOW                   1043
+#define IDC_RADIO_MEMORY_USAGE          1044
 #define IDC_CROSSREF_SCAN               1045
 #define IDC_CHECK_CYCLE_DETECTION       1046
+#define IDC_RADIO_DOM_USAGE             1047
 
 // Next default values for new objects
 // 

@@ -6,7 +6,7 @@
 #include "LeakDlg.hpp"
 #include "Cmallspy.h"
 #include "VORegistry.h"
-#include "Graph.h"
+#include "MemoryGraphCtrl.h"
 #include "afxwin.h"
 
 // Forward declaration
@@ -40,18 +40,23 @@ public:
 	enum { IDD = IDD_BROWSER_DIALOG };
 	CMallocSpy *m_mallocspy;
 	CListCtrl m_memsamples;
-	CButton	m_radioFast;
-	CButton	m_radioSlow;
+	CButton	m_radioMemoryUsage;
+	CButton	m_radioDOMUsage;
+	CButton	m_radioHigh;
+	CButton	m_radioNormal;
+	CButton	m_radioLow;
 	CButton m_radioPaused;
-	int m_timerMemoryMonitor;
 	bool m_check_auto_cleanup;
 	bool m_check_cycle_detection;
-	CGraphCtrl m_memGraph;
+	CMemoryGraphCtrl m_memGraph;
 
 	CMainBrowserDlg(CComObject<JSHook>* hook, CWnd* pParent = NULL);
 	virtual ~CMainBrowserDlg();
+	static size_t GetMemoryUsage();
+
 	void BeginWaitCursor();
 	void EndWaitCursor();
+	int updateStatistics();
 	afx_msg void OnBnClickedShowInUse();
 	afx_msg void OnBnClickedClearInUse();
 
@@ -64,7 +69,6 @@ public:
 	virtual void DoDataExchange(CDataExchange* pDX);
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
-	afx_msg HBRUSH OnCtlColor(CDC *pDC, CWnd *pWnd, UINT nCtlColor);
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void doNothing();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
@@ -75,7 +79,7 @@ public:
 	afx_msg LRESULT OnKickIdle(WPARAM, LPARAM lCount);
 	afx_msg void CMainBrowserDlg::autoCleanup();
 
-	void updateStatistics();
+
 	void requestClosePopups();
 	void destroyFinishedPopups();
 
@@ -95,30 +99,11 @@ public:
 	afx_msg void OnBnClickedShowHelp();
 	afx_msg void OnBnClickedCheckAutoCleanup();
 	afx_msg void OnBnClickedCheckCycleDetection();
-
-
-#ifdef NEVER // Separate browser POC-code
-	BOOL UnAdviseSink();
-
-	// Fires before a navigation occurs in the given object 
-	afx_msg void BeforeNavigate2(LPDISPATCH pDisp, VARIANT FAR *url, VARIANT FAR *Flags, VARIANT FAR *TargetFrameName, VARIANT FAR *PostData, VARIANT FAR *Headers, VARIANT_BOOL* Cancel);
-	// Fires when the document that is being navigated to reaches the READYSTATE_COMPLETE state
-	afx_msg void DocumentComplete(IDispatch *pDisp,VARIANT *URL);
-	//
-	afx_msg void NavigateComplete2(LPDISPATCH pDisp, VARIANT* URL);
-	// Fires when a navigation operation is beginning.
-	afx_msg void DownloadBegin();
-	// Fires when a navigation operation finishes, is halted, or fails.
-	afx_msg void DownloadEnd();
-	// browser is quiting so kill events
-	afx_msg void OnQuit();
-#endif
-public:
-	afx_msg void OnBnClickedRadioSlow();
-public:
-	afx_msg void OnBnClickedRadioFast();
-public:
+	afx_msg void OnBnClickedRadioMemoryUsage();
+	afx_msg void OnBnClickedRadioDOMUsage();
+	afx_msg void OnBnClickedRadioHigh();
+	afx_msg void OnBnClickedRadioNormal();
+	afx_msg void OnBnClickedRadioLow();
 	afx_msg void OnBnClickedRadioPaused();
-public:
 	afx_msg void OnBnClickedCrossrefScan();
 };

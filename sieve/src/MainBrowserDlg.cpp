@@ -10,32 +10,19 @@
 #include <afxpriv.h>
 
 #define TIMER_AUTO_REFRESH			0
-#define TIMER_MONITOR_MEMORY		1
-#define TIMER_ABOUTBLANK			2
-
-#define TIMER_MONITOR_MEMORY_SLOW	5000
-#define TIMER_MONITOR_MEMORY_FAST	1000
-#define TIMER_MONITOR_MEMORY_PAUSED	0
+#define TIMER_ABOUTBLANK			1
 
 LONG memUsage = 0;
 LONG nrMemSamples = 0;
 LONG autoFreedRefs = 0;
 
-void showMemoryUsageAndAvarageGrowth(CListCtrl &m_memsamples, int items, int itemsLeaked, int hiddenItems)
+void showMemoryUsageAndAvarageGrowth(CListCtrl &m_memsamples, int items, int itemsLeaked, int hiddenItems, size_t currentMemUsage)
 {
 	TCHAR memUsageText[32];
 	TCHAR memDeltaText[32];
 	TCHAR itemsInUseText[32];
 	TCHAR itemsLeakedText[32];
 	//TCHAR autoFreedRefsText[32];
-	LONG currentMemUsage;
-
-
-	PROCESS_MEMORY_COUNTERS procMem;
-	memset(&procMem, 0, sizeof(PROCESS_MEMORY_COUNTERS));
-	procMem.cb = sizeof(PROCESS_MEMORY_COUNTERS);
-	GetProcessMemoryInfo(GetCurrentProcess(), &procMem, procMem.cb);
-	currentMemUsage = (LONG) (procMem.WorkingSetSize);
 
 	if ( ! memUsage ) memUsage = currentMemUsage; //First 
 	LONG incr =  currentMemUsage - memUsage;
@@ -66,6 +53,25 @@ void initializeMemorySamples(CMainBrowserDlg* dlg)
 	dlg->m_memsamples.DeleteAllItems();
 }
 
+#if (_WIN32_WINNT < 0x0501)
+
+typedef struct _PROCESS_MEMORY_COUNTERS_EX {
+  DWORD cb;
+  DWORD PageFaultCount;
+  SIZE_T PeakWorkingSetSize;
+  SIZE_T WorkingSetSize;
+  SIZE_T QuotaPeakPagedPoolUsage;
+  SIZE_T QuotaPagedPoolUsage;
+  SIZE_T QuotaPeakNonPagedPoolUsage;
+  SIZE_T QuotaNonPagedPoolUsage;
+  SIZE_T PagefileUsage;
+  SIZE_T PeakPagefileUsage;
+  SIZE_T PrivateUsage;
+} PROCESS_MEMORY_COUNTERS_EX, 
+*PPROCESS_MEMORY_COUNTERS_EX;
+
+#endif
+
 BEGIN_MESSAGE_MAP(CMainBrowserDlg, CBrowserHostDlg)
 	//{{AFX_MSG_MAP(CMainBrowserDlg)
 	ON_WM_PAINT()
@@ -93,8 +99,11 @@ BEGIN_MESSAGE_MAP(CMainBrowserDlg, CBrowserHostDlg)
 	ON_BN_CLICKED(IDC_CHECK_CYCLE_DETECTION, &CMainBrowserDlg::OnBnClickedCheckCycleDetection)
 	ON_BN_CLICKED(IDC_LOG_DEFECT, &CMainBrowserDlg::OnBnClickedLogDefect)
 	ON_BN_CLICKED(IDC_SHOW_HELP, &CMainBrowserDlg::OnBnClickedShowHelp)
-	ON_BN_CLICKED(IDC_RADIO_SLOW, &CMainBrowserDlg::OnBnClickedRadioSlow)
-	ON_BN_CLICKED(IDC_RADIO_FAST, &CMainBrowserDlg::OnBnClickedRadioFast)
+	ON_BN_CLICKED(IDC_RADIO_MEMORY_USAGE, &CMainBrowserDlg::OnBnClickedRadioMemoryUsage)
+	ON_BN_CLICKED(IDC_RADIO_DOM_USAGE, &CMainBrowserDlg::OnBnClickedRadioDOMUsage)
+	ON_BN_CLICKED(IDC_RADIO_LOW, &CMainBrowserDlg::OnBnClickedRadioLow)
+	ON_BN_CLICKED(IDC_RADIO_NORMAL, &CMainBrowserDlg::OnBnClickedRadioNormal)
+	ON_BN_CLICKED(IDC_RADIO_HIGH, &CMainBrowserDlg::OnBnClickedRadioHigh)
 	ON_BN_CLICKED(IDC_RADIO_PAUSED, &CMainBrowserDlg::OnBnClickedRadioPaused)
 	ON_BN_CLICKED(IDC_CROSSREF_SCAN, &CMainBrowserDlg::OnBnClickedCrossrefScan)
 END_MESSAGE_MAP()
@@ -121,8 +130,9 @@ BEGIN_EASYSIZE_MAP(CMainBrowserDlg)
 	EASYSIZE(IDC_MEMLABEL,			ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
 
 	//Anchored to right + bottom
-	EASYSIZE(IDC_RADIO_FAST,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
-	EASYSIZE(IDC_RADIO_SLOW,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
+	EASYSIZE(IDC_RADIO_HIGH,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
+	EASYSIZE(IDC_RADIO_NORMAL,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
+	EASYSIZE(IDC_RADIO_LOW,			ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
 	EASYSIZE(IDC_RADIO_PAUSED,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
 
 	//Anchored to top + right + bottom
@@ -132,8 +142,8 @@ BEGIN_EASYSIZE_MAP(CMainBrowserDlg)
 	EASYSIZE(IDC_EDITURL,			ES_BORDER,		ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
 
 	//Anchored to left + bottom
-	EASYSIZE(IDC_STATIC_MIN,		ES_BORDER,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		0)
-	EASYSIZE(IDC_STATIC_MAX,		ES_BORDER,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		0)
+	EASYSIZE(IDC_RADIO_MEMORY_USAGE,ES_BORDER,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		0)
+	EASYSIZE(IDC_RADIO_DOM_USAGE,	ES_BORDER,		ES_KEEPSIZE,	ES_KEEPSIZE,	ES_BORDER,		0)
 
 	//Anchored to left + right + bottom
 	EASYSIZE(IDC_STATIC_GRAPH,		ES_BORDER,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
@@ -148,7 +158,7 @@ END_EASYSIZE_MAP
 
 CMainBrowserDlg::CMainBrowserDlg(CComObject<JSHook>* hook, CWnd* pParent)	: CBrowserHostDlg(hook, IDC_EXPLORER, CMainBrowserDlg::IDD, pParent),
 	m_waitingForDoc(false), m_waitingForBlankDoc(false), m_autoRefreshMode(false), m_checkLeakDoc(NULL), m_reg(HKEY_LOCAL_MACHINE, TEXT("Software\\IE Sieve"))
-	, m_check_auto_cleanup(false), m_check_cycle_detection(false)
+	, m_check_auto_cleanup(false), m_check_cycle_detection(false), m_memGraph(hook)
 {
 	//{{AFX_DATA_INIT(CMainBrowserDlg)
 		// NOTE: the ClassWizard will add member initialization here
@@ -214,21 +224,41 @@ CMainBrowserDlg::~CMainBrowserDlg() {
 void CMainBrowserDlg::DoDataExchange(CDataExchange* pDX) {
 	CBrowserHostDlg::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_MEMSAMPLES, m_memsamples);
-	DDX_Control(pDX, IDC_RADIO_SLOW, m_radioSlow);
-	DDX_Control(pDX, IDC_RADIO_FAST, m_radioFast);
+	DDX_Control(pDX, IDC_RADIO_MEMORY_USAGE, m_radioMemoryUsage);
+	DDX_Control(pDX, IDC_RADIO_DOM_USAGE, m_radioDOMUsage);
+	DDX_Control(pDX, IDC_RADIO_HIGH, m_radioHigh);
+	DDX_Control(pDX, IDC_RADIO_NORMAL, m_radioNormal);
+	DDX_Control(pDX, IDC_RADIO_LOW, m_radioLow);
 	DDX_Control(pDX, IDC_RADIO_PAUSED, m_radioPaused);
+}
+
+size_t CMainBrowserDlg::GetMemoryUsage()
+{
+	PROCESS_MEMORY_COUNTERS_EX procMem;
+	memset(&procMem, 0, sizeof(procMem));
+	procMem.cb = sizeof(procMem);
+	GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&procMem, procMem.cb);
+
+	// Private usage is not available on all platforms
+	if (procMem.cb >= sizeof(PROCESS_MEMORY_COUNTERS_EX))
+		return procMem.PrivateUsage;
+	else
+		return procMem.WorkingSetSize;
 }
 
 BOOL CMainBrowserDlg::OnInitDialog() {
 	CBrowserHostDlg::OnInitDialog();
 
 	m_memGraph.SubclassDlgItem(IDC_STATIC_GRAPH, this);
+	m_memGraph.setActiveSeries(CMemoryGraphCtrl::kMemory);
 	//m_memGraph.AddPoint(0);
-	m_radioSlow.SetCheck(0);
-	m_radioFast.SetCheck(0);
-	m_radioPaused.SetCheck(1);
-	m_timerMemoryMonitor = TIMER_MONITOR_MEMORY_FAST; // Default slow
-
+	m_radioMemoryUsage.SetCheck(1);
+	m_radioDOMUsage.SetCheck(0);
+	m_radioHigh.SetCheck(0);
+	m_radioNormal.SetCheck(1);
+	m_radioLow.SetCheck(0);
+	m_radioPaused.SetCheck(0);
+	m_memGraph.setUpdateSpeed(CMemoryGraphCtrl::kNormal);
 
 	// Set the application icon.
 	//
@@ -299,25 +329,6 @@ void CMainBrowserDlg::OnPaint() {
 	}
 }
 
-HBRUSH CMainBrowserDlg::OnCtlColor(CDC *pDC, CWnd *pWnd, UINT nCtlColor)
-{
-	HBRUSH hbr;
-
-    switch ( pWnd->GetDlgCtrlID() )
-    {
-		case IDC_STATIC_MAX:
-		case IDC_STATIC_MIN:
-			pDC->SetTextColor(RGB(0,255,0));
-			pDC->SetBkColor(RGB(0,0,0));
-			hbr = (HBRUSH) m_brush;
-			break;
-		default:
-			hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
-			break;
-    } 
-	return hbr;
-}
-
 HCURSOR CMainBrowserDlg::OnQueryDragIcon() {
 	return (HCURSOR) m_hIcon;
 }
@@ -377,10 +388,6 @@ void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent)
 			go();
 			break;
 
-		case TIMER_MONITOR_MEMORY:
-			updateStatistics();
-			break;
-
 		case TIMER_ABOUTBLANK:
 			if (m_checkLeakDoc == NULL) {
 				KillTimer(nIDEvent);
@@ -399,10 +406,8 @@ void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent)
 	}
 }
 
-void CMainBrowserDlg::updateStatistics()
+int CMainBrowserDlg::updateStatistics()
 {
-	TCHAR min_text[32]; TCHAR max_text[32];
-	int min, max;
 	int items;
 	int leakedItems;
 	int hiddenItems;
@@ -410,14 +415,8 @@ void CMainBrowserDlg::updateStatistics()
 	items = (int) (getHook()->m_elements.size());
 	items += (int) (getHook()->m_runningDocs.size());
 	getHook()->countElements(m_loadedDoc->parentWindow,leakedItems, hiddenItems);
-	showMemoryUsageAndAvarageGrowth(m_memsamples, items, leakedItems, hiddenItems);
-	m_memGraph.AddPoint((int)memUsage >> 10);
-
-	m_memGraph.GetMinMax(min,max);
-	wsprintf(min_text,L"%d (MB)      ",(min-1024) >> 10);
-	wsprintf(max_text,L"%d (MB)      ",(max+1024) >> 10);
-	GetDlgItem(IDC_STATIC_MIN)->SetWindowText(min_text);
-	GetDlgItem(IDC_STATIC_MAX)->SetWindowText(max_text);
+	showMemoryUsageAndAvarageGrowth(m_memsamples, items, leakedItems, hiddenItems, GetMemoryUsage());
+	return items - hiddenItems;  // in use items (domNodes);
 }
 
 void CMainBrowserDlg::autoCleanup()
@@ -533,13 +532,6 @@ void CMainBrowserDlg::OnBnClickedGo() {
 		GetDlgItem(IDC_GO)->SendMessage(WM_SETTEXT, 0, (LPARAM)L"Stop");
 		GetDlgItem(IDC_SIEVE)->EnableWindow(FALSE);
 		GetDlgItem(IDC_AUTOREFRESH)->EnableWindow(FALSE);
-		if ( m_timerMemoryMonitor )	SetTimer(TIMER_MONITOR_MEMORY, m_timerMemoryMonitor, NULL);
-		m_radioSlow.SetCheck(0);
-		m_radioFast.SetCheck(0);
-		m_radioPaused.SetCheck(0);
-		if ( m_timerMemoryMonitor == TIMER_MONITOR_MEMORY_FAST ) m_radioFast.SetCheck(1);
-		if ( m_timerMemoryMonitor == TIMER_MONITOR_MEMORY_SLOW ) m_radioSlow.SetCheck(1);
-		if ( m_timerMemoryMonitor == TIMER_MONITOR_MEMORY_PAUSED ) m_radioPaused.SetCheck(1);		
 		go();
 	}
 }
@@ -565,16 +557,18 @@ void CMainBrowserDlg::OnBnClickedAutoRefresh() {
 		//
 		m_autoRefreshMode = true;
 		initializeMemorySamples(this);
-		KillTimer(TIMER_MONITOR_MEMORY);	// Not during sampling
 		GetDlgItem(IDC_AUTOREFRESH)->SendMessage(WM_SETTEXT, 0, (LPARAM)L"Stop");
 		GetDlgItem(IDC_GO)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SIEVE)->EnableWindow(FALSE);
-		m_radioFast.EnableWindow(FALSE);
-		m_radioSlow.EnableWindow(FALSE);
+		m_radioHigh.EnableWindow(FALSE);
+		m_radioNormal.EnableWindow(FALSE);
+		m_radioLow.EnableWindow(FALSE);
 		m_radioPaused.EnableWindow(FALSE);
-		m_radioSlow.SetCheck(0);
-		m_radioFast.SetCheck(1);
+		m_radioHigh.SetCheck(0);
+		m_radioNormal.SetCheck(1);
+		m_radioLow.SetCheck(0);
 		m_radioPaused.SetCheck(0);
+		m_memGraph.setUpdateSpeed(CMemoryGraphCtrl::kNormal);
 
 		// Load the specified document, which will start the auto-refresh cycle.
 		//
@@ -590,12 +584,15 @@ void CMainBrowserDlg::OnBnClickedAutoRefresh() {
 		GetDlgItem(IDC_AUTOREFRESH)->SendMessage(WM_SETTEXT, 0, (LPARAM)L"Auto-Refresh");
 		GetDlgItem(IDC_GO)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SIEVE)->EnableWindow(TRUE);
-		m_radioFast.EnableWindow(TRUE);
-		m_radioSlow.EnableWindow(TRUE);
+		m_radioHigh.EnableWindow(TRUE);
+		m_radioNormal.EnableWindow(TRUE);
+		m_radioLow.EnableWindow(TRUE);
 		m_radioPaused.EnableWindow(TRUE);
-		m_radioSlow.SetCheck(0);
-		m_radioFast.SetCheck(0);
+		m_radioHigh.SetCheck(0);
+		m_radioNormal.SetCheck(0);
+		m_radioLow.SetCheck(0);
 		m_radioPaused.SetCheck(1);
+		m_memGraph.setUpdateSpeed(CMemoryGraphCtrl::kPaused);
 	}
 }
 
@@ -805,24 +802,36 @@ void CMainBrowserDlg::OnBnClickedShowHelp()
 	showHelp();
 }
 
-void CMainBrowserDlg::OnBnClickedRadioSlow()
+void CMainBrowserDlg::OnBnClickedRadioMemoryUsage()
 {
-	m_timerMemoryMonitor = TIMER_MONITOR_MEMORY_SLOW;
-	KillTimer(TIMER_MONITOR_MEMORY);
-	SetTimer(TIMER_MONITOR_MEMORY, m_timerMemoryMonitor, NULL);
+	m_memGraph.setActiveSeries(CMemoryGraphCtrl::kMemory);
+	m_memGraph.Invalidate();
 }
 
-void CMainBrowserDlg::OnBnClickedRadioFast()
+void CMainBrowserDlg::OnBnClickedRadioDOMUsage()
 {
-	m_timerMemoryMonitor = TIMER_MONITOR_MEMORY_FAST;
-	KillTimer(TIMER_MONITOR_MEMORY);
-	SetTimer(TIMER_MONITOR_MEMORY, m_timerMemoryMonitor, NULL);
+	m_memGraph.setActiveSeries(CMemoryGraphCtrl::kDOM);
+	m_memGraph.Invalidate();
+}
+
+void CMainBrowserDlg::OnBnClickedRadioHigh()
+{
+	m_memGraph.setUpdateSpeed(CMemoryGraphCtrl::kHigh);
+}
+
+void CMainBrowserDlg::OnBnClickedRadioNormal()
+{
+	m_memGraph.setUpdateSpeed(CMemoryGraphCtrl::kNormal);
+}
+
+void CMainBrowserDlg::OnBnClickedRadioLow()
+{
+	m_memGraph.setUpdateSpeed(CMemoryGraphCtrl::kLow);
 }
 
 void CMainBrowserDlg::OnBnClickedRadioPaused()
 {
-	m_timerMemoryMonitor = TIMER_MONITOR_MEMORY_PAUSED;
-	KillTimer(TIMER_MONITOR_MEMORY);
+	m_memGraph.setUpdateSpeed(CMemoryGraphCtrl::kPaused);
 }
 
 void CMainBrowserDlg::OnBnClickedCrossrefScan()
