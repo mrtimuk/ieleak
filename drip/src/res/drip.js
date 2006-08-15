@@ -49,18 +49,21 @@ function __drip_onFunctionCall(obj, functionName, returnValue) {
  */
 function __drip_createOverrideFunction(functionName) {
 	return function(arg1, arg2, arg3) {
-		/* This function cannot save a reference to the native function. Otherwise,
-		 * if the node is cloned, it will return a reference to the wrong function.
-		 * Thus, obtain a reference native function dynamically.
-		 */
-		this.removeAttribute(functionName);
-		var nativeFunction = this[name];
-		this[name] = arguments.callee;
-
 		/* Because of the self-altering nature of the overridden functions, the value
 		 * of "this" must be preserved for the callback notification
 		 */
 		var self = this;
+		/* This function cannot save a reference to the native function. Otherwise,
+		 * if the node is cloned, it will return a reference to the wrong function.
+		 * Thus, obtain a reference native function dynamically.
+		 *
+		 * Remove the Override Function for a while; This will expose again the
+		 * underlying native function. During the execution of the native function
+		 * it seems that the override may not exist. 
+		 */
+		self.removeAttribute(functionName);
+		var nativeFunction = self[functionName];
+		// self[functionName] = arguments.callee; // This is too Early; Do it at the end
 
 		/* simulate Function.call */
 		self.__drip_call = nativeFunction;
@@ -68,6 +71,7 @@ function __drip_createOverrideFunction(functionName) {
 		self.__drip_call = void 0;
 
 		__drip_onFunctionCall(self, functionName, result);
+		self[functionName] = arguments.callee; // Finally restore the Override Function
 		return result;
 	}
 }
@@ -85,7 +89,7 @@ function __drip_hookEvents(elem) {
 		var override = __drip_createOverrideFunction(functionNames[i]);
 
 		/* An exception may be thrown if properties cannot be set on the element. */
-		try { elem[name] = override; } catch (err)	{ }
+		try { elem[functionNames[i]] = override; } catch (err)	{ }
 	}
 
 	/* An exception may be thrown if properties cannot be set on the element. */
