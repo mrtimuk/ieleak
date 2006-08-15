@@ -62,16 +62,10 @@ function __drip_createOverrideFunction(functionName) {
 		 * it seems that the override may not exist. 
 		 */
 		self.removeAttribute(functionName);
-		var nativeFunction = self[functionName];
-		// self[functionName] = arguments.callee; // This is too Early; Do it at the end
-
-		/* simulate Function.call */
-		self.__drip_call = nativeFunction;
-		var result = self.__drip_call(arg1, arg2, arg3);
-		self.__drip_call = void 0;
+		var result = self[functionName](arg1, arg2, arg3);
+		self[functionName] = arguments.callee; // Finally restore the Override Function
 
 		__drip_onFunctionCall(self, functionName, result);
-		self[functionName] = arguments.callee; // Finally restore the Override Function
 		return result;
 	}
 }
