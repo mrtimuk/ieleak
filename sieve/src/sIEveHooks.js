@@ -82,33 +82,6 @@ function __sIEve_initializeHooks(jsHook)
 	};
 }
 
-function __sIEve_clearClones(elem)
-{
-	if ( elem.nodeType == 1 )
-	{
-		elem.removeAttribute("cloneNode");
-		elem.removeAttribute("__sIEve_nativeCloneNode");
-		var child = elem.firstChild;
-		while ( child ) {
-			window.__sIEve_clearClones(child);
-			child = child.nextSibling;
-		}
-	}
-}
-
-function __sIEve_resetClones(elem)
-{
-	if ( elem.nodeType == 1 )
-	{
-		window.__sIEve_overloadCloneNode(elem);
-		var child = elem.firstChild;
-		while ( child ) {
-			window.__sIEve_resetClones(child);
-			child = child.nextSibling;
-		}
-	}
-}
-
 function __sIEve_setRescanForElementsTimeout()
 {
 	window.navigator.__sIEve_rescanForElementsInterval *= 2;
@@ -134,10 +107,10 @@ function __sIEve_overloadCloneNode(elem)
 
 function __sIEve_customCloneNode(deep)
 {	
-	window.__sIEve_clearClones(this);
-	var clone = this.cloneNode(deep);
-	window.__sIEve_resetClones(this);
-	
+	var self = this;
+	self.removeAttribute("cloneNode"); // Remove the override (to avoid problems with clones of clones)
+	var clone = self.cloneNode(deep);  // Call the original native method
+	self.cloneNode = arguments.callee; // Restore the override	
 	if ( clone )
 	{
 		window.__sIEve_logElement(clone);
@@ -286,7 +259,6 @@ function ___sIEve_isCollection(target)
 	}
 	return false;
 }
-
 
 //========== TEMP CODE FOR DEBUGGING
 function dltypeof( vExpression )
