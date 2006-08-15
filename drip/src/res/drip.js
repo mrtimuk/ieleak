@@ -47,17 +47,25 @@ function __drip_onFunctionCall(obj, functionName, returnValue) {
 /* This function attaches to a native function and triggers a notification when it gets called.
  * NOTE: This function allows only a limited number of parameters.
  */
-function __drip_createOverrideFunction(functionName, nativeFunction) {
+function __drip_createOverrideFunction(functionName) {
 	return function(arg1, arg2, arg3) {
+		/* This function cannot save a reference to the native function. Otherwise,
+		 * if the node is cloned, it will return a reference to the wrong function.
+		 * Thus, obtain a reference native function dynamically.
+		 */
+		this.removeAttribute(functionName);
+		var nativeFunction = this[name];
+		this[name] = arguments.callee;
+
 		/* Because of the self-altering nature of the overridden functions, the value
 		 * of "this" must be preserved for the callback notification
 		 */
 		var self = this;
 
 		/* simulate Function.call */
-		this.__drip_call = nativeFunction;
-		var result = this.__drip_call(arg1, arg2, arg3);
-		this.__drip_call = void 0;
+		self.__drip_call = nativeFunction;
+		var result = self.__drip_call(arg1, arg2, arg3);
+		self.__drip_call = void 0;
 
 		__drip_onFunctionCall(self, functionName, result);
 		return result;
@@ -74,17 +82,10 @@ function __drip_hookEvents(elem) {
 	/* Element references might change when an element is attached to the document */
 	var functionNames = ['cloneNode','appendChild','insertBefore','insertAdjacentElement','insertAdjacentHTML'];
 	for (var i = 0; i < functionNames.length; i++) {
-		var name = functionNames[i];
+		var override = __drip_createOverrideFunction(functionNames[i]);
 
-		// the XML island getter throws an exception
-		var nativeFunction;
-		try { nativeFunction = elem[name]; } catch (err) { }
-
-		if (typeof nativeFunction !== 'undefined') {
-			var override = __drip_createOverrideFunction(name, nativeFunction);
-			/* An exception may be thrown if properties cannot be set on the element. */
-			try { elem[name] = override; } catch (err)	{ }
-		}
+		/* An exception may be thrown if properties cannot be set on the element. */
+		try { elem[name] = override; } catch (err)	{ }
 	}
 
 	/* An exception may be thrown if properties cannot be set on the element. */

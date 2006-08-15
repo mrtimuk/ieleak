@@ -1,0 +1,33 @@
+<HTML>
+<HEAD>
+<TITLE>Clone of Clone Test</TITLE>
+<script>
+function cloneTest()
+{
+	var someDiv = document.body.firstChild;
+
+	someDiv.myid = "the original";
+	
+	var clone = someDiv.cloneNode(true);
+	clone.myid = "the clone";
+
+	var cloneOfClone = clone.cloneNode(true);
+	
+	if ( cloneOfClone.myid == "the clone" )
+	{
+		// When running in IE it is OK the expected value is "the clone"
+		alert('OK fine;  cloneOfClone.myid == "the clone"')
+	}
+	else
+	{
+		// When running in Drip it fails due to the cloneNode overriding
+		alert('ERROR!! cloneOfClone.myid != "the clone"    BUT    cloneOfClone.myid = "' + cloneOfClone.myid + '"' )   
+	}
+}
+
+</script>
+</HEAD>
+<BODY><div></div>
+<button onclick="cloneTest()">Test cloneNode; It fails when running inside Drip</button>
+</BODY>
+</HTML>
