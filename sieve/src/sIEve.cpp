@@ -40,14 +40,12 @@ public:
 			m_pMainWnd = &dlg;
 			dlg.DoModal();
 		}
-		
 		// JSHook::hookNewPage adds references when it calls __drip_initHook. However, it is unclear
 		// when this reference is freed. At this point, simply release all references to the nodes
 		// in case there are outstanding references to the hook.
 		//
-		hook->clearElements();
+		hook->clearNodes();
 		int refCnt = hook->Release();
-
 		return FALSE;
 	}
 
