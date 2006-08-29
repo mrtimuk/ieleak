@@ -8,12 +8,18 @@
 
 int g_sortOrder = 1;
 
-CLeakDlg::CLeakDlg(CWnd* pParent) : CDialog(CLeakDlg::IDD, pParent), m_edit_items(0), m_lastSortedColumn(-1)
-, m_check_show_all(FALSE)
+CLeakDlg::CLeakDlg(CComObject<JSHook>* hook,CWnd* pParent) : CDialog(CLeakDlg::IDD, pParent), m_edit_items(0), m_lastSortedColumn(-1)
 {
+	m_hook = hook;
+	m_hook->AddRef();
 	//{{AFX_DATA_INIT(CLeakDlg)
 		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
+}
+
+CLeakDlg::~CLeakDlg()
+{
+	m_hook->Release();
 }
 
 void CLeakDlg::DoDataExchange(CDataExchange* pDX) {
@@ -26,7 +32,6 @@ void CLeakDlg::DoDataExchange(CDataExchange* pDX) {
 	//DDX_Text(pDX, IDC_EDIT_KBYTES, m_edit_kbytes);
 	DDX_Text(pDX, IDC_EDIT_ITEMS, m_edit_items);
 	DDX_Text(pDX, IDC_EDIT_HIDDEN_ITEMS, m_edit_hidden_items);
-	DDX_Check(pDX, IDC_CHECK_SHOW_ALL, m_check_show_all);
 }
 
 BEGIN_MESSAGE_MAP(CLeakDlg, CDialog)
@@ -51,7 +56,6 @@ BEGIN_MESSAGE_MAP(CLeakDlg, CDialog)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_LEAKLIST, OnCustomdrawLeakList)
 	ON_NOTIFY(HDN_ITEMCLICK, 0, OnHdnItemclickLeaklist)
 	ON_NOTIFY(WM_NCHITTEST, IDC_LEAKLIST, OnWmNcHitTest)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_ALL, OnBnClickedCheckShowAll)
 	ON_BN_CLICKED(IDC_REFRESH_LEAKS, OnBnClickedRefreshLeaks)
 END_MESSAGE_MAP()
 
@@ -70,7 +74,6 @@ BEGIN_EASYSIZE_MAP(CLeakDlg)
 	EASYSIZE(IDC_REFRESH_LEAKS,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
 	EASYSIZE(IDC_EDIT_ITEMS,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
 	EASYSIZE(IDC_EDIT_HIDDEN_ITEMS,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
-	EASYSIZE(IDC_CHECK_SHOW_ALL,	ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
 	EASYSIZE(IDC_STATIC_ITEMS,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
 	EASYSIZE(IDC_STATIC_HIDDEN_ITEMS,ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
 
@@ -110,7 +113,7 @@ BOOL CLeakDlg::OnInitDialog() {
 	// Set up the columns for the leak list.
 	//
 	m_leakList.InsertColumn(COL_NR,	L"#", LVCFMT_LEFT, 35);
-	m_leakList.InsertColumn(COL_DOC, L"doc", LVCFMT_LEFT, 37);
+	m_leakList.InsertColumn(COL_DOC, L"doc", LVCFMT_LEFT, 60);
 	m_leakList.InsertColumn(COL_URL, L"URL", LVCFMT_LEFT, 300);
 	m_leakList.InsertColumn(COL_REFS, L"Refs", LVCFMT_LEFT, 40);
 	m_leakList.InsertColumn(COL_TAG, L"Tag", LVCFMT_LEFT, 75);
@@ -119,8 +122,8 @@ BOOL CLeakDlg::OnInitDialog() {
 	m_leakList.InsertColumn(COL_LEAK, L"Leak", LVCFMT_LEFT, 40);
 	m_leakList.InsertColumn(COL_CYCLE, L"Cycle", LVCFMT_LEFT, 40);
 	m_leakList.InsertColumn(COL_OUTERHTML, L"outerHTML", LVCFMT_LEFT, 800);
-	m_leakList.InsertColumn(COL_ADDRESS, L"Address", LVCFMT_LEFT, 80);
-	m_leakList.InsertColumn(COL_SIZE,L"Size", LVCFMT_LEFT, 50);
+	//m_leakList.InsertColumn(COL_ADDRESS, L"Address", LVCFMT_LEFT, 80);
+	//m_leakList.InsertColumn(COL_SIZE,L"Size", LVCFMT_LEFT, 50);
 
 	// Set up resizing
 	//
@@ -161,191 +164,155 @@ void CLeakDlg::OnDestroy() {
 	clearLeaks();
 }
 
+void CLeakDlg::prepare(LPCTSTR title)
+{
+	this->LockWindowUpdate();
+	this->clearLeaks();
+	m_edit_items = 0;
+	m_edit_hidden_items = 0;
+	SetWindowText(title);
+	//m_edit_bytes = 0;
+	//m_edit_kbytes = 0;
+}
+
+void CLeakDlg::finish()
+{
+	UpdateData(FALSE); // From members to controls
+	updateButtons();
+	sortOnDefaultColumn();
+	this->UnlockWindowUpdate();
+	this->ShowWindow(SW_SHOW);
+}
+
+BOOL getIsNodeOrphan(IUnknown* unk) { 
+	MSHTML::IHTMLElementPtr	node = unk;
+	return ( node && node->parentElement == NULL );
+}
 
 // Adds an element to the leak list, including its document URL and ref count.
 //
-void CLeakDlg::addElement(IUnknown* elem, Elem *hookElem, int refCount, BOOL fromCmallspy, ULONG size, int reported) {
-	// Add a reference to the element, and allocate a copy of the URL string.
-	//
-	if ( fromCmallspy )
+void CLeakDlg::addElement(Elem *hookElem) 
+{
+	if ( hookElem && hookElem->unkNode )
 	{
-		m_leaks.push_back(LeakEntry(elem, NULL, refCount, fromCmallspy, size, reported));
+		int idx = m_edit_items++;
+		Elem* elem = new Elem(hookElem); // Make a Copy;
+		hookElem->reported = hookElem->refCountSample;
+		MSHTML::IHTMLDOMNode2Ptr node = elem->unkNode;
+		elem->isOrphan = getIsNodeOrphan(elem->unkNode);
+
+		wchar_t refCountText[64];
+		//wchar_t addressText[64];
+		//wchar_t sizeText[64];
+		wchar_t seqNrText[12];
+		wchar_t docIdText[12];
+
+		_itow(elem->seqNr, seqNrText, 10);
+		_itow(elem->docId, docIdText, 10);
+		_itow(elem->refCountSample, refCountText, 10);
+		//_ultow(elem->size, size, 10);
+		//wsprintf(addressText,L"0x%08x",elem->unkNode);
+
+		m_leakList.InsertItem(idx,seqNrText);
+		m_leakList.SetItemText(idx, COL_DOC, docIdText);
+		m_leakList.SetItemText(idx, COL_URL, elem->url);
+		m_leakList.SetItemText(idx, COL_REFS, refCountText);
+		m_leakList.SetItemText(idx, COL_ORPHAN, (elem->isOrphan) ? L"Yes" : L"");
+		if ( !elem->running && elem->refCountSample > 0)
+		{
+			m_leakList.SetItemText(idx, COL_LEAK, L"leak!");
+			hookElem->leakReported = 1;
+		}
+		if ( elem->cycleDetected )
+		{
+			m_leakList.SetItemText(idx, COL_CYCLE, L"cycle!");
+			hookElem->leakReported = 1;
+		}
+		m_leakList.SetItemData(idx,(DWORD_PTR) elem);
+		//m_leakList.SetItemText(idx, COL_ADDRESS, addressText);
+		//m_leakList.SetItemText(idx, COL_SIZE, sizeText);
+		m_leakList.SetItemText(idx, COL_TAG, elem->nodeName);
+
+		BSTR sValue = NULL;
+		if ( GetPropertyValueByName((CComQIPtr<IDispatchEx>)node, L"id", &sValue) )
+		{
+			elem->id = sValue; // Will be saved for sorting; Will be freed by ~Elem
+			m_leakList.SetItemText(idx, COL_ID, sValue);
+		}
+		sValue = NULL;
+
+		if ( elem->running )
+		{
+			if ( GetPropertyValueByName((CComQIPtr<IDispatchEx>)node, L"outerHTML", &sValue) )
+			{
+				wchar_t outerHTML[200];
+				wcsncpy(outerHTML,sValue,200);
+				m_leakList.SetItemText(idx, COL_OUTERHTML, outerHTML);
+			}
+			SysFreeString(sValue);  // Value not saved
+			sValue = NULL;
+		}
+		//m_edit_bytes += elem->size;
 	}
 	else
 	{
-		elem->AddRef();
-		m_leaks.push_back(LeakEntry(elem, hookElem, refCount, fromCmallspy, size, reported));
+		m_edit_hidden_items++;
+	}
+}
+
+void CLeakDlg::notifyElement(Elem* hookElem)
+{
+	// Search hookElem in leakList
+	int itemCount = m_leakList.GetItemCount();
+	int seqNr = hookElem->seqNr;
+	for ( int idx = 0; idx < itemCount; idx++ )
+	{
+		Elem *elem = (Elem*) m_leakList.GetItemData(idx);
+		if ( elem->seqNr == seqNr )
+		{
+			hookElem->reported = hookElem->refCountSample;
+
+			// Update important values in the element to notify;
+			elem->refCountSample = hookElem->refCountSample;
+			elem->running = hookElem->running;
+			elem->cycleDetected = hookElem->cycleDetected;
+			wchar_t refCountText[64];
+			_itow(elem->refCountSample, refCountText, 10);
+			m_leakList.SetItemText(idx, COL_REFS, refCountText);
+			if ( elem->cycleDetected )
+			{
+				m_leakList.SetItemText(idx, COL_CYCLE, L"cycle!");
+				hookElem->leakReported = 1;
+			}
+			if ( !elem->running && elem->refCountSample > 0 )
+			{
+				m_leakList.SetItemText(idx, COL_LEAK, L"leak!");
+				hookElem->leakReported = 1;
+			}
+			else if ( elem->refCountSample == 0 )
+			{
+				m_leakList.SetItemText(idx, COL_LEAK, L"freed");
+			}
+			m_leakList.RedrawItems(idx,idx);
+			break;
+		}
 	}
 }
 
 // Clear all leaks.
 //
-void CLeakDlg::clearLeaks() {
-	for (std::vector<LeakEntry>::const_iterator it = m_leaks.begin(); it != m_leaks.end(); ++it) {
-		// Release the leaked element and free its associated document URL.
-		//   (of course, since this element is over-referenced, it won't actually get freed
-		//   properly, but we're doing our part, at least!)
-		//
-		if ( it->fromCmallspy )
-		{
-		}
-		else
-		{
-			it->elem->Release();
-		}
-	}
-	
-	m_edit_items = 0;
-	m_edit_hidden_items = 0;
-	//m_edit_bytes = 0;
-	//m_edit_kbytes = 0;
-	m_leaks.clear();
-	UpdateData(FALSE); // From members to controls
-}
-
-BOOL getIsNodeOrphan(IUnknown* unk) { 
-	MSHTML::IHTMLElementPtr	element = unk;
-	return ( element && element->parentElement == NULL );
-}
-
-// Take all entries in m_leaks and populate the leak list control with them.
-//
-void CLeakDlg::populateLeaks() {
-	if ( m_check_show_all )
+void CLeakDlg::clearLeaks()
+{
+	int itemCount = m_leakList.GetItemCount();
+	for ( int i = 0; i < itemCount; i++ )
 	{
-		SetWindowText(L"Leaks");
+		Elem *elem = (Elem*) m_leakList.GetItemData(i);
+		delete elem; // Free saved data;
 	}
-	else
-	{
-		SetWindowText(L"Elements in use");
-	}
-	int idx = 0;
-	this->LockWindowUpdate();
 	m_leakList.DeleteAllItems();
 	m_edit_items = 0;
 	m_edit_hidden_items = 0;
-	//m_edit_bytes = 0;
-	//m_edit_kbytes = 0;
-	for (std::vector<LeakEntry>::iterator it = m_leaks.begin(); it != m_leaks.end(); ++it, ++idx)
-	{
-		LeakEntry &entry = *it;
-
-		if ( (entry.refCount > 0 && ! entry.hookElem->hide) || m_check_show_all )
-		{
-
-			MSHTML::IHTMLDOMNode2Ptr	element = entry.elem;
-			MSHTML::IHTMLDocument2Ptr	document = entry.elem;;
-			MSHTML::IHTMLWindow2Ptr		window = entry.elem;;
-
-			wchar_t refCountText[64];
-			wchar_t address[64];
-			wchar_t size[64];
-			wchar_t seqNr[12];
-			wchar_t docId[12];
-
-			_itow(entry.hookElem->seqNr, seqNr, 10);
-			_itow(entry.hookElem->docElem->docId, docId, 10);
-			_itow(entry.refCount, refCountText, 10);
-			_ultow(entry.size, size, 10);
-			wsprintf(address,L"0x%08x",entry.elem);
-
-			m_leakList.InsertItem(idx,seqNr);
-			m_leakList.SetItemText(idx, COL_DOC, docId);
-			m_leakList.SetItemText(idx, COL_URL, entry.hookElem->docElem->url);
-			m_leakList.SetItemText(idx, COL_REFS, refCountText);
-			m_leakList.SetItemText(idx, COL_ADDRESS, address);
-			m_leakList.SetItemText(idx, COL_SIZE, size);
-			// Leak if:  !running && refcount > 0.
-			m_leakList.SetItemText(idx, COL_ORPHAN, (getIsNodeOrphan(entry.elem)) ? L"Yes" : L"");
-			m_leakList.SetItemText(idx, COL_LEAK, (!entry.hookElem->docElem->running && entry.refCount > 0) ? L"leak!" : L"");
-			m_leakList.SetItemText(idx, COL_CYCLE, ( entry.hookElem->cycleDetected ) ? L"cycle!" : L"");
-			m_leakList.SetItemData(idx,(DWORD_PTR) &entry);
-
-			if ( element )
-			{
-				if ( ! entry.fromCmallspy )
-				{
-					BSTR sValue = NULL;
-					m_leakList.SetItemText(idx, COL_TAG, entry.hookElem->nodeName);
-		
-					if ( GetPropertyValueByName((CComQIPtr<IDispatchEx>)element, L"id", &sValue) )
-					{
-						m_leakList.SetItemText(idx, COL_ID, sValue);
-					}
-					SysFreeString(sValue);
-					sValue = NULL;
-
-					if ( entry.hookElem->docElem->running )
-					{
-						if ( GetPropertyValueByName((CComQIPtr<IDispatchEx>)element, L"outerHTML", &sValue) )
-						{
-							wchar_t outerHTML[200];
-							wcsncpy(outerHTML,sValue,200);
-							m_leakList.SetItemText(idx, COL_OUTERHTML, outerHTML);
-						}
-						SysFreeString(sValue);
-						sValue = NULL;
-					}
-				}
-			}
-			else if ( document )
-			{
-				m_leakList.SetItemText(idx, COL_TAG, entry.hookElem->nodeName);
-			}
-			else if ( window )
-			{
-				m_leakList.SetItemText(idx, COL_TAG, entry.hookElem->nodeName);
-			}
-			else
-			{
-				// Com or Lowlevel Normal Memory Allocation
-
-				/*
-				wchar_t text[32];
-				IUnknown* unk = NULL;
-				ULONG i = 0;
-				while ( i < entry.size )
-				{
-					try
-					{
-						IUnknown* ptr2 = entry.elem + 1;
-						HRESULT ok = ptr2->QueryInterface(IID_IUnknown, (void**)&unk);
-						if ( ok && unk )
-						{
-							unk->Release();
-						}
-						break;
-					}
-					catch (...)
-					{					
-						//MessageBox(L"NOT a COM OBJECT");
-					}
-					i++;
-				}
-				if (i >= entry.size)
-				{
-					wsprintf(text,L"NOT a COM object");
-				}
-				else
-				{
-					wsprintf(text,L"A COM object at location base+%l",i);
-				}
-				m_leakList.SetItemText(idx, 8, text);
-				*/
-			}
-			m_edit_items++;
-			//m_edit_bytes += entry.size;
-		}
-		else
-		{
-			m_edit_hidden_items++;
-		}
-	}
-	//m_edit_kbytes = m_edit_bytes >> 10;
 	UpdateData(FALSE); // From members to controls
-	updateButtons();
-	sortOnDefaultColumn();
-	this->UnlockWindowUpdate();
 }
 
 void CLeakDlg::clearInUse()
@@ -410,23 +377,23 @@ void CLeakDlg::OnCustomdrawLeakList ( NMHDR* pNMHDR, LRESULT* pResult )
         // item itself, but it will use the new color we set here.
         // We'll cycle the colors through red, green, and light blue.
 
-		LeakEntry *entry = (LeakEntry*) m_leakList.GetItemData((int)(pLVCD->nmcd.dwItemSpec));
-		if ( entry->reported == 0 )
+		Elem *elem = (Elem*) m_leakList.GetItemData((int)(pLVCD->nmcd.dwItemSpec));
+		if ( elem->reported == 0 )
 		{
 			// Make the item red when item is reported the first time
  	        pLVCD->clrText = RGB(255,0,0);
 		} 
-		else if ( entry->reported < entry->refCount  )
+		else if ( elem->reported < elem->refCountSample  )
 		{
 			// Make the item blue when the refcount is increased since last report
  	        pLVCD->clrText = RGB(0,0,255);
 		}
-		else if ( entry->reported > entry->refCount  )
+		else if ( elem->reported > elem->refCountSample  )
 		{
 			// Make the item darkgreen when the refcount is decreased since last report
  	        pLVCD->clrText = RGB(0,140,0);
 		}
-		if ( ! entry->refCount )
+		if ( elem->refCountSample == 0 )
 		{
 			// Make the item green when the memory item is already freed;
 			pLVCD->clrText = RGB(0,200,0);
@@ -470,7 +437,8 @@ void CLeakDlg::updateButtons()
 
 	if ( m_leakList.GetSelectedCount() == 1 )
 	{
-		GetDlgItem(IDC_PROPERTIES_BUTTON)->EnableWindow(TRUE);
+		Elem* elem = (Elem*)  m_leakList.GetItemData(m_leakList.GetNextItem(-1, LVNI_SELECTED));
+		GetDlgItem(IDC_PROPERTIES_BUTTON)->EnableWindow(elem->refCountSample == 0 ? FALSE : TRUE);
 		((CButton*) GetDlgItem(IDC_PROPERTIES_BUTTON))->SetButtonStyle(BS_DEFPUSHBUTTON,1);
 		((CButton*) GetDlgItem(IDOK))->SetButtonStyle(BS_PUSHBUTTON,1);
 	}
@@ -489,12 +457,18 @@ void CLeakDlg::showItemProperties(UINT nItem)
 	//
 	ASSERT(nItem != -1);
 
-	LeakEntry *entry = (LeakEntry*) m_leakList.GetItemData(nItem);
-	CComQIPtr<IDispatchEx> disp = entry->elem;
-
-	CPropDlg propDlg(CStringW(L"Properties"), this);
-	propDlg.setObject(disp);
-	propDlg.DoModal();
+	Elem *elem = (Elem*) m_leakList.GetItemData(nItem);
+	if (getHook()->m_nodes.find(elem->unkNode) != getHook()->m_nodes.end())
+	{
+		CComQIPtr<IDispatchEx> disp = elem->unkNode;
+		CPropDlg propDlg(CStringW(L"Properties"), this);
+		propDlg.setObject(disp);
+		propDlg.DoModal();
+	}
+	else
+	{
+		AfxMessageBox(L"Invalid node; most likely already released");
+	}
 }
 
 afx_msg void CLeakDlg::OnViewProperties()
@@ -541,20 +515,28 @@ void CLeakDlg::CopySelectedItems()
 		CArray<DISPID> aDispIDs;
 		CArray<CStringW> asNames, asValues;
 		
-		// Load object properties
-		LeakEntry *entry = (LeakEntry*) m_leakList.GetItemData(iCurrentItem);
-		GetObjectProperties((CComQIPtr<IDispatchEx>)entry->elem, aDispIDs, asNames, asValues);
-
+		Elem *elem = (Elem*) m_leakList.GetItemData(iCurrentItem);
 		// Serialize object
 		CStringW header;
-		MSHTML::IHTMLDOMNode2Ptr	node= entry->elem;
-		MSHTML::IHTMLDocument2Ptr	doc = node->ownerDocument;
 
-		header.Format(_T("%s\t(%i reference%s)\r\n"), doc->url, entry->refCount, entry->refCount != 1 ? "s" : "");
+		header.Format(_T("%s\t(%i reference%s)\r\n"), elem->url, elem->refCountSample, elem->refCountSample != 1 ? "s" : "");
 		text += header;
-		for (int iPropCnt = 0; iPropCnt < aDispIDs.GetSize(); iPropCnt++)
-			text += "\t" + asNames[iPropCnt] + "\t" + asValues[iPropCnt] + "\r\n";
-		text += "\r\n\r\n";
+
+		// Load object properties
+		try
+		{
+			GetObjectProperties((CComQIPtr<IDispatchEx>)elem->unkNode, aDispIDs, asNames, asValues);
+
+			for (int iPropCnt = 0; iPropCnt < aDispIDs.GetSize(); iPropCnt++)
+				text += "\t" + asNames[iPropCnt] + "\t" + asValues[iPropCnt] + "\r\n";
+			text += "\r\n\r\n";
+		}
+		catch (...)
+		{
+			CStringW props;
+			props.Format(_T("\ttagName\t%s\n\tid\t%s\r\n"),elem->nodeName,elem->id);
+			text += props;
+		}
 	}
 
 	if (!CopyToClipboard(m_hWnd, text)) {
@@ -589,66 +571,61 @@ int myStrCmp(TCHAR* s1, TCHAR* s2)
 
 int CALLBACK SortFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	LeakEntry* entry1 = (LeakEntry*) lParam1;
-	LeakEntry* entry2 = (LeakEntry*) lParam2;
-
-	MSHTML::IHTMLElementPtr elem1 = entry1->fromCmallspy ? NULL : entry1->elem;
-	MSHTML::IHTMLElementPtr elem2 = entry2->fromCmallspy ? NULL : entry2->elem;
+	Elem* entry1 = (Elem*) lParam1;
+	Elem* entry2 = (Elem*) lParam2;
 
 	switch (lParamSort)
 	{
 	case COL_NR:
-		return (entry1->hookElem->seqNr  < entry2->hookElem->seqNr ? -1 : ( entry1->hookElem->seqNr > entry2->hookElem->seqNr ? 1 : 0)) * g_sortOrder;
+		return (entry1->seqNr  < entry2->seqNr ? -1 : ( entry1->seqNr > entry2->seqNr ? 1 : 0)) * g_sortOrder;
 
 	case COL_DOC:
-		return (entry1->hookElem->docElem->docId  < entry2->hookElem->docElem->docId ? -1 : ( entry1->hookElem->docElem->docId > entry2->hookElem->docElem->docId ? 1 : 0)) * g_sortOrder;
+		return (entry1->docId  < entry2->docId ? -1 : ( entry1->docId > entry2->docId ? 1 : 0)) * g_sortOrder;
 
 	case COL_URL:
-		if (	entry1->hookElem && entry1->hookElem->docElem && entry1->hookElem->docElem->url && 
-				entry2->hookElem && entry2->hookElem->docElem && entry2->hookElem->docElem->url )
+		if ( entry1->url && entry2->url )
 		{
-			return myStrCmp(entry1->hookElem->docElem->url,entry2->hookElem->docElem->url)  * g_sortOrder;
+			return myStrCmp(entry1->url,entry2->url)  * g_sortOrder;
 		}
-		if ( elem1 ) return -1 * g_sortOrder;
-		if ( elem2 ) return 1 * g_sortOrder;
+		if ( entry1->url ) return -1 * g_sortOrder;
+		if ( entry2->url ) return 1 * g_sortOrder;
 		return 0; 
 
 	case COL_REFS:
-		return (entry1->refCount < entry2->refCount ? -1 : ( entry1->refCount > entry2->refCount ? 1 : 0)) * g_sortOrder;
+		return (entry1->refCountSample < entry2->refCountSample ? -1 : ( entry1->refCountSample > entry2->refCountSample ? 1 : 0)) * g_sortOrder;
 
 	case COL_TAG:
-		return myStrCmp(entry1->hookElem->nodeName,entry2->hookElem->nodeName) * g_sortOrder;
+		return myStrCmp(entry1->nodeName,entry2->nodeName) * g_sortOrder;
 
-	case COL_ID:		if ( elem1 != NULL && elem2 != NULL )
+	case COL_ID:
+		if ( entry1->id != NULL && entry2->id != NULL )
 		{
-			return myStrCmp(elem1->id,elem2->id)  * g_sortOrder;
+			return myStrCmp(entry1->id,entry2->id)  * g_sortOrder;
 		}
-		if ( elem1 ) return -1  * g_sortOrder;
-		if ( elem2 ) return 1  * g_sortOrder;
+		if ( entry1->id ) return -1  * g_sortOrder;
+		if ( entry2->id ) return 1  * g_sortOrder;
 		return 0; 
 
-	case COL_SIZE:
-		return (entry2->size < entry1->size ? -1 : ( entry2->size > entry1->size ? 1 : 0))  * g_sortOrder;
+//	case COL_SIZE:
+//		return (entry2->size < entry1->size ? -1 : ( entry2->size > entry1->size ? 1 : 0))  * g_sortOrder;
 
 	case COL_LEAK:
-		if ( entry1->hookElem->docElem->running == entry2->hookElem->docElem->running ) return 0;
-		if ( entry1->hookElem->docElem->running ) return 1 * g_sortOrder;
-		if ( entry2->hookElem->docElem->running ) return -1 * g_sortOrder;
+		if ( entry1->running == entry2->running ) return 0;
+		if ( entry1->running ) return 1 * g_sortOrder;
+		if ( entry2->running ) return -1 * g_sortOrder;
 		return 0;
 
 	case COL_CYCLE:
-		if ( entry1->hookElem->cycleDetected == entry2->hookElem->cycleDetected ) return 0;
-		if ( entry1->hookElem->cycleDetected ) return 1 * g_sortOrder;
-		if ( entry2->hookElem->cycleDetected ) return -1 * g_sortOrder;
+		if ( entry1->cycleDetected == entry2->cycleDetected ) return 0;
+		if ( entry1->cycleDetected ) return 1 * g_sortOrder;
+		if ( entry2->cycleDetected ) return -1 * g_sortOrder;
 		return 0;
 
 	case COL_ORPHAN:
 		{
-			BOOL elem1_isOrphan = elem1 ? getIsNodeOrphan(elem1) : false;
-			BOOL elem2_isOrphan = elem2 ? getIsNodeOrphan(elem2) : false;
-			if ( elem1_isOrphan == elem2_isOrphan ) return 0;
-			if ( elem1_isOrphan ) return 1 * g_sortOrder;
-			if ( elem2_isOrphan ) return -1 * g_sortOrder;
+			if ( entry1->isOrphan == entry2->isOrphan ) return 0;
+			if ( entry1->isOrphan ) return 1 * g_sortOrder;
+			if ( entry2->isOrphan ) return -1 * g_sortOrder;
 		}
 		return 0;
 
@@ -662,8 +639,9 @@ int CALLBACK SortFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 
 void CLeakDlg::sortOnDefaultColumn()
 {
+	m_leakList.SortItems(SortFunc, COL_DOC);  // primary sort on docId;
 	m_lastSortedColumn = m_lastSortedColumn < 0 ?  COL_URL :  m_lastSortedColumn;  // Default the URL Column
-	m_leakList.SortItems(SortFunc, m_lastSortedColumn);
+	m_leakList.SortItems(SortFunc, m_lastSortedColumn);  // secondary sort on specified column;
 }
 
 void CLeakDlg::OnHdnItemclickLeaklist(NMHDR *pNMHDR, LRESULT *pResult)
@@ -741,9 +719,4 @@ void CLeakDlg::OnWmNcHitTest(NMHDR *pNMHDR, LRESULT *pResult)
 	AfxMessageBox(L"HITHIT");
 	// TODO: Add your control notification handler code here
 	*pResult = 0;
-}
-void CLeakDlg::OnBnClickedCheckShowAll()
-{
-	m_check_show_all = ! m_check_show_all;
-	populateLeaks();
 }
