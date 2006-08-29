@@ -141,7 +141,7 @@ void CBrowserHostDlg::Event_DocumentCompleteExplorer(LPDISPATCH pDisp, VARIANT* 
 	// If we're waiting for a normal document, hook all of its static elements.
 	//
 	if (isHookActive())
-		getHook()->addStaticElements(doc);
+		getHook()->addStaticNodes(doc);
 
 	// Determine whether the completed document is the outer one that we are
 	//   actually waiting on (by comparing its URL with the outer browser's).
@@ -193,7 +193,6 @@ void CBrowserHostDlg::Event_NavigateComplete2Explorer(LPDISPATCH pDisp, VARIANT*
 void CBrowserHostDlg::Event_NewWindow2Explorer(LPDISPATCH* ppDisp, BOOL* Cancel) {
 	// See http://support.microsoft.com/kb/q184876/
 	//
-	AfxMessageBox(L"Event_NewWindow2Explorer");
 	CBrowserHostDlg* dlg = NULL;
 	onNewWindow(&dlg);
 	if (dlg != NULL) {
@@ -205,7 +204,6 @@ void CBrowserHostDlg::Event_NewWindow2Explorer(LPDISPATCH* ppDisp, BOOL* Cancel)
 }
 
 void CBrowserHostDlg::Event_WindowClosing(VARIANT_BOOL IsChildWindow, VARIANT_BOOL *&Cancel) {
-	AfxMessageBox(L"Event_WindowClosing");
 	onClosing();
 }
 
