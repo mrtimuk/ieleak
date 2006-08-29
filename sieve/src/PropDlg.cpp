@@ -95,9 +95,9 @@ bool GetPropertyValue(CComPtr<IDispatchEx> object, DISPID dispId, VARIANT& resul
 	}
 }
 
-IHTMLDocument2* GetContentDocument(CComPtr<IDispatchEx> object)
+MSHTML::IHTMLDocument2Ptr GetContentDocument(CComPtr<IDispatchEx> object)
 {
-	IHTMLDocument2* doc = NULL;
+	IHTMLDocument2Ptr doc = NULL;
 	DISPID dispId;
 	if ( SUCCEEDED(object->GetDispID(L"contentWindow", fdexNameCaseSensitive, &dispId)) )
 	{
@@ -109,7 +109,10 @@ IHTMLDocument2* GetContentDocument(CComPtr<IDispatchEx> object)
 				if (result.pdispVal)
 				{
 					IHTMLWindow2Ptr wnd = result.pdispVal;
-					wnd->get_document(&doc);
+					IHTMLDocument2* tmpdoc = NULL;
+					wnd->get_document(&tmpdoc);
+					doc = tmpdoc;
+					if ( tmpdoc && doc ) tmpdoc->Release();
 				}
 			}
 		}
@@ -245,7 +248,7 @@ BOOL CPropDlg::OnInitDialog() {
 	// Set up the name/value colums for the property list.
 	//
 	m_propList.InsertColumn(0, L"Name", LVCFMT_LEFT, 128);
-	m_propList.InsertColumn(1, L"Value", LVCFMT_LEFT, 384);
+	m_propList.InsertColumn(1, L"Value", LVCFMT_LEFT, 1000);
 
 	CArray<DISPID> aDispIDs;
 	CArray<CStringW> asNames, asValues;
