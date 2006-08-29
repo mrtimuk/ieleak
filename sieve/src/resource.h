@@ -45,7 +45,6 @@
 #define IDC_STATIC_BLACK                1030
 #define IDC_STATIC_GREEN                1031
 #define IDC_CHECK_SHOW_ALL              1033
-#define IDC_CHECK_AUTO_CLEANUP          1033
 #define IDC_SHOW_HELP                   1036
 #define IDC_LOG_DEFECT                  1037
 #define IDC_STATIC_GRAPH                1038

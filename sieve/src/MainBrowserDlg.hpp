@@ -34,7 +34,7 @@ private:
 	CVORegistry					m_reg;
 	CLeakDlg*					m_leakDlg;
 	CBrush						m_brush;
-	virtual bool isHookActive() { return !m_waitingForBlankDoc && !m_autoRefreshMode; }
+	virtual bool isHookActive() { return !m_waitingForBlankDoc /*&& !m_autoRefreshMode*/;}
 
 public:
 	enum { IDD = IDD_BROWSER_DIALOG };
@@ -46,7 +46,6 @@ public:
 	CButton	m_radioNormal;
 	CButton	m_radioLow;
 	CButton m_radioPaused;
-	bool m_check_auto_cleanup;
 	bool m_check_cycle_detection;
 	CMemoryGraphCtrl m_memGraph;
 
@@ -77,9 +76,6 @@ public:
 	afx_msg void OnDestroy();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg LRESULT OnKickIdle(WPARAM, LPARAM lCount);
-	afx_msg void CMainBrowserDlg::autoCleanup();
-
-
 	void requestClosePopups();
 	void destroyFinishedPopups();
 
@@ -97,7 +93,6 @@ public:
 	afx_msg void OnBnClickedShowLeaks();
 	afx_msg void OnBnClickedLogDefect();
 	afx_msg void OnBnClickedShowHelp();
-	afx_msg void OnBnClickedCheckAutoCleanup();
 	afx_msg void OnBnClickedCheckCycleDetection();
 	afx_msg void OnBnClickedRadioMemoryUsage();
 	afx_msg void OnBnClickedRadioDOMUsage();

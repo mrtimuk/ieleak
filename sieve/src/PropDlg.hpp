@@ -9,7 +9,7 @@ void GetObjectProperties(CComPtr<IDispatchEx> object, CArray<DISPID> &raDispIDs,
 bool GetPropertyValue(CComPtr<IDispatchEx> object, CStringW propertyName, VARIANT& result);
 bool GetPropertyValue(CComPtr<IDispatchEx> object, DISPID dispId, VARIANT& result);
 bool GetPropertyValueByName(CComPtr<IDispatchEx> object, CComBSTR name, BSTR *sValue);
-IHTMLDocument2* GetContentDocument(CComPtr<IDispatchEx> object);
+MSHTML::IHTMLDocument2Ptr GetContentDocument(CComPtr<IDispatchEx> object);
 bool GetLibraryURL(CComPtr<IDispatchEx> object, BSTR *url);
 
 

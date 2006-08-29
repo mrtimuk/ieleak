@@ -3,54 +3,33 @@
 #include "resource.h"
 #include "JSHook.hpp"
 
-// This structure is used to keep track of leaked elements, the URL of their
-//  documents, and the number of references left outstanding.
-//
-struct LeakEntry
-{
-	LeakEntry(IUnknown* elem, Elem *hookElem, int refCount, BOOL fromCmallspy = false, ULONG size = 0, int reported = 0)
-	{
-		this->elem = elem;
-		this->hookElem = hookElem;
-		this->refCount = refCount;
-		this->fromCmallspy = fromCmallspy;
-		this->size = size;
-		this->reported = reported;
-	}
-	IUnknown*	elem;
-	Elem*		hookElem;
-	ULONG		size;
-	int			refCount;
-	BOOL		fromCmallspy;
-	int			reported;
-	int			seqNr;
-};
-
 // The dialog box for displaying all leaked elements.
 //
 class CLeakDlg : public CDialog {
 	DECLARE_EASYSIZE
 private:
 	enum { IDD = IDD_LEAKS };
-	CListCtrl				m_leakList;
 	CPoint					m_point;
-	std::vector<LeakEntry>	m_leaks;
 	int						m_lastSortedColumn;
 	//CToolTipCtrl*			m_toolTip;
 	CBrush m_brush;
-
+	CComObject<JSHook>*		m_hook;
 	void showItemProperties(UINT nItem);
 
 public:
-	CLeakDlg(CWnd* pParent = NULL);
-	void addElement(IUnknown* elem, Elem* hookElem, int refCount, BOOL fromCmallspy = false, ULONG size = 0, int reported = 0);
+	CLeakDlg(CComObject<JSHook>* hook, CWnd* pParent = NULL);
+	~CLeakDlg();
+	CComObject<JSHook>* getHook() { return m_hook; }
+	void addElement(Elem* hookElem);
+	void notifyElement(Elem* hookElem);
 	void sortOnDefaultColumn();
-	void populateLeaks();
 	void updateButtons();
 	void clearLeaks();
 	void clearInUse();
 	void showInUse();
-	BOOL m_check_show_all;
+	void prepare(LPCTSTR title);
+	void finish();
+	CListCtrl				m_leakList;
 
 	DECLARE_MESSAGE_MAP()
 
