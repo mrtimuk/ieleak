@@ -123,7 +123,8 @@ void CMallocSpy::showLeaks(CLeakDlg* dlg)
     {
 		if ( m_map2[i].inUse )
 		{
-			dlg->addElement((IUnknown *)(m_map2[i].pActual), NULL,  m_map2[i].inUse, true, m_map2[i].size, m_map2[i].reported);
+			//TODO: Create an Elem() structure
+//			dlg->addElement((IUnknown *)(m_map2[i].pActual), NULL,  m_map2[i].inUse, true, m_map2[i].size, m_map2[i].reported);
 			m_map2[i].reported = 1;
 		}
 	}
@@ -135,7 +136,8 @@ void CMallocSpy::showLeaks(CLeakDlg* dlg)
     {
 		if ( ! m_map2[i].inUse )
 		{
-			dlg->addElement((IUnknown *)(m_map2[i].pActual), NULL, m_map2[i].inUse, true, m_map2[i].size, m_map2[i].reported);
+			//TODO: Create an Elem() structure
+//			dlg->addElement((IUnknown *)(m_map2[i].pActual), NULL, m_map2[i].inUse, true, m_map2[i].size, m_map2[i].reported);
 			m_map2[i].reported = 1;
 		}
     }
@@ -190,7 +192,7 @@ void *CMallocSpy::PreFree(void *pRequest, BOOL fSpyed)
         // Mark the allocation as inactive in the map.
         //
         int counter;
-		//wchar_t	buf[50];
+		// wchar_t	buf[50];
 
 		pRequest = (void*)(((BYTE*)pRequest) - HEADERSIZE);
 
