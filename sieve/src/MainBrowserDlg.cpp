@@ -95,7 +95,6 @@ BEGIN_MESSAGE_MAP(CMainBrowserDlg, CBrowserHostDlg)
 	ON_BN_CLICKED(IDC_CLEAR_IN_USE, OnBnClickedClearInUse)
 	ON_BN_CLICKED(IDC_SHOW_LEAKS, OnBnClickedShowLeaks)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_MEMSAMPLES, OnNMCustomdrawMemsamples)
-	ON_BN_CLICKED(IDC_CHECK_AUTO_CLEANUP, &CMainBrowserDlg::OnBnClickedCheckAutoCleanup)
 	ON_BN_CLICKED(IDC_CHECK_CYCLE_DETECTION, &CMainBrowserDlg::OnBnClickedCheckCycleDetection)
 	ON_BN_CLICKED(IDC_LOG_DEFECT, &CMainBrowserDlg::OnBnClickedLogDefect)
 	ON_BN_CLICKED(IDC_SHOW_HELP, &CMainBrowserDlg::OnBnClickedShowHelp)
@@ -123,7 +122,6 @@ BEGIN_EASYSIZE_MAP(CMainBrowserDlg)
 	EASYSIZE(IDC_SHOW_LEAKS,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
 	EASYSIZE(IDC_SHOW_HELP,			ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
 	EASYSIZE(IDC_LOG_DEFECT,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
-	EASYSIZE(IDC_CHECK_AUTO_CLEANUP,ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
 	EASYSIZE(IDC_CROSSREF_SCAN,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
 	EASYSIZE(IDC_CHECK_CYCLE_DETECTION,ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
 	EASYSIZE(IDC_GO,				ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		ES_KEEPSIZE,	0)
@@ -147,7 +145,6 @@ BEGIN_EASYSIZE_MAP(CMainBrowserDlg)
 
 	//Anchored to left + right + bottom
 	EASYSIZE(IDC_STATIC_GRAPH,		ES_BORDER,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
-	EASYSIZE(IDC_STATIC_HISTORY,	ES_BORDER,		ES_KEEPSIZE,	ES_BORDER,		ES_BORDER,		0)
 
 	//Anchored to left + top + right + bottom
 	EASYSIZE(IDC_EXPLORER,			ES_BORDER,		ES_BORDER,		ES_BORDER,		ES_BORDER,		0)
@@ -157,8 +154,8 @@ END_EASYSIZE_MAP
 
 
 CMainBrowserDlg::CMainBrowserDlg(CComObject<JSHook>* hook, CWnd* pParent)	: CBrowserHostDlg(hook, IDC_EXPLORER, CMainBrowserDlg::IDD, pParent),
-	m_waitingForDoc(false), m_waitingForBlankDoc(false), m_autoRefreshMode(false), m_checkLeakDoc(NULL), m_reg(HKEY_LOCAL_MACHINE, TEXT("Software\\IE Sieve"))
-	, m_check_auto_cleanup(false), m_check_cycle_detection(false), m_memGraph(hook)
+	m_waitingForDoc(false), m_waitingForBlankDoc(false), m_autoRefreshMode(false), m_checkLeakDoc(NULL),
+	m_reg(HKEY_LOCAL_MACHINE, TEXT("Software\\IE Sieve")), m_check_cycle_detection(false), m_memGraph(hook)
 {
 	//{{AFX_DATA_INIT(CMainBrowserDlg)
 		// NOTE: the ClassWizard will add member initialization here
@@ -184,7 +181,7 @@ void showHelp()
     {
         VARIANT_BOOL pBool=true; //The browser is invisible
 		//COleVariant vaURL(L"http://cwiki/wiki/index.php/SIEve") ; 
-		COleVariant vaURL(L"http://sourceforge.net/projects/ieleak") ; 
+		COleVariant vaURL(L"http://home.wanadoo.nl/jsrosman/sievehelp.htm") ; 
 
 		m_pBrowser->put_MenuBar(true);
 		m_pBrowser->put_ToolBar(true);
@@ -400,7 +397,6 @@ void CMainBrowserDlg::OnTimer(UINT_PTR nIDEvent)
 			if (m_popups.begin() == m_popups.end()) {
 				KillTimer(nIDEvent);
 			}
-			if ( m_check_auto_cleanup ) autoCleanup();
 			if ( m_leakDlg ) OnBnClickedShowLeaks();
 			break;
 	}
@@ -411,64 +407,11 @@ int CMainBrowserDlg::updateStatistics()
 	int items;
 	int leakedItems;
 	int hiddenItems;
-
-	items = (int) (getHook()->m_elements.size());
-	items += (int) (getHook()->m_runningDocs.size());
-	getHook()->countElements(m_loadedDoc->parentWindow,leakedItems, hiddenItems);
+	items = (int) (getHook()->m_nodes.size());
+	getHook()->countNodes(m_loadedDoc->parentWindow,leakedItems, hiddenItems);
 	showMemoryUsageAndAvarageGrowth(m_memsamples, items, leakedItems, hiddenItems, GetMemoryUsage());
 	return items - hiddenItems;  // in use items (domNodes);
 }
-
-void CMainBrowserDlg::autoCleanup()
-{
-	for (std::map<IUnknown*,Elem>::iterator it = getHook()->m_elements.begin(); it != getHook()->m_elements.end(); ++it) {
-		IUnknown *unk = it->first;
-		Elem &elem = it->second;
-
-		// For each element, AddRef() and Release() it.  The latter method will return
-		//   the current ref count.
-		//
-		unk->AddRef();
-		int refCount = unk->Release();
-
-		if ( refCount > 1 && ! elem.docElem->running )
-		{
-			if ( wcscmp(elem.nodeName,L"#window") )
-			{
-				for ( int i = 0; i < refCount-1 ; i++)
-				{
-					autoFreedRefs++;
-					unk->Release();
-				}
-			}
-			else
-			{
-				AfxMessageBox(L"Don't free #window");
-			}
-		}
-	}
-
-	for (std::map<IUnknown*,Elem>::iterator it = getHook()->m_runningDocs.begin(); it != getHook()->m_runningDocs.end(); ++it) {
-		IUnknown *unk = it->first;
-		Elem &elem = it->second;
-
-		// For each element, AddRef() and Release() it.  The latter method will return
-		//   the current ref count.
-		//
-		unk->AddRef();
-		int refCount = unk->Release();
-
-		if ( refCount > 1 && ! elem.docElem->running )
-		{
-			for ( int i = 0; i < refCount-1 ; i++)
-			{
-				autoFreedRefs++;
-				unk->Release();
-			}
-		}
-	}
-}
-
 
 // Gets the text in the url edit control.  The caller must free it.
 //
@@ -494,7 +437,6 @@ wchar_t* CMainBrowserDlg::getUrlText() {
 // Loads the document specified by the url edit control.
 //
 void CMainBrowserDlg::go() {
-	if ( m_check_auto_cleanup ) autoCleanup();
 	wchar_t* url = getUrlText();
 	Navigate(url);
 	//Save MRU_Url
@@ -538,7 +480,7 @@ void CMainBrowserDlg::OnBnClickedGo() {
 
 void CMainBrowserDlg::OnBnClickedAboutBlank() {
 	// When the leak test button is pressed, navigate to the blank document
-	//   so that the browser will release all of its elements.  Set
+	//   so that the browser will release all of its nodes.  Set
 	//   m_waitingForBlankDoc to true so that the DocumentComplete event
 	//   handler will know to check for leaks when the blank document
 	//   finishes loading.
@@ -560,15 +502,6 @@ void CMainBrowserDlg::OnBnClickedAutoRefresh() {
 		GetDlgItem(IDC_AUTOREFRESH)->SendMessage(WM_SETTEXT, 0, (LPARAM)L"Stop");
 		GetDlgItem(IDC_GO)->EnableWindow(FALSE);
 		GetDlgItem(IDC_SIEVE)->EnableWindow(FALSE);
-		m_radioHigh.EnableWindow(FALSE);
-		m_radioNormal.EnableWindow(FALSE);
-		m_radioLow.EnableWindow(FALSE);
-		m_radioPaused.EnableWindow(FALSE);
-		m_radioHigh.SetCheck(0);
-		m_radioNormal.SetCheck(1);
-		m_radioLow.SetCheck(0);
-		m_radioPaused.SetCheck(0);
-		m_memGraph.setUpdateSpeed(CMemoryGraphCtrl::kNormal);
 
 		// Load the specified document, which will start the auto-refresh cycle.
 		//
@@ -584,15 +517,6 @@ void CMainBrowserDlg::OnBnClickedAutoRefresh() {
 		GetDlgItem(IDC_AUTOREFRESH)->SendMessage(WM_SETTEXT, 0, (LPARAM)L"Auto-Refresh");
 		GetDlgItem(IDC_GO)->EnableWindow(TRUE);
 		GetDlgItem(IDC_SIEVE)->EnableWindow(TRUE);
-		m_radioHigh.EnableWindow(TRUE);
-		m_radioNormal.EnableWindow(TRUE);
-		m_radioLow.EnableWindow(TRUE);
-		m_radioPaused.EnableWindow(TRUE);
-		m_radioHigh.SetCheck(0);
-		m_radioNormal.SetCheck(0);
-		m_radioLow.SetCheck(0);
-		m_radioPaused.SetCheck(1);
-		m_memGraph.setUpdateSpeed(CMemoryGraphCtrl::kPaused);
 	}
 }
 
@@ -684,7 +608,6 @@ void CMainBrowserDlg::onOuterDocumentLoad(MSHTML::IHTMLDocument2Ptr doc)
 
 void CMainBrowserDlg::onNewWindow(CBrowserHostDlg** ppDlg)
 {
-	AfxMessageBox(L"New Window");
 	CBrowserPopupDlg *dlg = new CBrowserPopupDlg(getHook(),&m_popups,this);
 	dlg->Create(CBrowserPopupDlg::IDD);
 	dlg->ShowWindow(SW_SHOW);
@@ -697,44 +620,39 @@ void CMainBrowserDlg::OnBnClickedShowInUse()
 {
 	if ( ! m_leakDlg ) 
 	{
-		m_leakDlg = new CLeakDlg(this);
+		m_leakDlg = new CLeakDlg(getHook(), this);
 		m_leakDlg->Create(IDD_LEAKS);
 	}
-	m_leakDlg->clearLeaks();
-	getHook()->rescanForElements(NULL);
+	m_leakDlg->prepare(L"DOM Nodes in use");
+	getHook()->rescanForNodes(NULL);
 	getHook()->showLeaks(m_loadedDoc->parentWindow, m_leakDlg,false);
 	m_mallocspy->showLeaks(m_leakDlg);
-	m_leakDlg->populateLeaks();
-	m_leakDlg->ShowWindow(SW_SHOW);
+	m_leakDlg->finish();
 }
 
 void CMainBrowserDlg::OnBnClickedShowLeaks()
 {
 	if ( ! m_leakDlg ) 
 	{
-		m_leakDlg = new CLeakDlg(this);
+		m_leakDlg = new CLeakDlg(getHook(),this);
 		m_leakDlg->Create(IDD_LEAKS);
 	}
-	m_leakDlg->clearLeaks();
-	getHook()->rescanForElements(NULL);
-	getHook()->showLeaks(m_loadedDoc->parentWindow, m_leakDlg,true);
+	m_leakDlg->prepare(L"Detected DOM Leaks and Cycles");
+	getHook()->rescanForNodes(NULL);
+	getHook()->showLeaks(m_loadedDoc->parentWindow, m_leakDlg, true);
 	m_mallocspy->showLeaks(m_leakDlg);
-	m_leakDlg->m_check_show_all = true;
-	m_leakDlg->populateLeaks();
-	m_leakDlg->m_check_show_all = false;
-	m_leakDlg->ShowWindow(SW_SHOW);
+	m_leakDlg->finish();
 }
 
 void CMainBrowserDlg::OnBnClickedClearInUse()
 {
 	if ( m_leakDlg )
 	{
-		m_leakDlg->clearLeaks();
-		m_leakDlg->populateLeaks();
+		m_leakDlg->prepare(L"DOM Nodes in use");
+		m_leakDlg->finish();
 	}
 
-
-	getHook()->clearElements();
+	getHook()->clearNodes();
 	m_mallocspy->Clear();
 	if ( m_leakDlg && m_leakDlg->IsWindowVisible() )
 	{
@@ -784,12 +702,6 @@ void CMainBrowserDlg::OnNMCustomdrawMemsamples(NMHDR *pNMHDR, LRESULT *pResult)
 void CMainBrowserDlg::OnBnClickedCheckCycleDetection()
 {
 	m_check_cycle_detection = ! m_check_cycle_detection;
-}
-
-void CMainBrowserDlg::OnBnClickedCheckAutoCleanup()
-{
-	m_check_auto_cleanup = ! m_check_auto_cleanup;
-	if ( m_check_auto_cleanup ) autoCleanup();
 }
 
 void CMainBrowserDlg::OnBnClickedLogDefect()
