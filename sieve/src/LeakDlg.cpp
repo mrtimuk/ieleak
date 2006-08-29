@@ -186,7 +186,7 @@ void CLeakDlg::finish()
 
 BOOL getIsNodeOrphan(IUnknown* unk) { 
 	MSHTML::IHTMLElementPtr	node = unk;
-	return ( node && node->parentElement == NULL );
+	return ( node != NULL && node->parentElement == NULL );
 }
 
 // Adds an element to the leak list, including its document URL and ref count.

@@ -112,7 +112,7 @@ MSHTML::IHTMLDocument2Ptr GetContentDocument(CComPtr<IDispatchEx> object)
 					IHTMLDocument2* tmpdoc = NULL;
 					wnd->get_document(&tmpdoc);
 					doc = tmpdoc;
-					if ( tmpdoc && doc ) tmpdoc->Release();
+					if ( tmpdoc != NULL && doc != NULL ) tmpdoc->Release();
 				}
 			}
 		}

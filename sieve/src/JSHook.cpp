@@ -158,7 +158,7 @@ void JSHook::addNode(MSHTML::IHTMLDOMNode* node) {
 			if ( doc )
 			{
 				BSTR url = NULL;
-				if (!wnd || ! GetLibraryURL((CComQIPtr<IDispatchEx>)wnd, &url) )  // Cordys Specific test
+				if (wnd == NULL || ! GetLibraryURL((CComQIPtr<IDispatchEx>)wnd, &url) )  // Cordys Specific test
 				{
 					url = SysAllocString(doc->url);
 				}
