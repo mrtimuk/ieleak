@@ -170,8 +170,9 @@ CStringW CDOMReportDlg::getIsNodeAttached(IUnknown* unk) {
 	VARIANT ownerDocument, document;
 	CStringW retVal = L"";
 
-	if (!getPropertyValue((CComQIPtr<IDispatchEx>)unk, L"ownerDocument", ownerDocument) ||
-		!getPropertyValue((CComQIPtr<IDispatchEx>)unk, L"document", document)) {
+	CComQIPtr<IDispatchEx> node(unk);
+	if (!getPropertyValue(node, L"ownerDocument", ownerDocument) ||
+		!getPropertyValue(node, L"document", document)) {
 		retVal = L"";
 	}
 	else if (ownerDocument.vt != VT_DISPATCH || document.vt != VT_DISPATCH) {
