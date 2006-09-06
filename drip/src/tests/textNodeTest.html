@@ -1,0 +1,21 @@
+<html>
+<head>
+	<title>Text Node Test</title>
+	<script>
+		function addCircularReferenceTextNode(container) {
+			var textNode = document.createTextNode('');
+			container.appendChild(textNode);
+			container.setText = function(text) {
+				return this.firstChild.nodeValue;
+			};
+		}
+
+		window.onload = function() {
+			addCircularReferenceTextNode(document.body);
+			document.body.setText('This text node will be leaked.');
+		};
+	</script>
+</head>
+<body>
+</body>
+</html>
