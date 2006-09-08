@@ -1,0 +1,45 @@
+<html>
+<head>
+	<title>Closure Cycle Leak Test</title>
+</head>
+<body>
+<div id="matthiasDiv">matthias</div>
+<div id="johanDiv">johan</div>
+<div id="devinDiv">devin</div>
+</body>
+	<script>
+		function addleak(a,b) {
+			var localDevin = devinDiv;
+			return function() {};
+		}
+		matthiasDiv.ff = addleak(matthiasDiv,johanDiv);
+	</script>
+</html>
+
+<!-- The explanation of leaks caused bt the Cycle via a closure'
+
+This small page causes 3 DOM leaks. What is the leak scenario?
+
+The function addleak(a,b) has 2 formal parameters 'a' and 'b' and a local variable
+'localDevin'. The actual function call will create a stackframe for holding 3 variables.
+In our example the stack-frame will look like this:
+
+1) a = reference to 'matthiasDiv'
+2) b = reference to 'johanDiv' 
+3) localDevin = reference to 'devinDiv' 
+
+Then the function addleak will create a new function instance which will be returned.
+However the function is EMPTY doing nothing with the localfunction scope of its parent
+'addleak'. But it is allowed to use anything of its parents scope and since the parents
+scope is a temporary scope (a function call) it will just copy the stackframe of its
+parent whithout analyzing what is actual necessary inside the new created function.
+So conclusion is the function (even the empty function) returned by addleak(a,b) will hold 3
+references in our example. 
+
+Then as final step the cycle is created by assigning the returned function pointer
+(holding the 3 references) to a property of 'matthiasDiv'. And because of the fact
+that one of the 3 references points to 'matthiasDiv' we have a cycle.
+
+And we obviously know that the IE garbage collector doesn't recognize the cycles.
+
+-->
