@@ -85,7 +85,7 @@ function __sIEve_overloadCloneNode(node)
 	{
 		try
 		{
-			node.__sIEve_nativeCloneNode = node.cloneNode;
+			node.__sIEve_nativeCloneNode = true;
 			node.cloneNode = __sIEve_customCloneNode;
 		}
 		catch ( err ) { } //Some nodes doesn't allow override e.g. <EMBED>
