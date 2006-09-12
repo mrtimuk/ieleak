@@ -61,7 +61,8 @@ function __drip_createOverrideFunction(functionName) {
 		 * underlying native function. During the execution of the native function
 		 * it seems that the override may not exist. 
 		 */
-		self.removeAttribute(functionName);
+		if (self.removeAttribute)
+			self.removeAttribute(functionName);
 		var result = self[functionName](arg1, arg2, arg3);
 		self[functionName] = arguments.callee; // Finally restore the Override Function
 
