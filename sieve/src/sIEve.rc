@@ -72,7 +72,7 @@ IDI_ICON2               ICON                    "res\\sIEve.ico"
 // Dialog
 //
 
-IDD_BROWSER_DIALOG DIALOGEX 50, 50, 700, 483
+IDD_BROWSER_DIALOG DIALOGEX 50, 50, 696, 483
 STYLE DS_SETFONT | DS_3DLOOK | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_WINDOWEDGE | WS_EX_APPWINDOW
 CAPTION "sIEve"
@@ -85,16 +85,16 @@ BEGIN
     DEFPUSHBUTTON   "Go",IDC_GO,435,7,25,13
     PUSHBUTTON      "Auto-Refresh",IDC_AUTOREFRESH,466,7,54,13
     PUSHBUTTON      "Help",IDC_SHOW_HELP,550,7,66,14
-    PUSHBUTTON      "Clear in use",IDC_CLEAR_IN_USE,626,7,66,14
+    PUSHBUTTON      "Clear in use",IDC_CLEAR_IN_USE,622,7,66,14
     PUSHBUTTON      "Log Defect",IDC_LOG_DEFECT,550,26,66,14
-    PUSHBUTTON      "Show in use",IDC_SHOW_IN_USE,626,26,66,14
+    PUSHBUTTON      "Show in use",IDC_SHOW_IN_USE,622,26,66,14
     PUSHBUTTON      "about:blank",IDC_ABOUTBLANK,550,46,66,14
-    PUSHBUTTON      "Show Leaks",IDC_SHOW_LEAKS,626,46,66,14
+    PUSHBUTTON      "Show Leaks",IDC_SHOW_LEAKS,622,46,66,14
     CONTROL         "Cycle Detection",IDC_CHECK_CYCLE_DETECTION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,550,67,67,10
-    PUSHBUTTON      "Scan Now !",IDC_CROSSREF_SCAN,626,66,66,14
-    CTEXT           "Memory Usage (KB)             DOM Usage (#nodes)",IDC_MEMLABEL,529,93,163,8
+    PUSHBUTTON      "Scan Now !",IDC_CROSSREF_SCAN,622,66,66,14
+    CTEXT           "Memory Usage (KB)             DOM Usage (#nodes)",IDC_MEMLABEL,525,93,163,8
     CONTROL         "",IDC_EXPLORER,"{8856F961-340A-11D0-A96B-00C04FD705A2}",WS_TABSTOP,7,26,513,375
-    CONTROL         "",IDC_MEMSAMPLES,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER,529,105,163,370,WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_MEMSAMPLES,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER,526,106,162,370,WS_EX_CLIENTEDGE
     LTEXT           "Static",IDC_STATIC_GRAPH,7,417,513,58,0,WS_EX_CLIENTEDGE
     CONTROL         "Memory Usage",IDC_RADIO_MEMORY_USAGE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,9,406,66,10
     CONTROL         "DOM Usage",IDC_RADIO_DOM_USAGE,"Button",BS_AUTORADIOBUTTON,89,406,57,10
@@ -157,7 +157,7 @@ BEGIN
     IDD_BROWSER_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 692
+        RIGHTMARGIN, 688
         TOPMARGIN, 7
         BOTTOMMARGIN, 476
     END
@@ -228,8 +228,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,5,0
- PRODUCTVERSION 0,0,5,0
+ FILEVERSION 0,0,7,0
+ PRODUCTVERSION 0,0,7,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -247,12 +247,12 @@ BEGIN
             VALUE "Comments", "Based on Drip 0.3"
             VALUE "CompanyName", "Cordys"
             VALUE "FileDescription", "sIEve"
-            VALUE "FileVersion", "0, 0, 5, 0"
+            VALUE "FileVersion", "0, 0, 7, 0"
             VALUE "InternalName", "sIEve"
             VALUE "LegalCopyright", "Copyright (c) 2005, 2006"
             VALUE "OriginalFilename", "sIEve.exe"
             VALUE "ProductName", "sIEve"
-            VALUE "ProductVersion", "0, 0, 5, 0"
+            VALUE "ProductVersion", "0, 0, 7, 0"
         END
     END
     BLOCK "VarFileInfo"

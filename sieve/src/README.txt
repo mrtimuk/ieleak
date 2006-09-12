@@ -1,4 +1,4 @@
-sIEve -- Memory Leak Detector for Internet Explorer (version 0.0.5)
+sIEve -- Memory Leak Detector for Internet Explorer (version 0.0.7)
 
 This software is distributed under the BSD license included below. The
 source code and compiled binary, as well as further resources, can be found

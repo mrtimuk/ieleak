@@ -76,11 +76,11 @@ private:
 	void addNode(MSHTML::IHTMLDOMNode* node);
 	Elem* getElement(MSHTML::IHTMLDOMNodePtr node);
 	void addNodeRecursively(MSHTML::IHTMLDOMNode* node);
-	void releaseExtraReferences(MSHTML::IHTMLWindow2Ptr wnd);
 	CStringW m_js;
 	CLeakDlg* m_leakDlg;
 
 public:	
+	std::map<IUnknown*,IUnknown*> m_hookedwindows;
 	std::map<IUnknown*,Elem*> m_nodes;
 	std::map<IUnknown*,Elem*>::iterator m_itNextNode;
 
@@ -98,6 +98,7 @@ public:
 	void rescanForNodes(MSHTML::IHTMLDocument2Ptr doc);
 	void countNodes(MSHTML::IHTMLWindow2Ptr wnd,int& leakedItems, int& hiddenItems);
 	void setMainBrowserDlg(CMainBrowserDlg* dlg);
+	void releaseExtraReferences(MSHTML::IHTMLWindow2Ptr wnd);
 	void backgroundReleaseExtraReferences();
 	void unloadWindow(MSHTML::IHTMLDocument2Ptr doc);
 	void crossRefScan(MSHTML::IHTMLDocument2Ptr doc, CButton* button);

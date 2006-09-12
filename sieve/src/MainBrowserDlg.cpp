@@ -181,7 +181,7 @@ void showHelp()
     {
         VARIANT_BOOL pBool=true; //The browser is invisible
 		//COleVariant vaURL(L"http://cwiki/wiki/index.php/SIEve") ; 
-		COleVariant vaURL(L"http://home.wanadoo.nl/jsrosman/sievehelp.htm") ; 
+		COleVariant vaURL(L"http://home.orange.nl/jsrosman/sievehelp.htm") ; 
 
 		m_pBrowser->put_MenuBar(true);
 		m_pBrowser->put_ToolBar(true);
@@ -212,6 +212,12 @@ void logDefect()
         m_pBrowser->Navigate2(vaURL,null,null,null,null) ; 
 	    m_pBrowser->put_Visible( pBool ) ; 
 	}
+}
+
+void CMainBrowserDlg::logMessage(LPCTSTR message)
+{
+	m_memsamples.InsertItem(0,L"");
+	m_memsamples.SetItemText(0, 5, message);
 }
 
 CMainBrowserDlg::~CMainBrowserDlg() {
@@ -271,6 +277,7 @@ BOOL CMainBrowserDlg::OnInitDialog() {
 	m_memsamples.InsertColumn(2, L"delta", LVCFMT_RIGHT, 50);
 	m_memsamples.InsertColumn(3, L"#inUse", LVCFMT_RIGHT, 48);
 	m_memsamples.InsertColumn(4, L"#leaks", LVCFMT_RIGHT, 45);
+	m_memsamples.InsertColumn(5, L"logMessage", LVCFMT_LEFT, 1000);
 
 	// Navigate to a page so that the border appears in the browser
 	//
@@ -407,6 +414,8 @@ int CMainBrowserDlg::updateStatistics()
 	int items;
 	int leakedItems;
 	int hiddenItems;
+	if ( m_loadedDoc) getHook()->releaseExtraReferences(m_loadedDoc->parentWindow);
+	getHook()->rescanForNodes(NULL);
 	items = (int) (getHook()->m_nodes.size());
 	getHook()->countNodes(m_loadedDoc->parentWindow,leakedItems, hiddenItems);
 	showMemoryUsageAndAvarageGrowth(m_memsamples, items, leakedItems, hiddenItems, GetMemoryUsage());

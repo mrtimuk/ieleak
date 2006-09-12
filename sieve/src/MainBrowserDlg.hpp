@@ -56,6 +56,7 @@ public:
 	void BeginWaitCursor();
 	void EndWaitCursor();
 	int updateStatistics();
+	void logMessage(LPCTSTR message);
 	afx_msg void OnBnClickedShowInUse();
 	afx_msg void OnBnClickedClearInUse();
 

@@ -48,6 +48,8 @@ STDMETHODIMP JSHook::GetIDsOfNames(REFIID iid, OLECHAR **names, UINT nameCount, 
 			dispIds[i] = 2;
 		else if (!wcscmp(names[i], L"logDetectedCycle"))
 			dispIds[i] = 3;
+		else if (!wcscmp(names[i], L"logMessage"))
+			dispIds[i] = 4;
 		else	
 		{
 			dispIds[i] = -1;
@@ -120,6 +122,13 @@ STDMETHODIMP JSHook::Invoke(DISPID dispId, REFIID riid, LCID lcid, WORD flags, D
 		}
 		return S_OK;
 	}
+	else if ( dispId == 4 )
+	{
+		// logMessage() takes one argument, str
+		//
+		m_mainBrowserDlg->logMessage(dispParams->rgvarg[0].bstrVal);
+		return S_OK;
+	}
 	else 
 		return DISP_E_MEMBERNOTFOUND;
 }
@@ -129,11 +138,8 @@ STDMETHODIMP JSHook::Invoke(DISPID dispId, REFIID riid, LCID lcid, WORD flags, D
 //
 void JSHook::addNode(MSHTML::IHTMLDOMNode* node) {
 
-	if ( node->nodeType == NODE_TEXT )
+	if ( node == NULL || node->nodeType == NODE_TEXT )
 		return; // No need to register NODE_TEXT; They never leak;
-	MSHTML::IHTMLDOMNode2Ptr	node2= node;
-	MSHTML::IHTMLDocument2Ptr	doc = node2->ownerDocument;
-	MSHTML::IHTMLWindow2Ptr		wnd = doc ? doc->parentWindow : NULL;
 
 	// In order to ensure that we maintain a durable reference to the node (as
 	//   opposed to a tear-off interface), we have to query for IUnknown.
@@ -149,14 +155,16 @@ void JSHook::addNode(MSHTML::IHTMLDOMNode* node) {
 
 	if ( unkNode )
 	{
-		BSTR nodeName = NULL;
-		int docId = getDocumentId(doc);
-
 		if (m_nodes.find(unkNode) == m_nodes.end())
 		{
+			MSHTML::IHTMLDOMNode2Ptr	node2= node;
+			MSHTML::IHTMLDocument2Ptr	doc = node2->ownerDocument;
+			MSHTML::IHTMLWindow2Ptr		wnd = doc ? doc->parentWindow : NULL;
+			BSTR nodeName = NULL;
 			GetPropertyValueByName((CComQIPtr<IDispatchEx>)node, L"nodeName", &nodeName);	
 			if ( doc )
 			{
+				int docId = getDocumentId(doc);
 				BSTR url = NULL;
 				if (wnd == NULL || ! GetLibraryURL((CComQIPtr<IDispatchEx>)wnd, &url) )  // Cordys Specific test
 				{
@@ -217,7 +225,7 @@ void JSHook::hookNewNode(MSHTML::IHTMLDOMNodePtr node, MSHTML::IHTMLDocument2Ptr
 		CComPtr<IDispatch> scriptObj = doc->Script;
 
 		DISPID dispId;
-		OLECHAR *name = SysAllocString(L"__sIEve_overloadCloneNode");
+		OLECHAR *name = SysAllocString(L"__sIEve_hookNode");
 		scriptObj->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_SYSTEM_DEFAULT, &dispId);
 		SysFreeString(name);
 		scriptObj->Invoke(dispId, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &params, NULL, NULL, NULL);
@@ -286,14 +294,39 @@ void JSHook::crossRefScanNode(MSHTML::IHTMLDOMNode2Ptr node)
 	VariantClear(&vHook);
 }
 
+
+
+
 // This method is called when a document is finished loading.  It will hook the
 //   document's createElement() method, passing all dynamically-created nodes
 //   to the hook as they are created.
 //
 void JSHook::hookNewPage(MSHTML::IHTMLDocument2Ptr doc) {
-	if ( wcscmp(doc->url,L"about:blank") )
+	if ( doc != NULL && wcscmp(doc->url,L"about:blank") )
 	{
 		MSHTML::IHTMLWindow2Ptr wnd = doc->parentWindow;
+
+		IUnknown* unkWnd = NULL;
+		wnd->QueryInterface(IID_IUnknown, (void**)&unkWnd);
+		if ( unkWnd ) unkWnd->Release();
+		if ( unkWnd == NULL || m_hookedwindows.find(unkWnd) != m_hookedwindows.end() )
+		{
+			// Log exceptional case;
+			BSTR url;
+			if (wnd == NULL || ! GetLibraryURL((CComQIPtr<IDispatchEx>)wnd, &url) )  // Cordys Specific test
+			{
+				url = SysAllocString(doc->url);
+			}
+			CStringW x;
+			x.Format(L"ALREADY HOOKED %s",(LPCTSTR) url);
+			m_mainBrowserDlg->logMessage(x);
+			SysFreeString(url);
+			return;
+		}
+		else
+		{
+			m_hookedwindows.insert(std::pair<IUnknown*,IUnknown*>(unkWnd,unkWnd));
+		}
 
 		if ( !m_js.GetLength())
 			VERIFY(GetHTML(IDR_SIEVEHOOKS_JS, m_js));
@@ -329,25 +362,29 @@ void JSHook::hookNewPage(MSHTML::IHTMLDocument2Ptr doc) {
 		scriptObj->Invoke(dispId, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &params, NULL, NULL, NULL);
 
 		VariantClear(&vHook);
+
+		addStaticNodes(doc);
 	}
 }
 
 // Add all nodes recursively from a given root node.
 //
 void JSHook::addNodeRecursively(MSHTML::IHTMLDOMNode* node) {
-	addNode(node);
+	if ( node )
+	{
+		addNode(node);
 
-	MSHTML::IHTMLDOMNodePtr child = node->firstChild;
-	while (child) {
-		addNodeRecursively(child);
-		child = child->nextSibling;
+		MSHTML::IHTMLDOMNodePtr child = node->firstChild;
+		while (child) {
+			addNodeRecursively(child);
+			child = child->nextSibling;
+		}
 	}
 }
 
 // Add all nodes within a window, starting with its document's body.
 //
 void JSHook::addStaticNodes(MSHTML::IHTMLDocument2Ptr doc) {
-
 	MSHTML::IHTMLWindow2Ptr wnd = doc->parentWindow;
 	if ( wcscmp(doc->url,L"about:blank") )
 	{
@@ -377,7 +414,19 @@ void JSHook::unloadWindow(MSHTML::IHTMLDocument2Ptr doc)
 			elem->running = false;
 		}
 		it = next;
-	}		
+	}
+
+	IUnknown* unkWnd = NULL;
+	wnd->QueryInterface(IID_IUnknown, (void**)&unkWnd);
+	if ( unkWnd )
+	{
+		unkWnd->Release();
+		std::map<IUnknown*,IUnknown*>::iterator it = m_hookedwindows.find(unkWnd);
+		if ( it != m_hookedwindows.end())
+		{
+			m_hookedwindows.erase(it);
+		}
+	}	
 }
 
 int JSHook::getDocumentId(MSHTML::IHTMLDocument2Ptr doc)
@@ -445,9 +494,29 @@ void JSHook::rescanForNodes(MSHTML::IHTMLDocument2Ptr doc)
 				int docId = getDocumentId(iFrameDoc);
 				if ( docId == 0 )
 				{
+					/*
+					{
+						MSHTML::IHTMLWindow2Ptr		wnd = iFrameDoc ? iFrameDoc->parentWindow : NULL;
+						BSTR url = NULL;
+						if (wnd == NULL || ! GetLibraryURL((CComQIPtr<IDispatchEx>)wnd, &url) )  // Cordys Specific test
+						{
+							url = SysAllocString(iFrameDoc->url);
+						}
+
+						BSTR sValue = NULL;
+						if ( GetPropertyValueByName((CComQIPtr<IDispatchEx>)node, L"id", &sValue) )
+						{
+						}
+
+						CStringW x;
+						x.Format(L"New IFRAME %s %s (#%d)",(LPCTSTR) url, (LPCTSTR) sValue, elem->seqNr);
+						SysFreeString(sValue);
+						m_mainBrowserDlg->logMessage(x);
+						SysFreeString(url);
+					}
+					*/
 					// Not yet hooked it is a new Document in an IFrame;
 					hookNewPage(iFrameDoc);
-					addStaticNodes(iFrameDoc);
 				}
 			}
 		}

@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "BrowserHostDlg.hpp"
+#include "MainBrowserDlg.hpp"
 #include "JSHook.hpp"
 #include "WebBrowser2.hpp"
 #include "resource.h"
@@ -138,10 +139,16 @@ void CBrowserHostDlg::Event_DocumentCompleteExplorer(LPDISPATCH pDisp, VARIANT* 
 		return;
 	}
 
+
 	// If we're waiting for a normal document, hook all of its static elements.
 	//
 	if (isHookActive())
+	{
+		//CStringW x;
+		//x.Format(L"DocumentComplete %s",(LPCTSTR) doc->url);
+		//getHook()->m_mainBrowserDlg->logMessage(x);
 		getHook()->addStaticNodes(doc);
+	}
 
 	// Determine whether the completed document is the outer one that we are
 	//   actually waiting on (by comparing its URL with the outer browser's).
@@ -169,21 +176,15 @@ void CBrowserHostDlg::Event_NavigateComplete2Explorer(LPDISPATCH pDisp, VARIANT*
 		sender->get_Document(&dispDoc);
 		MSHTML::IHTMLDocument2Ptr doc = dispDoc;
 		
-		/*
-		if ( isOuterLocation(sender) )
-		{
-			CStringW url = m_explorer->GetLocationURL();
-			if (url.CompareNoCase(L"about:blank") == 0)
-				url = "";
-			GetDlgItem(IDC_EDITURL)->SetWindowText(url);
-			GetDlgItem(IDC_EDITURL)->SendMessage(EM_SETSEL,0,-1);
-		}
-		*/
-
 		// The document pointer may be NULL if the user navigates to a folder on the hard drive
 		//
 		if (doc)
+		{
+			//CStringW x;
+			//x.Format(L"NavigateComplete %s",(LPCTSTR) doc->url);
+			//getHook()->m_mainBrowserDlg->logMessage(x);
 			getHook()->hookNewPage(doc);
+		}
 
 		dispDoc->Release();
 		sender->Release();
