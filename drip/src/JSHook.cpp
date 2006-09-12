@@ -90,7 +90,9 @@ void JSHook::addNode(MSHTML::IHTMLDOMNode* node, MSHTML::IHTMLDocument2* doc) {
 	// saves a references to the element and adds it to the DOM after the page is loaded.) 
 	//
 	if (m_nodes.find(unk) == m_nodes.end()) {
-		// Text nodes have no expandos or events and thus cannot leak.
+		// Text nodes have no expandos or events and thus cannot without another node also leaking.
+		// Accessing certain properties of text nodes (for example, ownerDocument) can cause crashes
+		// after other nodes are freed.
 		//
 		if (node->nodeType != 3/*TEXT*/) {
 			Node cachedNode(SysAllocString(doc->url));
