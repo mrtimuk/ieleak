@@ -90,12 +90,12 @@ void JSHook::addNode(MSHTML::IHTMLDOMNode* node, MSHTML::IHTMLDocument2* doc) {
 	// saves a references to the element and adds it to the DOM after the page is loaded.) 
 	//
 	if (m_nodes.find(unk) == m_nodes.end()) {
-		Node cachedNode(SysAllocString(doc->url));
-		m_nodes.insert(std::pair<IUnknown*,Node>(unk,cachedNode));
-
-		// Text nodes have no expandos or events.
+		// Text nodes have no expandos or events and thus cannot leak.
 		//
 		if (node->nodeType != 3/*TEXT*/) {
+			Node cachedNode(SysAllocString(doc->url));
+			m_nodes.insert(std::pair<IUnknown*,Node>(unk,cachedNode));
+
 			// Create a temporary parameter list to pass the node to the script, 
 			// in order to so attach events and override functions
 			//
