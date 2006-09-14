@@ -1,0 +1,18 @@
+<html>
+<body onload="addInnerHTMLLeak()">
+</body>
+<script>
+
+var container = null;
+
+function addInnerHTMLLeak()
+{
+	container = window.document.createElement("div");
+	container.innerHTML = "<div>innerDiv</div>";
+	container.firstChild.cycle = container.firstChild;
+	container.firstChild.bigString = new Array(1024).join(new Array(512).join("x"));
+	
+}
+</script>
+
+</html>
