@@ -597,11 +597,9 @@ void JSHook::countNodes(MSHTML::IHTMLWindow2Ptr wnd, int& leakedItems, int& hidd
 	}
 }
 
-// Clear all unused nodes and documents in the hook.
+// Hide all nodes for the UI (Show in Use Button clicked).
 //
 void JSHook::clearNodes() {
-	// Clear unused nodes
-
 	std::map<IUnknown*,Elem*>::iterator it = m_nodes.begin();
 	while (it != m_nodes.end())
 	{
@@ -613,23 +611,8 @@ void JSHook::clearNodes() {
 		Elem* elem = it->second;
 		elem->hide = true;  // Hide the node for the user interface
 		elem->reported = refCount - 1; // reported counter at the moment node is hidden. If recFount increases Node will be showed again
-		if ( ! elem->running )
-		{
-			// Only erase the nodes which are not longer in use (ie having references besides our own reference)
-			if ( refCount == 1 )
-			{
-				// If this is the only outstanding reference, free it.
-				delete elem;
-				m_nodes.erase(it);
-				VERIFY(unkNode->Release() == 0); // Relase our own reference
-			}
-		}
 		it = next;
 	}
-	// It is very important to update m_itNextNode whenever items are removed from the nodes list
-	//
-	m_nodes.clear();
-	m_itNextNode = m_nodes.begin();
 }
 
 // Free up any non-leaked nodes
