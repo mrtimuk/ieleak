@@ -1,0 +1,15 @@
+<html>
+<body onload="addIframeLeakWithSynchroneousDocumentWrite()">
+<iframe style="height:95%;width:95%;border:10 ridge" id="myIframe"></iframe>
+</body>
+<script>
+
+function addIframeLeakWithSynchroneousDocumentWrite()
+{
+	myIframe.document.write("<html><body><div id='mydiv'>written doc in iframe</body><script>mydiv.cycle=mydiv; mydiv.bigstring=new Array(512).join(new Array(1024).join('x'));<"+"/script></html>");
+	myIframe.document.close();
+}
+</script>
+
+
+</html>
