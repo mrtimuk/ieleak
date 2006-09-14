@@ -228,8 +228,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,7,0
- PRODUCTVERSION 0,0,7,0
+ FILEVERSION 0,0,8,0
+ PRODUCTVERSION 0,0,8,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -247,12 +247,12 @@ BEGIN
             VALUE "Comments", "Based on Drip 0.3"
             VALUE "CompanyName", "Cordys"
             VALUE "FileDescription", "sIEve"
-            VALUE "FileVersion", "0, 0, 7, 0"
+            VALUE "FileVersion", "0, 0, 8, 0"
             VALUE "InternalName", "sIEve"
             VALUE "LegalCopyright", "Copyright (c) 2005, 2006"
             VALUE "OriginalFilename", "sIEve.exe"
             VALUE "ProductName", "sIEve"
-            VALUE "ProductVersion", "0, 0, 7, 0"
+            VALUE "ProductVersion", "0, 0, 8, 0"
         END
     END
     BLOCK "VarFileInfo"
