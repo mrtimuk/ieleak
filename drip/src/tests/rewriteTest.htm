@@ -1,0 +1,12 @@
+<html>
+<body onload="rewritedocWithLeak()">
+</body>
+<script>
+function rewritedocWithLeak()
+{
+	window.document.write("<html><body><div id='mydiv'>Rewritten Document with a leak</body><script>mydiv.cycle=mydiv; mydiv.bigstring=new Array(1024).join(new Array(512).join('x'));<"+"/script></html>");
+	window.document.close();
+}
+</script>
+
+</html>
