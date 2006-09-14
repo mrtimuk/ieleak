@@ -147,6 +147,15 @@ void CDOMReportDlg::addNode(IUnknown* node, BSTR url, int refCount, bool isRecen
 	//
 	node->AddRef();
 	m_leaks.push_back(LeakEntry(node, SysAllocString(url), refCount, isRecent));
+
+	// Retrieve a reference to the node's document. Sometimes the node's document is
+	// freed but the node retains a pointer to the document, causing crashes when
+	// retrieving certain properties. Accessing the document property forces a new,
+	// empty document to be created for this node.
+	//
+	CComQIPtr<IDispatchEx> node_ptr(node);
+	VARIANT document;
+	(bool)getPropertyValue(node_ptr, L"document", document);
 }
 
 // Clear all leaks.
