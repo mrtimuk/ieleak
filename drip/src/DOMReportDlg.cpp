@@ -155,7 +155,8 @@ void CDOMReportDlg::addNode(IUnknown* node, BSTR url, int refCount, bool isRecen
 	//
 	CComQIPtr<IDispatchEx> node_ptr(node);
 	VARIANT document;
-	(bool)getPropertyValue(node_ptr, L"document", document);
+	if (getPropertyValue(node_ptr, L"document", document))
+		VariantClear(&document);
 }
 
 // Clear all leaks.
