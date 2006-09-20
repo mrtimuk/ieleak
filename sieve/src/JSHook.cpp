@@ -412,6 +412,7 @@ void JSHook::unloadWindow(MSHTML::IHTMLDocument2Ptr doc)
 		Elem* elem = it->second;
 		if ( elem->docId == docId )		{
 			elem->running = false;
+			elem->hide = true;
 		}
 		it = next;
 	}
@@ -552,16 +553,16 @@ void JSHook::showLeaks(MSHTML::IHTMLWindow2Ptr wnd, CLeakDlg* dlg, bool showLeak
 
 		if ( showLeaks )
 		{
-			// Only show all leaks (And thus also the detected cycles)
-			if ( (!elem->running && refCount > 1) || elem->cycleDetected )
+			// Only show leaks 
+			if ( !elem->running && refCount > 1 )
 			{
 				dlg->addElement(elem);
 			}
 		}
 		else
 		{
-			// Show nodes in use together with leaks
-			if ( (refCount - 1) > elem->reported ) elem->hide = false;
+			// Show nodes in use 
+			if ( elem->running && (refCount - 1) > elem->reported ) elem->hide = false;
 			if ( refCount > 1 && ! elem->hide )
 				dlg->addElement(elem);
 		}
@@ -584,12 +585,12 @@ void JSHook::countNodes(MSHTML::IHTMLWindow2Ptr wnd, int& leakedItems, int& hidd
 
 		// If any references (other than the one that we hold) are outstanding, then
 		//   the node has been leaked.
-		// OR if we detected a cycle
 
-		if ( (!elem->running && refCount > 1) || elem->cycleDetected )
+		if ( !elem->running && refCount > 1 )
 		{
 			leakedItems++;
 		}
+
 		if ( elem->hide || refCount <= 1 )
 		{
 			hiddenItems++;
