@@ -633,7 +633,7 @@ void CMainBrowserDlg::OnBnClickedShowInUse()
 		m_leakDlg->Create(IDD_LEAKS);
 	}
 	m_leakDlg->prepare(L"DOM Nodes in use");
-	getHook()->rescanForNodes(NULL);
+	this->updateStatistics();
 	getHook()->showLeaks(m_loadedDoc->parentWindow, m_leakDlg,false);
 	m_mallocspy->showLeaks(m_leakDlg);
 	m_leakDlg->finish();
@@ -647,7 +647,7 @@ void CMainBrowserDlg::OnBnClickedShowLeaks()
 		m_leakDlg->Create(IDD_LEAKS);
 	}
 	m_leakDlg->prepare(L"Detected DOM Leaks and Cycles");
-	getHook()->rescanForNodes(NULL);
+	this->updateStatistics();
 	getHook()->showLeaks(m_loadedDoc->parentWindow, m_leakDlg, true);
 	m_mallocspy->showLeaks(m_leakDlg);
 	m_leakDlg->finish();
@@ -660,12 +660,15 @@ void CMainBrowserDlg::OnBnClickedClearInUse()
 		m_leakDlg->prepare(L"DOM Nodes in use");
 		m_leakDlg->finish();
 	}
-
 	getHook()->clearNodes();
 	m_mallocspy->Clear();
 	if ( m_leakDlg && m_leakDlg->IsWindowVisible() )
 	{
 		OnBnClickedShowInUse();
+	}
+	else
+	{
+		this->updateStatistics();
 	}
 }
 
