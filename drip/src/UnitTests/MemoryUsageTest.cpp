@@ -31,7 +31,7 @@ TEST_(MemoryUsageTest, TestMemoryIncreases)
 int MemoryUsageTest::ToInt(CStringW stringBuffer)
 {
 	int result = 0;
-	swscanf(stringBuffer, L"%d", &result);
+	swscanf_s(stringBuffer, L"%d", &result);
 	return result;
 }
 

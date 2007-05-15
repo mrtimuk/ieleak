@@ -1,112 +1,178 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.10"
+	Version="8.00"
 	Name="drip"
 	ProjectGUID="{39327173-0C48-465E-A904-65C76667E85B}"
-	Keyword="Win32Proj">
+	Keyword="Win32Proj"
+	>
 	<Platforms>
 		<Platform
-			Name="Win32"/>
+			Name="Win32"
+		/>
 	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
 			ConfigurationType="1"
-			CharacterSet="1">
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;TEST"
-				MinimalRebuild="TRUE"
+				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="TRUE"
-				DebugInformationFormat="4"/>
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="4"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="psapi.lib"
 				OutputFile="$(OutDir)/drip.exe"
 				LinkIncremental="2"
-				GenerateDebugInformation="TRUE"
+				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)/drip.pdb"
 				SubSystem="2"
 				EntryPointSymbol="wWinMainCRTStartup "
-				TargetMachine="1"/>
+				TargetMachine="1"
+			/>
 			<Tool
-				Name="VCMIDLTool"/>
+				Name="VCALinkTool"
+			/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCManifestTool"
+				EmbedManifest="false"
+			/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCXDCMakeTool"
+			/>
 			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCBscMakeTool"
+			/>
 			<Tool
-				Name="VCResourceCompilerTool"/>
+				Name="VCFxCopTool"
+			/>
 			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
+				Name="VCAppVerifierTool"
+			/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"/>
+				Name="VCWebDeploymentTool"
+			/>
 			<Tool
-				Name="VCWebDeploymentTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+				Name="VCPostBuildEventTool"
+			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="Release"
 			IntermediateDirectory="Release"
 			ConfigurationType="1"
-			CharacterSet="1">
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
 				RuntimeLibrary="0"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="TRUE"
-				DebugInformationFormat="3"/>
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="psapi.lib"
 				OutputFile="$(OutDir)/drip.exe"
 				LinkIncremental="1"
-				GenerateDebugInformation="TRUE"
+				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				EntryPointSymbol="wWinMainCRTStartup "
-				TargetMachine="1"/>
+				TargetMachine="1"
+			/>
 			<Tool
-				Name="VCMIDLTool"/>
+				Name="VCALinkTool"
+			/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCManifestTool"
+				EmbedManifest="false"
+			/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCXDCMakeTool"
+			/>
 			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCBscMakeTool"
+			/>
 			<Tool
-				Name="VCResourceCompilerTool"/>
+				Name="VCFxCopTool"
+			/>
 			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
+				Name="VCAppVerifierTool"
+			/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"/>
+				Name="VCWebDeploymentTool"
+			/>
 			<Tool
-				Name="VCWebDeploymentTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+				Name="VCPostBuildEventTool"
+			/>
 		</Configuration>
 	</Configurations>
 	<References>
@@ -115,145 +181,190 @@
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			>
 			<File
-				RelativePath=".\BrowserHostDlg.cpp">
+				RelativePath=".\BrowserHostDlg.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\BrowserPopupDlg.cpp">
+				RelativePath=".\BrowserPopupDlg.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\DlgResizeHelper.cpp">
+				RelativePath=".\DlgResizeHelper.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\DOMReportDlg.cpp">
+				RelativePath=".\DOMReportDlg.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\drip.cpp">
+				RelativePath=".\drip.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\Graph.cpp">
+				RelativePath=".\Graph.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\HtmlResource.cpp">
+				RelativePath=".\HtmlResource.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\JSHook.cpp">
+				RelativePath=".\JSHook.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\MainBrowserDlg.cpp">
+				RelativePath=".\MainBrowserDlg.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\MemoryGraphCtrl.cpp">
+				RelativePath=".\MemoryGraphCtrl.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\UnitTests\MemoryGraphCtrlTest.cpp">
+				RelativePath=".\UnitTests\MemoryGraphCtrlTest.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\UnitTests\MemoryUsageTest.cpp">
+				RelativePath=".\UnitTests\MemoryUsageTest.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\PropDlg.cpp">
+				RelativePath=".\PropDlg.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\NanoCppUnit\test.cpp">
+				RelativePath=".\NanoCppUnit\test.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\WebBrowser2.cpp">
+				RelativePath=".\WebBrowser2.cpp"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+			>
 			<File
-				RelativePath=".\BrowserHostDlg.hpp">
+				RelativePath=".\BrowserHostDlg.hpp"
+				>
 			</File>
 			<File
-				RelativePath=".\BrowserPopupDlg.hpp">
+				RelativePath=".\BrowserPopupDlg.hpp"
+				>
 			</File>
 			<File
-				RelativePath=".\NanoCppUnit\debug.h">
+				RelativePath=".\NanoCppUnit\debug.h"
+				>
 			</File>
 			<File
-				RelativePath=".\DlgResizeHelper.h">
+				RelativePath=".\DlgResizeHelper.h"
+				>
 			</File>
 			<File
-				RelativePath=".\DOMReportDlg.hpp">
+				RelativePath=".\DOMReportDlg.hpp"
+				>
 			</File>
 			<File
-				RelativePath=".\Graph.h">
+				RelativePath=".\Graph.h"
+				>
 			</File>
 			<File
-				RelativePath=".\HtmlResource.h">
+				RelativePath=".\HtmlResource.h"
+				>
 			</File>
 			<File
-				RelativePath=".\JSHook.hpp">
+				RelativePath=".\JSHook.hpp"
+				>
 			</File>
 			<File
-				RelativePath=".\MainBrowserDlg.hpp">
+				RelativePath=".\MainBrowserDlg.hpp"
+				>
 			</File>
 			<File
-				RelativePath=".\MemDCCtrl.cpp">
+				RelativePath=".\MemDCCtrl.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\MemDCCtrl.h">
+				RelativePath=".\MemDCCtrl.h"
+				>
 			</File>
 			<File
-				RelativePath=".\MemoryGraphCtrl.h">
+				RelativePath=".\MemoryGraphCtrl.h"
+				>
 			</File>
 			<File
-				RelativePath=".\UnitTests\MemoryGraphCtrlTest.h">
+				RelativePath=".\UnitTests\MemoryGraphCtrlTest.h"
+				>
 			</File>
 			<File
-				RelativePath=".\UnitTests\MemoryUsageTest.h">
+				RelativePath=".\UnitTests\MemoryUsageTest.h"
+				>
 			</File>
 			<File
-				RelativePath=".\PropDlg.hpp">
+				RelativePath=".\PropDlg.hpp"
+				>
 			</File>
 			<File
-				RelativePath=".\resource.h">
+				RelativePath=".\resource.h"
+				>
 			</File>
 			<File
-				RelativePath=".\UnitTests\stdafx.h">
+				RelativePath=".\UnitTests\stdafx.h"
+				>
 			</File>
 			<File
-				RelativePath=".\stdafx.h">
+				RelativePath=".\stdafx.h"
+				>
 			</File>
 			<File
-				RelativePath=".\NanoCppUnit\stdafx.h">
+				RelativePath=".\NanoCppUnit\stdafx.h"
+				>
 			</File>
 			<File
-				RelativePath=".\NanoCppUnit\test.h">
+				RelativePath=".\NanoCppUnit\test.h"
+				>
 			</File>
 			<File
-				RelativePath=".\WebBrowser2.hpp">
+				RelativePath=".\WebBrowser2.hpp"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
+			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
+			>
 			<File
-				RelativePath=".\res\drip.js">
+				RelativePath=".\res\drip.js"
+				>
 			</File>
 			<File
-				RelativePath=".\drip.rc">
+				RelativePath=".\drip.rc"
+				>
 			</File>
 			<File
-				RelativePath=".\res\icon1.ico">
+				RelativePath=".\res\icon1.ico"
+				>
 			</File>
 			<File
-				RelativePath=".\README.txt">
+				RelativePath=".\README.txt"
+				>
 			</File>
 			<File
-				RelativePath=".\res\rt_manif.bin">
+				RelativePath=".\res\rt_manif.bin"
+				>
 			</File>
 		</Filter>
 	</Files>
 	<Globals>
 		<Global
 			Name="RESOURCE_FILE"
-			Value="drip.rc"/>
+			Value="drip.rc"
+		/>
 	</Globals>
 </VisualStudioProject>
