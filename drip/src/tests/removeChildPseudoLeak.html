@@ -1,0 +1,28 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; ">
+	<title>Memory leak test</title>
+
+	<script type="text/javascript">
+		function LeakMemory(){
+			for(i = 0; i < 10; i++) {
+				var parentDiv = document.createElement("div");
+				document.body.removeChild(document.body.appendChild(parentDiv));
+			}
+			parentDiv = null;
+		}
+	</script>
+
+</head>
+<body>
+	<input type="button" value="Memory Leaking Insert" onclick="LeakMemory()" />
+	<p>
+		Internet Explorer 7 does not show a major increase in memory usage when clicking
+		the above button.</p>
+	<p>
+		It appears that IE's implementation of removeChild creates a document fragment parent
+		node for the element if there's an outstanding reference to the element. This may
+		be where the extra reference is coming from.
+	</p>
+</body>
+</html>

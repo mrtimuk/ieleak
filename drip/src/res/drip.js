@@ -28,6 +28,7 @@ function __drip_onFunctionCall(obj, functionName, returnValue) {
 	case 'cloneNode':
 	case 'appendChild':
 	case 'insertBefore':
+	case 'removeChild':
 		__drip_jsHook.logNode(returnValue, document, true);
 		break;
 
@@ -79,7 +80,7 @@ function __drip_hookEvents(elem) {
 		elem.attachEvent('onpropertychange', __drip_onPropertyChange);
 
 	/* Element references might change when an element is attached to the document */
-	var functionNames = ['cloneNode','appendChild','insertBefore','insertAdjacentElement','insertAdjacentHTML'];
+	var functionNames = ['cloneNode','appendChild','removeChild','insertBefore','insertAdjacentElement','insertAdjacentHTML'];
 	for (var i = 0; i < functionNames.length; i++) {
 		var override = __drip_createOverrideFunction(functionNames[i]);
 
