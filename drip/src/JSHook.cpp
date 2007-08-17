@@ -123,6 +123,9 @@ void JSHook::addNode(MSHTML::IHTMLDOMNode* node, MSHTML::IHTMLDocument2* doc) {
 
 			VariantClear(&vHook);
 		}
+		else {
+			unk->Release();
+		}
 	}
 	else {
 		unk->Release();
